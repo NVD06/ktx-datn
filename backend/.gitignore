@@ -26,3 +26,6 @@ prisma/migrations/dev.db*
 .idea
 .DS_Store
 Thumbs.db
+
+# Prisma Client sinh tu dong (chay "npx prisma generate")
+src/generated

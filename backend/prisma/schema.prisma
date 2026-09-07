@@ -1,0 +1,285 @@
+// Thiết kế CSDL — xem docs/database.md để biết lý do đằng sau từng quyết định.
+// Ba điểm khác với thiết kế thông thường:
+//   - Manager thuộc đúng 1 tòa (User.buildingId), không dùng bảng nối n-n
+//   - Không có bảng RoomType: capacity + price nằm thẳng trên Room
+//   - Không có bảng InvoiceItem: chỉ số điện nước là 4 cột trên Invoice
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum BedStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+// OVERDUE không có ở đây — tính khi đọc: dueDate < now && status = UNPAID
+enum InvoiceStatus {
+  UNPAID
+  PAID
+}
+
+enum InvoiceType {
+  ROOM_FEE
+  UTILITY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum RequestStatus {
+  PENDING
+  RECEIVED
+  IN_PROGRESS
+  DONE
+  CONFIRMED
+  REJECTED
+}
+
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         Role    @default(STUDENT)
+  isActive     Boolean @default(true)
+
+  // Chỉ dùng cho MANAGER: tòa được gán. Mọi kiểm tra phạm vi quyền dựa vào cột này.
+  buildingId String?
+  building   Building? @relation(fields: [buildingId], references: [id])
+
+  profile       StudentProfile?
+  registrations Registration[]
+  requests      MaintenanceRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StudentProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  studentCode String    @unique
+  gender      Gender
+  dob         DateTime?
+  className   String?
+  faculty     String?
+  hometown    String?
+  citizenId   String?
+}
+
+model Building {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  floors      Int
+  gender      Gender? // null = tòa hỗn hợp
+  description String?
+  isActive    Boolean @default(true)
+
+  rooms    Room[]
+  managers User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id         String   @id @default(uuid())
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+  code       String
+  floor      Int
+  capacity   Int
+  price      Decimal  @db.Decimal(12, 0) // giá/kỳ cho 1 sinh viên
+  isActive   Boolean  @default(true)
+
+  beds     Bed[]
+  requests MaintenanceRequest[]
+  hygiene  HygieneRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([buildingId, code])
+}
+
+model Bed {
+  id     String    @id @default(uuid())
+  roomId String
+  room   Room      @relation(fields: [roomId], references: [id])
+  code   String
+  status BedStatus @default(AVAILABLE)
+
+  contracts Contract[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roomId, code])
+}
+
+model RegistrationPeriod {
+  id      String   @id @default(uuid())
+  name    String
+  startAt DateTime
+  endAt   DateTime
+  isOpen  Boolean  @default(false) // Admin bật/tắt tay, không tự đóng theo endAt
+
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Registration {
+  id        String             @id @default(uuid())
+  periodId  String
+  period    RegistrationPeriod @relation(fields: [periodId], references: [id])
+  studentId String
+  student   User               @relation(fields: [studentId], references: [id])
+
+  // Nguyện vọng — cố ý để dạng scalar, không ràng buộc khóa ngoại
+  buildingId        String?
+  preferredCapacity Int?
+  note              String?
+
+  status       RegistrationStatus @default(PENDING)
+  reviewedById String?
+  reviewNote   String?
+  contract     Contract?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contract {
+  id             String       @id @default(uuid())
+  code           String       @unique
+  registrationId String       @unique
+  registration   Registration @relation(fields: [registrationId], references: [id])
+  bedId          String
+  bed            Bed          @relation(fields: [bedId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime
+  price     Decimal        @db.Decimal(12, 0) // snapshot từ Room.price lúc tạo
+  status    ContractStatus @default(DRAFT)
+
+  signedAt     DateTime?
+  terminatedAt DateTime?
+
+  invoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id         String        @id @default(uuid())
+  code       String        @unique
+  contractId String
+  contract   Contract      @relation(fields: [contractId], references: [id])
+  type       InvoiceType
+  period     String? // "2026-09" với hóa đơn điện nước
+  amount     Decimal       @db.Decimal(12, 0)
+  dueDate    DateTime
+  status     InvoiceStatus @default(UNPAID)
+
+  // Chỉ dùng khi type = UTILITY
+  elecOld  Int?
+  elecNew  Int?
+  waterOld Int?
+  waterNew Int?
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contractId, type, period])
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id])
+  amount    Decimal       @db.Decimal(12, 0)
+  status    PaymentStatus @default(PENDING)
+
+  txnRef           String    @unique // = payment.id, gửi làm vnp_TxnRef
+  vnpTransactionNo String?
+  vnpResponseCode  String? // "00" = thành công
+  paidAt           DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MaintenanceRequest {
+  id          String        @id @default(uuid())
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id])
+  studentId   String
+  student     User          @relation(fields: [studentId], references: [id])
+  title       String
+  description String
+  status      RequestStatus @default(PENDING)
+
+  assigneeNote String?
+  handledById  String?
+  doneAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HygieneRecord {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  checkDate DateTime
+  score     Int // 0-100
+  deduction Int      @default(0)
+  note      String?
+
+  checkedById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,4 +1,5 @@
 import express from 'express';
+import { authHandler } from './config/auth.js';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { apiRouter } from './routes/index.js';
 
@@ -9,7 +10,7 @@ export const app = express();
 // nếu không express.json() nuốt mất body và authorize() nhận undefined.
 app.use(express.urlencoded({ extended: true }));
 
-// app.use('/auth', authHandler);   // US-00.3 — Auth.js
+app.use('/auth', authHandler);
 
 app.use(express.json());
 app.use('/api/v1', apiRouter);
