@@ -20,6 +20,9 @@ CREATE TYPE "InvoiceStatus" AS ENUM ('UNPAID', 'PAID');
 CREATE TYPE "InvoiceType" AS ENUM ('ROOM_FEE', 'UTILITY');
 
 -- CreateEnum
+CREATE TYPE "InvoiceItemType" AS ENUM ('ROOM_FEE', 'ELECTRIC', 'WATER');
+
+-- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
 
 -- CreateEnum
@@ -71,13 +74,26 @@ CREATE TABLE "Building" (
 );
 
 -- CreateTable
+CREATE TABLE "RoomType" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "capacity" INTEGER NOT NULL,
+    "price" DECIMAL(12,0) NOT NULL,
+    "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RoomType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Room" (
     "id" TEXT NOT NULL,
     "buildingId" TEXT NOT NULL,
+    "roomTypeId" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "floor" INTEGER NOT NULL,
-    "capacity" INTEGER NOT NULL,
-    "price" DECIMAL(12,0) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -116,7 +132,7 @@ CREATE TABLE "Registration" (
     "periodId" TEXT NOT NULL,
     "studentId" TEXT NOT NULL,
     "buildingId" TEXT,
-    "preferredCapacity" INTEGER,
+    "preferredRoomTypeId" TEXT,
     "note" TEXT,
     "status" "RegistrationStatus" NOT NULL DEFAULT 'PENDING',
     "reviewedById" TEXT,
@@ -151,18 +167,30 @@ CREATE TABLE "Invoice" (
     "code" TEXT NOT NULL,
     "contractId" TEXT NOT NULL,
     "type" "InvoiceType" NOT NULL,
-    "period" TEXT,
+    "period" TEXT NOT NULL,
     "amount" DECIMAL(12,0) NOT NULL,
     "dueDate" TIMESTAMP(3) NOT NULL,
     "status" "InvoiceStatus" NOT NULL DEFAULT 'UNPAID',
-    "elecOld" INTEGER,
-    "elecNew" INTEGER,
-    "waterOld" INTEGER,
-    "waterNew" INTEGER,
+    "splitCount" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Invoice_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InvoiceItem" (
+    "id" TEXT NOT NULL,
+    "invoiceId" TEXT NOT NULL,
+    "type" "InvoiceItemType" NOT NULL,
+    "oldIndex" INTEGER,
+    "newIndex" INTEGER,
+    "quantity" DECIMAL(12,2) NOT NULL,
+    "unitPrice" DECIMAL(12,0) NOT NULL,
+    "amount" DECIMAL(12,0) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "InvoiceItem_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -226,6 +254,9 @@ CREATE UNIQUE INDEX "StudentProfile_studentCode_key" ON "StudentProfile"("studen
 CREATE UNIQUE INDEX "Building_name_key" ON "Building"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "RoomType_name_key" ON "RoomType"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Room_buildingId_code_key" ON "Room"("buildingId", "code");
 
 -- CreateIndex
@@ -244,6 +275,9 @@ CREATE UNIQUE INDEX "Invoice_code_key" ON "Invoice"("code");
 CREATE UNIQUE INDEX "Invoice_contractId_type_period_key" ON "Invoice"("contractId", "type", "period");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "InvoiceItem_invoiceId_type_key" ON "InvoiceItem"("invoiceId", "type");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Payment_txnRef_key" ON "Payment"("txnRef");
 
 -- AddForeignKey
@@ -256,6 +290,9 @@ ALTER TABLE "StudentProfile" ADD CONSTRAINT "StudentProfile_userId_fkey" FOREIGN
 ALTER TABLE "Room" ADD CONSTRAINT "Room_buildingId_fkey" FOREIGN KEY ("buildingId") REFERENCES "Building"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Room" ADD CONSTRAINT "Room_roomTypeId_fkey" FOREIGN KEY ("roomTypeId") REFERENCES "RoomType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Bed" ADD CONSTRAINT "Bed_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "Room"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -265,6 +302,9 @@ ALTER TABLE "Registration" ADD CONSTRAINT "Registration_periodId_fkey" FOREIGN K
 ALTER TABLE "Registration" ADD CONSTRAINT "Registration_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Registration" ADD CONSTRAINT "Registration_preferredRoomTypeId_fkey" FOREIGN KEY ("preferredRoomTypeId") REFERENCES "RoomType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Contract" ADD CONSTRAINT "Contract_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -272,6 +312,9 @@ ALTER TABLE "Contract" ADD CONSTRAINT "Contract_bedId_fkey" FOREIGN KEY ("bedId"
 
 -- AddForeignKey
 ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_contractId_fkey" FOREIGN KEY ("contractId") REFERENCES "Contract"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InvoiceItem" ADD CONSTRAINT "InvoiceItem_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

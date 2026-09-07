@@ -8,6 +8,7 @@ import { prisma } from '../src/config/prisma.js';
  * Chỉ tạo đủ để kiểm tra đăng nhập và phân quyền:
  *   - 3 vai trò để test điều hướng sau login
  *   - 2 tòa nhà để test buildingScope() (Manager tòa B1 không đọc được B2)
+ *   - 2 loại phòng: danh mục, cần có sẵn thì US-01 mới tạo được phòng
  *
  * Phòng, giường, hợp đồng, hóa đơn... sẽ được tạo qua giao diện ở US-01 trở đi,
  * và bổ sung vào file này khi tới các user story tương ứng.
@@ -21,6 +22,7 @@ const PASSWORD = '123456';
 async function clearAll() {
   // Xóa theo thứ tự ngược với phụ thuộc khóa ngoại.
   await prisma.payment.deleteMany();
+  await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();
   await prisma.contract.deleteMany();
   await prisma.registration.deleteMany();
@@ -29,6 +31,7 @@ async function clearAll() {
   await prisma.hygieneRecord.deleteMany();
   await prisma.bed.deleteMany();
   await prisma.room.deleteMany();
+  await prisma.roomType.deleteMany();
   await prisma.studentProfile.deleteMany();
   await prisma.user.deleteMany();
   await prisma.building.deleteMany();
@@ -51,6 +54,30 @@ async function main() {
   const b2 = await prisma.building.create({
     data: { name: 'B2', floors: 3, gender: 'FEMALE', description: 'Tòa nữ' },
   });
+
+  // ── Loại phòng ────────────────────────────────────────────────────────────
+  // Danh mục dùng chung toàn hệ thống (không gắn theo tòa). Seed sẵn vì US-01
+  // cần có ít nhất một loại phòng thì mới tạo được phòng qua giao diện.
+  console.log('Tạo loại phòng...');
+
+  const roomTypes = await Promise.all([
+    prisma.roomType.create({
+      data: {
+        name: 'Phòng 4 giường - điều hòa',
+        capacity: 4,
+        price: 1_500_000,
+        description: 'Phòng khép kín, điều hòa, 4 giường tầng',
+      },
+    }),
+    prisma.roomType.create({
+      data: {
+        name: 'Phòng 8 giường - quạt',
+        capacity: 8,
+        price: 900_000,
+        description: 'Phòng khép kín, quạt trần, 8 giường tầng',
+      },
+    }),
+  ]);
 
   // ── Tài khoản ─────────────────────────────────────────────────────────────
   console.log('Tạo tài khoản...');
@@ -118,8 +145,9 @@ async function main() {
 
   console.log(`
 Seed xong (phạm vi US-00):
-  Tòa nhà   : 2  (${b1.name} nam, ${b2.name} nữ — chưa có phòng)
-  Tài khoản : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
+  Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ — chưa có phòng)
+  Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
+  Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
   ${admin.email}       → ADMIN

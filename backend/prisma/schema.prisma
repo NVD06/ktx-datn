@@ -1,8 +1,13 @@
 // Thiết kế CSDL — xem docs/database.md để biết lý do đằng sau từng quyết định.
-// Ba điểm khác với thiết kế thông thường:
-//   - Manager thuộc đúng 1 tòa (User.buildingId), không dùng bảng nối n-n
-//   - Không có bảng RoomType: capacity + price nằm thẳng trên Room
-//   - Không có bảng InvoiceItem: chỉ số điện nước là 4 cột trên Invoice
+//
+// Điểm khác thiết kế thông thường:
+//   - Manager thuộc đúng 1 tòa (User.buildingId), không dùng bảng nối n-n.
+//     Mọi kiểm tra phạm vi quyền dựa vào cột này — xem src/utils/scope.ts.
+//
+// Nguyên tắc snapshot: dữ liệu đã chốt không đổi theo bảng danh mục.
+//   - Contract.price        copy từ RoomType.price lúc tạo hợp đồng
+//   - InvoiceItem.unitPrice copy từ đơn giá điện/nước lúc chốt hóa đơn
+//   Nhờ vậy sửa giá phòng / đơn giá điện nước không hồi tố dữ liệu cũ.
 
 generator client {
   provider = "prisma-client"
@@ -53,6 +58,12 @@ enum InvoiceStatus {
 enum InvoiceType {
   ROOM_FEE
   UTILITY
+}
+
+enum InvoiceItemType {
+  ROOM_FEE
+  ELECTRIC
+  WATER
 }
 
 enum PaymentStatus {
@@ -119,14 +130,31 @@ model Building {
   updatedAt DateTime @updatedAt
 }
 
+// Danh mục loại phòng — dùng chung toàn hệ thống, không gắn theo tòa.
+// Sức chứa và giá nằm ở đây để hai phòng cùng loại không thể lệch giá nhau.
+model RoomType {
+  id          String  @id @default(uuid())
+  name        String  @unique // "Phòng 4 giường - điều hòa"
+  capacity    Int // số giường chuẩn
+  price       Decimal @db.Decimal(12, 0) // giá/kỳ cho 1 sinh viên
+  description String?
+  isActive    Boolean @default(true)
+
+  rooms         Room[]
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Room {
   id         String   @id @default(uuid())
   buildingId String
   building   Building @relation(fields: [buildingId], references: [id])
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id])
   code       String
   floor      Int
-  capacity   Int
-  price      Decimal  @db.Decimal(12, 0) // giá/kỳ cho 1 sinh viên
   isActive   Boolean  @default(true)
 
   beds     Bed[]
@@ -174,10 +202,12 @@ model Registration {
   studentId String
   student   User               @relation(fields: [studentId], references: [id])
 
-  // Nguyện vọng — cố ý để dạng scalar, không ràng buộc khóa ngoại
-  buildingId        String?
-  preferredCapacity Int?
-  note              String?
+  // Nguyện vọng tòa — cố ý để dạng scalar, không ràng buộc khóa ngoại
+  buildingId          String?
+  // Nguyện vọng loại phòng — có khóa ngoại vì RoomType là danh mục ổn định
+  preferredRoomTypeId String?
+  preferredRoomType   RoomType? @relation(fields: [preferredRoomTypeId], references: [id])
+  note                String?
 
   status       RegistrationStatus @default(PENDING)
   reviewedById String?
@@ -198,7 +228,7 @@ model Contract {
 
   startDate DateTime
   endDate   DateTime
-  price     Decimal        @db.Decimal(12, 0) // snapshot từ Room.price lúc tạo
+  price     Decimal        @db.Decimal(12, 0) // snapshot từ RoomType.price lúc tạo
   status    ContractStatus @default(DRAFT)
 
   signedAt     DateTime?
@@ -211,28 +241,51 @@ model Contract {
 }
 
 model Invoice {
-  id         String        @id @default(uuid())
-  code       String        @unique
+  id         String      @id @default(uuid())
+  code       String      @unique
   contractId String
-  contract   Contract      @relation(fields: [contractId], references: [id])
+  contract   Contract    @relation(fields: [contractId], references: [id])
   type       InvoiceType
-  period     String? // "2026-09" với hóa đơn điện nước
-  amount     Decimal       @db.Decimal(12, 0)
-  dueDate    DateTime
-  status     InvoiceStatus @default(UNPAID)
 
-  // Chỉ dùng khi type = UTILITY
-  elecOld  Int?
-  elecNew  Int?
-  waterOld Int?
-  waterNew Int?
+  // Bắt buộc, kể cả ROOM_FEE — "2026-09" (điện nước) | "2026-HK1" (tiền phòng).
+  // Để nullable thì @@unique bên dưới vô hiệu, vì Postgres coi mọi NULL là khác nhau.
+  period String
 
+  amount  Decimal       @db.Decimal(12, 0) // = SUM(items.amount), chốt lúc tạo
+  dueDate DateTime
+  status  InvoiceStatus @default(UNPAID)
+
+  // Số sinh viên chia hóa đơn tại thời điểm chốt — chỉ dùng khi type = UTILITY.
+  // Lưu lại để về sau vẫn giải thích được con số đã tính.
+  splitCount Int?
+
+  items    InvoiceItem[]
   payments Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([contractId, type, period])
+}
+
+// Dòng chi tiết hóa đơn. ROOM_FEE có 1 dòng, UTILITY có 2 dòng (điện + nước).
+// Lý do tách bảng: unitPrice phải được snapshot — đơn giá điện nước nằm trong
+// constants.ts, sửa hằng số đó không được phép làm hóa đơn cũ giải thích sai.
+model InvoiceItem {
+  id        String          @id @default(uuid())
+  invoiceId String
+  invoice   Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type      InvoiceItemType
+
+  oldIndex  Int? // chỉ số cũ — chỉ ELECTRIC/WATER
+  newIndex  Int? // chỉ số mới — chỉ ELECTRIC/WATER
+  quantity  Decimal @db.Decimal(12, 2) // kWh / m³ của CẢ PHÒNG (ROOM_FEE = 1)
+  unitPrice Decimal @db.Decimal(12, 0) // snapshot đơn giá lúc chốt
+  amount    Decimal @db.Decimal(12, 0) // phần của SV này = quantity * unitPrice / splitCount
+
+  createdAt DateTime @default(now())
+
+  @@unique([invoiceId, type])
 }
 
 model Payment {
