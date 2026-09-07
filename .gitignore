@@ -28,3 +28,4 @@ docs/
 # File backup tam
 *.bak
 /README.md
+.claude/

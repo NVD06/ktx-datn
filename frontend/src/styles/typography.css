@@ -1,0 +1,18 @@
+/* ============================================================================
+ * typography.css — Font chữ và cỡ chữ
+ * ========================================================================== */
+
+@import "@fontsource-variable/geist";
+
+@theme inline {
+    --font-sans: 'Geist Variable', sans-serif;
+    --font-heading: var(--font-sans);
+}
+
+/* --- Thang cỡ chữ dùng trong dự án ----------------------------------------
+ * Tiêu đề trang   text-2xl font-semibold tracking-tight   (PageHeader)
+ * Tiêu đề thẻ     text-base font-medium                   (CardTitle)
+ * Nội dung        text-sm                                 (mặc định trong app)
+ * Chú thích       text-sm text-muted-foreground
+ * Không tự đặt cỡ chữ khác — xem docs/convention.md §8.1.
+ * ------------------------------------------------------------------------ */

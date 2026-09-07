@@ -1,0 +1,79 @@
+# Kiểm tra tự động mỗi lần đẩy code lên GitHub.
+# Chưa có test tự động — CI hiện kiểm tra: schema Prisma hợp lệ, TypeScript
+# không lỗi, lint sạch, và cả hai bên build được.
+
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    env:
+      # Prisma đọc DATABASE_URL từ prisma.config.ts ngay khi nạp, kể cả với
+      # lệnh không cần kết nối như validate/generate. Giá trị giả là đủ —
+      # CI không chạy migrate nên không đụng tới database thật.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Cài dependency
+        working-directory: backend
+        run: npm ci
+
+      - name: Kiểm tra schema Prisma
+        working-directory: backend
+        run: npx prisma validate
+
+      # Bắt buộc: src/generated/prisma nằm trong .gitignore nên không có sẵn
+      # trên máy CI. Không generate thì typecheck sẽ báo thiếu module.
+      - name: Sinh Prisma Client
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Kiểm tra kiểu
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cài dependency
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      # `npm run build` đã bao gồm `tsc -b` rồi nên không cần bước typecheck riêng.
+      - name: Build
+        working-directory: frontend
+        run: npm run build

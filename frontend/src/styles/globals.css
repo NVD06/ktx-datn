@@ -1,0 +1,25 @@
+/* ============================================================================
+ * globals.css — Điểm vào CSS duy nhất của ứng dụng (import ở src/main.tsx)
+ *
+ *   theme.css       màu, bo góc, token thiết kế
+ *   typography.css  font chữ, thang cỡ chữ
+ * ========================================================================== */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@import "./theme.css";
+@import "./typography.css";
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    html {
+        @apply font-sans;
+    }
+}

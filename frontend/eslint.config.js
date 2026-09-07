@@ -18,5 +18,22 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Biến bắt đầu bằng _ là cố ý bỏ đi, ví dụ khi tách một field ra khỏi
+      // object: const { confirmPassword: _confirm, ...rest } = values
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
+    // components/ui do `npx shadcn add` sinh ra, không sửa bằng tay. Chúng
+    // export kèm hằng số biến thể (buttonVariants…) nên vi phạm quy tắc
+    // fast-refresh — tắt riêng cho thư mục này thay vì sửa file của thư viện.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])
