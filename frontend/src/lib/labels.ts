@@ -76,6 +76,6 @@ export const REQUEST_STATUS = def({
 
 /**
  * OVERDUE không phải giá trị trong DB mà tính khi đọc
- * (dueDate < now && status = UNPAID) — xem docs/database.md §3.8.
+ * (dueDate < now && status = UNPAID) — xem docs/database.md §3.9.
  */
 export const OVERDUE: LabelDef = { label: 'Quá hạn', tone: 'danger' }
