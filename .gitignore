@@ -23,7 +23,7 @@ npm-debug.log*
 Thumbs.db
 
 # Tài liệu (chỉ giữ ở máy local)
-docs/
+/docs/
 
 # File backup tam
 *.bak
