@@ -1,17 +1,17 @@
 import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { prisma } from '../src/config/prisma.js';
+import { bedCodes } from '../src/modules/beds/bed-code.js';
 
 /**
- * Dữ liệu mẫu — phạm vi US-00 (nền tảng + xác thực).
+ * Dữ liệu mẫu — phạm vi US-00 + US-01.
  *
- * Chỉ tạo đủ để kiểm tra đăng nhập và phân quyền:
  *   - 3 vai trò để test điều hướng sau login
  *   - 2 tòa nhà để test buildingScope() (Manager tòa B1 không đọc được B2)
- *   - 2 loại phòng: danh mục, cần có sẵn thì US-01 mới tạo được phòng
+ *   - 2 loại phòng (danh mục dùng chung)
+ *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
  *
- * Phòng, giường, hợp đồng, hóa đơn... sẽ được tạo qua giao diện ở US-01 trở đi,
- * và bổ sung vào file này khi tới các user story tương ứng.
+ * Hợp đồng, hóa đơn... bổ sung vào file này khi tới các user story tương ứng.
  *
  * Chạy lại được nhiều lần: xóa sạch dữ liệu cũ trước khi tạo mới.
  * KHÔNG chạy trên môi trường có dữ liệu thật.
@@ -79,6 +79,56 @@ async function main() {
     }),
   ]);
 
+  // ── Phòng & giường (US-01) ────────────────────────────────────────────────
+  // Giường sinh đủ theo sức chứa loại phòng, giống hệt khi tạo phòng qua API.
+  // Chưa có giường OCCUPIED: trạng thái đó chỉ xuất hiện cùng hợp đồng (US-03).
+  console.log('Tạo phòng và giường...');
+
+  const [type4, type8] = roomTypes;
+  const roomPlan = [
+    { building: b1, roomsPerFloor: 8 }, // 24 phòng — vượt 1 trang (20 dòng)
+    { building: b2, roomsPerFloor: 5 }, // 15 phòng
+  ];
+
+  let roomCount = 0;
+  let bedCount = 0;
+  for (const { building, roomsPerFloor } of roomPlan) {
+    for (let floor = 1; floor <= building.floors; floor++) {
+      for (let n = 1; n <= roomsPerFloor; n++) {
+        // 2 phòng đầu mỗi tầng là phòng 8 giường quạt, còn lại 4 giường điều hòa.
+        const roomType = n <= 2 ? type8 : type4;
+        await prisma.room.create({
+          data: {
+            buildingId: building.id,
+            roomTypeId: roomType.id,
+            code: `${floor}${String(n).padStart(2, '0')}`,
+            floor,
+            beds: { create: bedCodes(roomType.capacity).map((code) => ({ code })) },
+          },
+        });
+        roomCount++;
+        bedCount += roomType.capacity;
+      }
+    }
+  }
+
+  // Vài trạng thái đặc biệt để giao diện có đủ màu:
+  //   B1-105: 1 giường bảo trì, phòng vẫn còn chỗ
+  //   B1-305: cả phòng bảo trì
+  //   B2-205: phòng ngừng hoạt động
+  await prisma.bed.updateMany({
+    where: { code: 'G4', room: { buildingId: b1.id, code: '105' } },
+    data: { status: 'MAINTENANCE' },
+  });
+  await prisma.bed.updateMany({
+    where: { room: { buildingId: b1.id, code: '305' } },
+    data: { status: 'MAINTENANCE' },
+  });
+  await prisma.room.updateMany({
+    where: { buildingId: b2.id, code: '205' },
+    data: { isActive: false },
+  });
+
   // ── Tài khoản ─────────────────────────────────────────────────────────────
   console.log('Tạo tài khoản...');
 
@@ -144,9 +194,10 @@ async function main() {
   }
 
   console.log(`
-Seed xong (phạm vi US-00):
-  Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ — chưa có phòng)
+Seed xong (phạm vi US-00 + US-01):
+  Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
+  Phòng      : ${roomCount}  (${bedCount} giường)
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":

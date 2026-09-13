@@ -54,3 +54,14 @@ export function ownBuildingScope(user: AuthUser): { id?: string } {
   const id = allowedBuildingId(user);
   return id === null ? {} : { id };
 }
+
+/**
+ * Lỗi khi truy vấn đã kèm scope mà không ra bản ghi nào — tức là "không tồn tại"
+ * hoặc "không thuộc phạm vi của bạn", hai trường hợp không phân biệt được.
+ *
+ * ADMIN không bị giới hạn phạm vi nên chắc chắn là không tồn tại -> 404.
+ * Vai trò khác nhận 403 cho cả hai trường hợp để không lộ id nào có thật.
+ */
+export function outOfScope(user: AuthUser, notFoundMessage?: string): ApiError {
+  return user.role === 'ADMIN' ? ApiError.notFound(notFoundMessage) : ApiError.forbidden();
+}
