@@ -66,7 +66,8 @@ export function pagedSchema<T extends z.ZodTypeAny>(item: T) {
   return z.object({ success: z.literal(true), data: z.array(item), meta: paginationMetaSchema });
 }
 
-const jsonBody = <T extends z.ZodTypeAny>(schema: T) => ({
+/** Body JSON cho request hoặc response: `request: { body: jsonBody(schema) }`. */
+export const jsonBody = <T extends z.ZodTypeAny>(schema: T) => ({
   content: { 'application/json': { schema } },
 });
 
@@ -108,6 +109,10 @@ export function buildOpenApiDoc() {
       { name: 'System', description: 'Kiểm tra tình trạng hệ thống' },
       { name: 'Auth', description: 'Đăng ký và thông tin người dùng hiện tại' },
       { name: 'Buildings', description: 'Tòa nhà (ADMIN, MANAGER)' },
+      { name: 'Room types', description: 'Danh mục loại phòng dùng chung toàn hệ thống' },
+      { name: 'Rooms', description: 'Phòng theo tòa nhà' },
+      { name: 'Beds', description: 'Giường trong phòng' },
+      { name: 'Users', description: 'Tài khoản người dùng (ADMIN)' },
     ],
   });
 }

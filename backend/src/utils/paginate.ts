@@ -1,28 +1,5 @@
 import type { PaginationMeta } from '../types/response.js';
 
-/**
- * Danh sách cột được phép sắp xếp.
- *
- * Bắt buộc phải có whitelist: đưa thẳng `req.query.sortBy` vào `orderBy` của
- * Prisma là lỗ hổng — người dùng sắp xếp được theo cột bất kỳ, kể cả cột
- * không nên lộ ra ngoài.
- */
-const SORTABLE = [
-  'createdAt',
-  'updatedAt',
-  'code',
-  'name',
-  'email',
-  'fullName',
-  'floor',
-  'status',
-  'dueDate',
-  'amount',
-  'checkDate',
-  'startDate',
-  'endDate',
-] as const;
-
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
@@ -33,7 +10,28 @@ export interface ListQuery {
   order?: unknown;
 }
 
-export function parseQuery(q: ListQuery) {
+export type SortOrder = 'asc' | 'desc';
+
+/**
+ * Cấu hình sắp xếp của từng bảng.
+ *
+ * `sortable` là whitelist bắt buộc: đưa thẳng `req.query.sortBy` vào `orderBy`
+ * của Prisma là lỗ hổng — người dùng sắp xếp được theo cột bất kỳ, kể cả cột
+ * không nên lộ ra ngoài. Whitelist khai báo theo từng bảng (không dùng chung
+ * một danh sách) vì cột không có trong model sẽ làm Prisma ném lỗi 500.
+ */
+export interface SortOptions {
+  sortable: readonly string[];
+  defaultSort?: { field: string; order: SortOrder };
+}
+
+export interface PageArgs {
+  skip: number;
+  take: number;
+  orderBy: Record<string, SortOrder>;
+}
+
+export function parseQuery(q: ListQuery, sort: SortOptions) {
   const rawPage = Number(q.page ?? 1);
   const rawLimit = Number(q.limit ?? DEFAULT_LIMIT);
 
@@ -42,48 +40,35 @@ export function parseQuery(q: ListQuery) {
     ? Math.min(MAX_LIMIT, Math.max(1, Math.trunc(rawLimit)))
     : DEFAULT_LIMIT;
 
-  const sortBy =
-    typeof q.sortBy === 'string' && (SORTABLE as readonly string[]).includes(q.sortBy)
-      ? q.sortBy
-      : 'createdAt';
-  const order = q.order === 'asc' ? 'asc' : 'desc';
+  const fallback = sort.defaultSort ?? { field: 'createdAt', order: 'desc' };
+  const requested = typeof q.sortBy === 'string' && sort.sortable.includes(q.sortBy);
+
+  const sortBy = requested ? (q.sortBy as string) : fallback.field;
+  const order: SortOrder = q.order === 'asc' || q.order === 'desc' ? q.order : fallback.order;
 
   return { skip: (page - 1) * limit, take: limit, orderBy: { [sortBy]: order }, page, limit };
 }
 
 /**
- * Chỉ cần Prisma delegate có findMany + count — đủ cho mọi model.
- *
- * `args` để `any` là cố ý: kiểu tham số thật của Prisma (`SelectSubset<...>`)
- * quá chặt để mô tả tổng quát, nhưng kiểu *trả về* vẫn được suy ra đầy đủ nên
- * `data` ở đầu ra vẫn có kiểu đúng của model.
- */
-interface Delegate<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  findMany(args: any): Promise<T[]>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  count(args: any): Promise<number>;
-}
-
-/**
  * Phân trang phía server dùng chung cho mọi bảng.
  *
- *   return paginate(prisma.room, { ...filters, ...buildingScope(user) }, req.query);
+ *   return paginate(
+ *     query,
+ *     { sortable: ['code', 'floor', 'createdAt'] },
+ *     (page) => prisma.room.findMany({ where, ...page, include: { roomType: true } }),
+ *     () => prisma.room.count({ where }),
+ *   );
  *
- * `extra` để truyền thêm `select` / `include` khi cần.
+ * Nhận hàm thay vì nhận thẳng `prisma.room`: nhờ vậy `include`/`select` viết
+ * ngay tại service và kiểu dữ liệu trả về được Prisma suy ra đầy đủ.
  */
 export async function paginate<T>(
-  model: Delegate<T>,
-  where: Record<string, unknown>,
   query: ListQuery,
-  extra: Record<string, unknown> = {},
+  sort: SortOptions,
+  findPage: (args: PageArgs) => Promise<T[]>,
+  count: () => Promise<number>,
 ): Promise<{ data: T[]; meta: PaginationMeta }> {
-  const { skip, take, orderBy, page, limit } = parseQuery(query);
-
-  const [data, total] = await Promise.all([
-    model.findMany({ where, skip, take, orderBy, ...extra }),
-    model.count({ where }),
-  ]);
-
+  const { page, limit, ...args } = parseQuery(query, sort);
+  const [data, total] = await Promise.all([findPage(args), count()]);
   return { data, meta: { page, limit, total } };
 }
