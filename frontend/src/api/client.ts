@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios'
-import type { ErrorResponse } from '@/types/api'
+import type { ErrorResponse, ListParams, Paged, SuccessResponse } from '@/types/api'
 
 /**
  * Instance axios duy nhất của ứng dụng — mọi lời gọi API đều đi qua đây.
@@ -32,6 +32,19 @@ export function getFieldErrors(error: unknown): Record<string, string[]> | undef
     if (data && data.success === false) return data.error.details
   }
   return undefined
+}
+
+/**
+ * Gọi API danh sách có phân trang. Tham số rỗng bị bỏ đi để backend không nhận
+ * chuỗi "" (ví dụ `?status=` sẽ bị zod từ chối vì không thuộc enum).
+ */
+export async function getPaged<T>(url: string, params: ListParams = {}): Promise<Paged<T>> {
+  const query = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== ''),
+  )
+  const res = await api.get<SuccessResponse<T[]>>(url, { params: query })
+  const { data, meta } = res.data
+  return { data, meta: meta ?? { page: 1, limit: data.length, total: data.length } }
 }
 
 /** Những endpoint được phép trả 401 mà không đá người dùng ra trang đăng nhập. */

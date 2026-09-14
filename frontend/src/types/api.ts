@@ -27,3 +27,13 @@ export interface ErrorResponse {
 }
 
 export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse
+
+export type SortOrder = 'asc' | 'desc'
+
+/** Query string của API danh sách — khớp listQuerySchema ở backend. */
+export type ListParams = Record<string, string | number | boolean | undefined>
+
+export interface Paged<T> {
+  data: T[]
+  meta: PaginationMeta
+}

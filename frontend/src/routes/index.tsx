@@ -1,9 +1,13 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPage'
 import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
 import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
+import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
+import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
+import { RoomDetailPage } from '@/features/rooms/pages/RoomDetailPage'
 import { ForbiddenPage } from '@/features/system/pages/ForbiddenPage'
 import { HomeRedirect } from '@/features/system/pages/HomeRedirect'
 import { NotFoundPage } from '@/features/system/pages/NotFoundPage'
@@ -31,6 +35,9 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/admin/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
           { path: 'buildings', element: <BuildingListPage /> },
+          { path: 'buildings/:id', element: <BuildingDetailPage /> },
+          { path: 'rooms/:id', element: <RoomDetailPage /> },
+          { path: 'room-types', element: <RoomTypeListPage /> },
         ],
       },
     ],
@@ -43,7 +50,10 @@ export const router = createBrowserRouter([
       {
         path: '/me',
         element: <StudentLayout />,
-        children: [{ index: true, element: <StudentHomePage /> }],
+        children: [
+          { index: true, element: <StudentHomePage /> },
+          { path: 'rooms', element: <AvailableRoomsPage /> },
+        ],
       },
     ],
   },

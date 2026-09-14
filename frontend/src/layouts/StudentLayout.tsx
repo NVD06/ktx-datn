@@ -4,7 +4,10 @@ import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
 // US-02 trở đi sẽ bổ sung: Đăng ký ở, Hợp đồng, Hóa đơn, Sửa chữa.
-const NAV = [{ to: '/me', label: 'Trang cá nhân' }]
+const NAV = [
+  { to: '/me', label: 'Trang cá nhân' },
+  { to: '/me/rooms', label: 'Phòng còn chỗ' },
+]
 
 export function StudentLayout() {
   const { user } = useAuth()
@@ -23,6 +26,8 @@ export function StudentLayout() {
               <NavLink
                 key={to}
                 to={to}
+                // '/me' là tiền tố của mọi trang sinh viên — thiếu `end` thì nó luôn sáng.
+                end={to === '/me'}
                 className={({ isActive }) =>
                   cn(
                     'rounded-md px-3 py-1.5 text-sm transition-colors',

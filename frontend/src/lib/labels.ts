@@ -35,6 +35,25 @@ export const BED_STATUS = def({
   MAINTENANCE: { label: 'Bảo trì', tone: 'warning' },
 })
 
+/** Tòa không đặt giới tính (`gender = null`). */
+export const MIXED_GENDER: LabelDef = { label: 'Hỗn hợp', tone: 'neutral' }
+
+/**
+ * Trạng thái phòng — backend tính từ giường, không lưu DB.
+ * FULL dùng `info` như "Đang ở": phòng đầy là đang được dùng bình thường.
+ */
+export const ROOM_STATUS = def({
+  AVAILABLE: { label: 'Còn chỗ', tone: 'success' },
+  FULL: { label: 'Đã đầy', tone: 'info' },
+  MAINTENANCE: { label: 'Bảo trì', tone: 'warning' },
+})
+
+/** Cờ `isActive` của tòa nhà, loại phòng, phòng. */
+export const ACTIVE_STATUS = def({
+  ACTIVE: { label: 'Hoạt động', tone: 'success' },
+  INACTIVE: { label: 'Ngừng hoạt động', tone: 'neutral' },
+})
+
 export const REGISTRATION_STATUS = def({
   PENDING: { label: 'Chờ duyệt', tone: 'warning' },
   APPROVED: { label: 'Đã duyệt', tone: 'success' },
