@@ -161,7 +161,7 @@ export function RoomTypeListPage() {
               value={list.filters.isActive}
               onChange={(v) => list.setFilter('isActive', v)}
               options={ACTIVE_OPTIONS}
-              allLabel="Mọi trạng thái"
+              allLabel="Các trạng thái"
             />
           </>
         }

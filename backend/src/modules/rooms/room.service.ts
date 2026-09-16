@@ -152,7 +152,8 @@ export async function listAvailable(query: AvailableRoomQuery) {
       },
       query.buildingId ? { buildingId: query.buildingId } : {},
       query.roomTypeId ? { roomTypeId: query.roomTypeId } : {},
-      query.gender ? { building: { OR: [{ gender: query.gender }, { gender: null }] } } : {},
+      // Tòa hỗn hợp lưu gender = null trong DB.
+      query.gender ? { building: { gender: query.gender === 'MIXED' ? null : query.gender } } : {},
       query.search ? { code: { contains: query.search, mode: 'insensitive' } } : {},
     ],
   };

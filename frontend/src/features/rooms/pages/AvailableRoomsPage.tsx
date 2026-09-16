@@ -18,8 +18,9 @@ import { GENDER, MIXED_GENDER } from '@/lib/labels'
 import { useAvailableRooms } from '../hooks/useRooms'
 
 const GENDER_OPTIONS = [
-  { value: 'MALE', label: 'Tòa nam & hỗn hợp' },
-  { value: 'FEMALE', label: 'Tòa nữ & hỗn hợp' },
+  { value: 'MALE', label: 'Tòa nam' },
+  { value: 'FEMALE', label: 'Tòa nữ' },
+  { value: 'MIXED', label: 'Tòa hỗn hợp' },
 ]
 
 /**
@@ -43,7 +44,7 @@ export function AvailableRoomsPage() {
           value={list.filters.gender}
           onChange={(v) => list.setFilter('gender', v)}
           options={GENDER_OPTIONS}
-          allLabel="Mọi tòa"
+          allLabel="Các tòa nhà"
         />
       </div>
 

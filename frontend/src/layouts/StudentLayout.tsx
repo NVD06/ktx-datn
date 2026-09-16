@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils'
 
 // US-02 trở đi sẽ bổ sung: Đăng ký ở, Hợp đồng, Hóa đơn, Sửa chữa.
 const NAV = [
-  { to: '/me', label: 'Trang cá nhân' },
-  { to: '/me/rooms', label: 'Phòng còn chỗ' },
+  { to: '/student', label: 'Trang cá nhân' },
+  { to: '/student/rooms', label: 'Phòng còn chỗ' },
 ]
 
 export function StudentLayout() {
@@ -17,7 +17,7 @@ export function StudentLayout() {
     <div className="min-h-svh">
       <header className="border-primary bg-card/90 sticky top-0 z-10 border-b-2 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
-          <Link to="/me" className="text-foreground font-semibold">
+          <Link to="/student" className="text-foreground font-semibold">
             Ký túc xá
           </Link>
 
@@ -26,8 +26,8 @@ export function StudentLayout() {
               <NavLink
                 key={to}
                 to={to}
-                // '/me' là tiền tố của mọi trang sinh viên — thiếu `end` thì nó luôn sáng.
-                end={to === '/me'}
+                // '/student' là tiền tố của mọi trang sinh viên — thiếu `end` thì nó luôn sáng.
+                end={to === '/student'}
                 className={({ isActive }) =>
                   cn(
                     'rounded-md px-3 py-1.5 text-sm transition-colors',

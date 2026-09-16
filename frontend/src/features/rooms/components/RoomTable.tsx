@@ -157,19 +157,19 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
               value={list.filters.floor}
               onChange={(v) => list.setFilter('floor', v)}
               options={floorOptions}
-              allLabel="Mọi tầng"
+              allLabel="Tầng"
             />
             <FilterSelect
               value={list.filters.roomTypeId}
               onChange={(v) => list.setFilter('roomTypeId', v)}
               options={roomTypeOptions}
-              allLabel="Mọi loại phòng"
+              allLabel="Loại phòng"
             />
             <FilterSelect
               value={list.filters.status}
               onChange={(v) => list.setFilter('status', v)}
               options={STATUS_OPTIONS}
-              allLabel="Mọi tình trạng"
+              allLabel="Tình trạng"
             />
             <FilterSelect
               value={list.filters.isActive}

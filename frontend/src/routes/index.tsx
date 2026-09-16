@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute roles={['STUDENT']} />,
     children: [
       {
-        path: '/me',
+        path: '/student',
         element: <StudentLayout />,
         children: [
           { index: true, element: <StudentHomePage /> },

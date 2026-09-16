@@ -184,13 +184,13 @@ export function BuildingListPage() {
               value={list.filters.gender}
               onChange={(v) => list.setFilter('gender', v)}
               options={GENDER_OPTIONS}
-              allLabel="Mọi giới tính"
+              allLabel="Giới tính"
             />
             <FilterSelect
               value={list.filters.isActive}
               onChange={(v) => list.setFilter('isActive', v)}
               options={ACTIVE_OPTIONS}
-              allLabel="Mọi trạng thái"
+              allLabel="Các trạng thái"
             />
           </>
         }

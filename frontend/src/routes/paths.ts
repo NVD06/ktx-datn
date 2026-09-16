@@ -5,14 +5,14 @@ import type { Role } from '@/types/auth'
  * Gom vào một chỗ để mọi nơi điều hướng đều nhất quán.
  */
 export function homePathFor(role: Role): string {
-  return role === 'STUDENT' ? '/me' : '/admin/dashboard'
+  return role === 'STUDENT' ? '/student' : '/admin/dashboard'
 }
 
 /** Tiền tố đường dẫn mà từng vai trò được phép vào. */
 const AREA: Record<Role, string> = {
   ADMIN: '/admin',
   MANAGER: '/admin',
-  STUDENT: '/me',
+  STUDENT: '/student',
 }
 
 /**
