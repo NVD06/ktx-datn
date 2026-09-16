@@ -1,6 +1,6 @@
 import { api } from './client'
 import type { SuccessResponse } from '@/types/api'
-import type { AuthUser, RegisterInput } from '@/types/auth'
+import type { AuthUser, RegisteredUser, RegisterInput } from '@/types/auth'
 
 /**
  * Các hàm gọi API xác thực.
@@ -64,7 +64,7 @@ export async function logout(): Promise<void> {
 }
 
 /** Đăng ký tài khoản sinh viên. Không tự động đăng nhập sau khi tạo. */
-export async function register(input: RegisterInput): Promise<AuthUser> {
-  const res = await api.post<SuccessResponse<AuthUser>>('/auth/register', input)
+export async function register(input: RegisterInput): Promise<RegisteredUser> {
+  const res = await api.post<SuccessResponse<RegisteredUser>>('/auth/register', input)
   return res.data.data
 }

@@ -10,6 +10,21 @@ export interface AuthUser {
   buildingId: string | null
 }
 
+/**
+ * Kết quả của POST /api/v1/auth/register — chép từ `registeredUserSchema`
+ * ở backend/src/docs/schemas.ts.
+ *
+ * Hẹp hơn `AuthUser`: endpoint này chỉ tạo tài khoản chứ không đăng nhập, nên
+ * không trả `buildingId`. Khai là `AuthUser` thì TypeScript cho đọc
+ * `user.buildingId` mà không cảnh báo, trong khi lúc chạy luôn là `undefined`.
+ */
+export interface RegisteredUser {
+  id: string
+  email: string
+  fullName: string
+  role: Role
+}
+
 export interface RegisterInput {
   email: string
   password: string
