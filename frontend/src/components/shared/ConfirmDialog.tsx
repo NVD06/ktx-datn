@@ -13,6 +13,7 @@ import {
 /**
  * Hộp xác nhận trước thao tác không hoàn tác được (xóa…).
  * Mô tả phải nêu rõ tên bản ghi — convention.md §8.4.
+ * `destructive={false}` cho thao tác đảo lại được (mở đợt…) — nút xác nhận không tô đỏ.
  */
 export function ConfirmDialog({
   open,
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   description,
   confirmLabel = 'Xóa',
   isPending = false,
+  destructive = true,
   onConfirm,
 }: {
   open: boolean
@@ -29,6 +31,7 @@ export function ConfirmDialog({
   description: ReactNode
   confirmLabel?: string
   isPending?: boolean
+  destructive?: boolean
   onConfirm: () => void
 }) {
   return (
@@ -41,7 +44,7 @@ export function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Hủy</AlertDialogCancel>
           <AlertDialogAction
-            variant="destructive"
+            variant={destructive ? 'destructive' : 'default'}
             disabled={isPending}
             onClick={(e) => {
               // Giữ dialog mở tới khi API trả lời — mặc định Action đóng ngay khi bấm.

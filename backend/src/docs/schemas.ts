@@ -69,6 +69,19 @@ export const roomTypeSchema = z
   })
   .openapi('RoomType');
 
+export const registrationPeriodSchema = z
+  .object({
+    id: z.uuid(),
+    name: z.string().openapi({ example: 'Đăng ký học kỳ 1 năm 2026-2027' }),
+    startAt: z.iso.datetime(),
+    endAt: z.iso.datetime(),
+    isOpen: z.boolean().openapi({ description: 'Tối đa 1 đợt mở tại một thời điểm' }),
+    registrationCount: z.int(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('RegistrationPeriod');
+
 export const bedSchema = z
   .object({
     id: z.uuid(),

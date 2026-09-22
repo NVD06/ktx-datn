@@ -54,6 +54,12 @@ export const ACTIVE_STATUS = def({
   INACTIVE: { label: 'Ngừng hoạt động', tone: 'neutral' },
 })
 
+/** Cờ `isOpen` của đợt đăng ký. */
+export const PERIOD_STATUS = def({
+  OPEN: { label: 'Đang mở', tone: 'success' },
+  CLOSED: { label: 'Đã đóng', tone: 'neutral' },
+})
+
 export const REGISTRATION_STATUS = def({
   PENDING: { label: 'Chờ duyệt', tone: 'warning' },
   APPROVED: { label: 'Đã duyệt', tone: 'success' },

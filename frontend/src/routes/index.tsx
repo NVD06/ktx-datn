@@ -5,6 +5,7 @@ import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPag
 import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
 import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
+import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
 import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
 import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
 import { RoomDetailPage } from '@/features/rooms/pages/RoomDetailPage'
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
           { path: 'buildings/:id', element: <BuildingDetailPage /> },
           { path: 'rooms/:id', element: <RoomDetailPage /> },
           { path: 'room-types', element: <RoomTypeListPage /> },
+          { path: 'registration-periods', element: <RegistrationPeriodListPage /> },
         ],
       },
     ],

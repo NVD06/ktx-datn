@@ -193,11 +193,30 @@ async function main() {
     });
   }
 
+  // Đợt cũ đã đóng + đợt hiện tại đang mở — US-02 nộp đơn được ngay sau khi seed.
+  await prisma.registrationPeriod.create({
+    data: {
+      name: 'Đăng ký học kỳ 2 năm 2025-2026',
+      startAt: new Date('2026-01-05T00:00:00+07:00'),
+      endAt: new Date('2026-01-31T23:59:59+07:00'),
+      isOpen: false,
+    },
+  });
+  const openPeriod = await prisma.registrationPeriod.create({
+    data: {
+      name: 'Đăng ký học kỳ 1 năm 2026-2027',
+      startAt: new Date('2026-09-01T00:00:00+07:00'),
+      endAt: new Date('2026-12-31T23:59:59+07:00'),
+      isOpen: true,
+    },
+  });
+
   console.log(`
-Seed xong (phạm vi US-00 + US-01):
+Seed xong (phạm vi US-00 + US-01 + US-02.1):
   Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
   Phòng      : ${roomCount}  (${bedCount} giường)
+  Đợt đăng ký: 2  (đang mở: ${openPeriod.name})
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":

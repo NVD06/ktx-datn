@@ -113,6 +113,7 @@ export function buildOpenApiDoc() {
       { name: 'Rooms', description: 'Phòng theo tòa nhà' },
       { name: 'Beds', description: 'Giường trong phòng' },
       { name: 'Users', description: 'Tài khoản người dùng (ADMIN)' },
+      { name: 'Registration periods', description: 'Đợt đăng ký ở KTX — tối đa 1 đợt mở' },
     ],
   });
 }
