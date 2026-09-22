@@ -138,22 +138,44 @@ export async function getById(user: AuthUser, id: string) {
 }
 
 /**
+ * Điều kiện chung của "phòng còn chỗ": phòng, tòa, loại phòng đang hoạt động
+ * và còn ít nhất 1 giường trống.
+ *
+ * Sinh viên chỉ thấy tòa cùng giới tính với mình và tòa hỗn hợp (gender = null);
+ * bộ lọc `gender` trên URL bị bỏ qua để không xem được tòa khác giới. Tài khoản
+ * STUDENT chưa có hồ sơ (do Admin tạo tay) chưa rõ giới tính nên chỉ thấy tòa hỗn hợp.
+ */
+async function availableWhere(user: AuthUser): Promise<Prisma.RoomWhereInput> {
+  const base: Prisma.RoomWhereInput = {
+    isActive: true,
+    building: { isActive: true },
+    roomType: { isActive: true },
+    beds: { some: { status: 'AVAILABLE' } },
+  };
+  if (user.role !== 'STUDENT') return base;
+
+  const profile = await prisma.studentProfile.findUnique({
+    where: { userId: user.id },
+    select: { gender: true },
+  });
+  const genders = profile ? [{ gender: profile.gender }, { gender: null }] : [{ gender: null }];
+  return { AND: [base, { building: { OR: genders } }] };
+}
+
+/**
  * Phòng còn chỗ cho sinh viên xem. Không dùng buildingScope (vốn chặn STUDENT)
  * mà chỉ trả thông tin công khai: không có giường cụ thể, không có người ở.
  */
-export async function listAvailable(query: AvailableRoomQuery) {
+export async function listAvailable(user: AuthUser, query: AvailableRoomQuery) {
   const where: Prisma.RoomWhereInput = {
     AND: [
-      {
-        isActive: true,
-        building: { isActive: true },
-        roomType: { isActive: true },
-        beds: { some: { status: 'AVAILABLE' } },
-      },
+      await availableWhere(user),
       query.buildingId ? { buildingId: query.buildingId } : {},
       query.roomTypeId ? { roomTypeId: query.roomTypeId } : {},
-      // Tòa hỗn hợp lưu gender = null trong DB.
-      query.gender ? { building: { gender: query.gender === 'MIXED' ? null : query.gender } } : {},
+      // Tòa hỗn hợp lưu gender = null trong DB. Với sinh viên, availableWhere đã khóa giới tính.
+      query.gender && user.role !== 'STUDENT'
+        ? { building: { gender: query.gender === 'MIXED' ? null : query.gender } }
+        : {},
       query.search ? { code: { contains: query.search, mode: 'insensitive' } } : {},
     ],
   };
@@ -181,6 +203,27 @@ export async function listAvailable(query: AvailableRoomQuery) {
     data: result.data.map(({ beds, ...room }) => ({ ...room, availableBeds: beds.length })),
     meta: result.meta,
   };
+}
+
+/**
+ * Tòa và loại phòng đang có phòng còn chỗ mà người này xem được — cho bộ lọc
+ * của trang phòng còn chỗ (sinh viên không gọi được /buildings, /room-types).
+ */
+export async function listAvailableOptions(user: AuthUser) {
+  const rooms = { some: await availableWhere(user) };
+  const [buildings, roomTypes] = await Promise.all([
+    prisma.building.findMany({
+      where: { rooms },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, gender: true },
+    }),
+    prisma.roomType.findMany({
+      where: { rooms },
+      orderBy: { name: 'asc' },
+      select: ROOM_TYPE_SELECT,
+    }),
+  ]);
+  return { buildings, roomTypes };
 }
 
 // ── Ghi ─────────────────────────────────────────────────────────────────────

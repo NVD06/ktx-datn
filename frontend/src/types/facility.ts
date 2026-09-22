@@ -115,3 +115,9 @@ export interface AvailableRoom {
   roomType: RoomTypeRef
   availableBeds: number
 }
+
+/** Lựa chọn cho bộ lọc trang phòng còn chỗ — chỉ gồm tòa/loại phòng đang còn chỗ. */
+export interface AvailableRoomOptions {
+  buildings: { id: string; name: string; gender: Gender | null }[]
+  roomTypes: RoomTypeRef[]
+}

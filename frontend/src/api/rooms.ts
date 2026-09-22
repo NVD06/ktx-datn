@@ -2,6 +2,7 @@ import { api, getPaged } from './client'
 import type { ListParams, SuccessResponse } from '@/types/api'
 import type {
   AvailableRoom,
+  AvailableRoomOptions,
   Bed,
   BedUpdateInput,
   RoomDetail,
@@ -31,6 +32,11 @@ export async function deleteRoom(id: string) {
 
 export function listAvailableRooms(params: ListParams) {
   return getPaged<AvailableRoom>('/rooms/available', params)
+}
+
+export async function getAvailableRoomOptions() {
+  const res = await api.get<SuccessResponse<AvailableRoomOptions>>('/rooms/available/options')
+  return res.data.data
 }
 
 // ── Giường ────────────────────────────────────────────────────────────────

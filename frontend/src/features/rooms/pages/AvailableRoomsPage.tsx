@@ -15,36 +15,48 @@ import {
 import { useListParams } from '@/hooks/useListParams'
 import { formatMoney } from '@/lib/format'
 import { GENDER, MIXED_GENDER } from '@/lib/labels'
-import { useAvailableRooms } from '../hooks/useRooms'
-
-const GENDER_OPTIONS = [
-  { value: 'MALE', label: 'Tòa nam' },
-  { value: 'FEMALE', label: 'Tòa nữ' },
-  { value: 'MIXED', label: 'Tòa hỗn hợp' },
-]
+import { useAvailableRoomOptions, useAvailableRooms } from '../hooks/useRooms'
 
 /**
- * Phòng còn chỗ cho sinh viên (US-01.5). Chỉ gồm phòng đang nhận người — backend
- * đã lọc tòa/phòng/loại phòng ngừng hoạt động và không trả thông tin giường.
+ * Phòng còn chỗ cho sinh viên (US-02.2). Chỉ gồm phòng đang nhận người — backend
+ * đã lọc tòa/phòng/loại phòng ngừng hoạt động, chỉ trả tòa cùng giới tính với
+ * sinh viên và tòa hỗn hợp, và không trả thông tin giường.
  */
 export function AvailableRoomsPage() {
-  const list = useListParams(['gender'] as const)
+  const list = useListParams(['buildingId', 'roomTypeId'] as const)
   const query = useAvailableRooms({ ...list.params, sortBy: 'code', order: 'asc' })
+  const options = useAvailableRoomOptions()
+
+  const buildingOptions = (options.data?.buildings ?? []).map((b) => ({
+    value: b.id,
+    label: `Tòa ${b.name} (${(b.gender ? GENDER[b.gender] : MIXED_GENDER).label})`,
+  }))
+  const roomTypeOptions = (options.data?.roomTypes ?? []).map((t) => ({
+    value: t.id,
+    label: t.name,
+  }))
+  const filtered = list.search || list.filters.buildingId || list.filters.roomTypeId
 
   return (
     <>
       <PageHeader
         title="Phòng còn chỗ"
-        description="Các phòng đang còn giường trống. Giá tính cho một sinh viên trong một kỳ."
+        description="Các phòng còn giường trống ở tòa dành cho giới tính của bạn và tòa hỗn hợp. Giá tính cho một sinh viên trong một kỳ."
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <SearchInput value={list.search} onChange={list.setSearch} placeholder="Tìm mã phòng" />
         <FilterSelect
-          value={list.filters.gender}
-          onChange={(v) => list.setFilter('gender', v)}
-          options={GENDER_OPTIONS}
+          value={list.filters.buildingId}
+          onChange={(v) => list.setFilter('buildingId', v)}
+          options={buildingOptions}
           allLabel="Các tòa nhà"
+        />
+        <FilterSelect
+          value={list.filters.roomTypeId}
+          onChange={(v) => list.setFilter('roomTypeId', v)}
+          options={roomTypeOptions}
+          allLabel="Các loại phòng"
         />
       </div>
 
@@ -53,7 +65,7 @@ export function AvailableRoomsPage() {
       {query.data?.data.length === 0 && (
         <EmptyState
           title="Không có phòng còn chỗ"
-          description={list.search || list.filters.gender ? 'Thử bỏ bớt bộ lọc.' : undefined}
+          description={filtered ? 'Thử bỏ bớt bộ lọc.' : undefined}
         />
       )}
 

@@ -8,6 +8,7 @@ import {
   registry,
 } from '../../config/openapi.js';
 import {
+  availableRoomOptionsSchema,
   availableRoomSchema,
   bedSchema,
   deletedSchema,
@@ -43,6 +44,7 @@ registry.registerPath({
   summary: 'Phòng còn chỗ (mọi vai trò)',
   description:
     'Chỉ gồm phòng, tòa và loại phòng đang hoạt động, còn ít nhất 1 giường trống. ' +
+    'STUDENT chỉ thấy tòa cùng giới tính với hồ sơ của mình và tòa hỗn hợp. ' +
     'Không trả thông tin giường hay người ở.',
   security,
   request: { query: availableRoomQuerySchema },
@@ -52,6 +54,20 @@ registry.registerPath({
   },
 });
 roomRoutes.get('/available', ctrl.listAvailable);
+
+registry.registerPath({
+  method: 'get',
+  path: '/rooms/available/options',
+  tags: ['Rooms'],
+  summary: 'Tòa và loại phòng cho bộ lọc phòng còn chỗ (mọi vai trò)',
+  description: 'Chỉ gồm tòa/loại phòng đang có phòng còn chỗ mà người gọi xem được (cùng quy tắc giới tính).',
+  security,
+  responses: {
+    200: okResponse('Lựa chọn bộ lọc', okSchema(availableRoomOptionsSchema)),
+    ...errorResponses(401),
+  },
+});
+roomRoutes.get('/available/options', ctrl.listAvailableOptions);
 
 registry.registerPath({
   method: 'get',

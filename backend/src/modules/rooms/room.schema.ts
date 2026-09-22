@@ -55,7 +55,11 @@ export const availableRoomQuerySchema = listQuerySchema.extend({
   gender: z
     .enum(['MALE', 'FEMALE', 'MIXED'])
     .optional()
-    .openapi({ description: 'Lọc theo loại tòa: MALE = tòa nam, FEMALE = tòa nữ, MIXED = tòa hỗn hợp' }),
+    .openapi({
+      description:
+        'Lọc theo loại tòa: MALE = tòa nam, FEMALE = tòa nữ, MIXED = tòa hỗn hợp. ' +
+        'Bị bỏ qua với STUDENT — sinh viên luôn chỉ thấy tòa cùng giới tính và tòa hỗn hợp.',
+    }),
 });
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;

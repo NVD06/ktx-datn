@@ -135,6 +135,15 @@ export const availableRoomSchema = z
   })
   .openapi('AvailableRoom');
 
+export const availableRoomOptionsSchema = z
+  .object({
+    buildings: z.array(z.object({ id: z.uuid(), name: z.string(), gender: genderSchema.nullable() })),
+    roomTypes: z.array(
+      z.object({ id: z.uuid(), name: z.string(), capacity: z.int(), price: moneySchema }),
+    ),
+  })
+  .openapi('AvailableRoomOptions');
+
 export const userSchema = z
   .object({
     id: z.uuid(),
