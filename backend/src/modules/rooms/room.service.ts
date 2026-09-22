@@ -5,9 +5,9 @@ import { ApiError } from '../../utils/api-error.js';
 import { paginate, type SortOptions } from '../../utils/paginate.js';
 import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { bedCodes, compareBedCode } from '../beds/bed-code.js';
+import { FREE_BED, roomForGender } from './room-eligibility.js';
 import { roomStatusWhere, summarizeBeds } from './room-status.js';
 import type {
-  AvailableRoomQuery,
   BuildingRoomListQuery,
   CreateRoomInput,
   RoomListQuery,
@@ -19,7 +19,8 @@ const SORT: SortOptions = {
   defaultSort: { field: 'code', order: 'asc' },
 };
 
-const ROOM_TYPE_SELECT = { id: true, name: true, capacity: true, price: true } as const;
+export const ROOM_TYPE_SELECT = { id: true, name: true, capacity: true, price: true } as const;
+export const BUILDING_REF_SELECT = { id: true, name: true, gender: true } as const;
 
 const LIST_INCLUDE = {
   building: { select: { id: true, name: true } },
@@ -139,18 +140,18 @@ export async function getById(user: AuthUser, id: string) {
 
 /**
  * Điều kiện chung của "phòng còn chỗ": phòng, tòa, loại phòng đang hoạt động
- * và còn ít nhất 1 giường trống.
+ * và còn ít nhất 1 giường trống thật sự (không bị hợp đồng DRAFT giữ chỗ).
  *
- * Sinh viên chỉ thấy tòa cùng giới tính với mình và tòa hỗn hợp (gender = null);
- * bộ lọc `gender` trên URL bị bỏ qua để không xem được tòa khác giới. Tài khoản
- * STUDENT chưa có hồ sơ (do Admin tạo tay) chưa rõ giới tính nên chỉ thấy tòa hỗn hợp.
+ * Sinh viên chỉ thấy phòng mình được ở (room-eligibility.ts): tòa cùng giới
+ * tính, và phòng ở tòa hỗn hợp chưa có người khác giới. Bộ lọc `gender` trên
+ * URL bị bỏ qua để không xem được tòa khác giới.
  */
 async function availableWhere(user: AuthUser): Promise<Prisma.RoomWhereInput> {
   const base: Prisma.RoomWhereInput = {
     isActive: true,
     building: { isActive: true },
     roomType: { isActive: true },
-    beds: { some: { status: 'AVAILABLE' } },
+    beds: { some: FREE_BED },
   };
   if (user.role !== 'STUDENT') return base;
 
@@ -158,72 +159,43 @@ async function availableWhere(user: AuthUser): Promise<Prisma.RoomWhereInput> {
     where: { userId: user.id },
     select: { gender: true },
   });
-  const genders = profile ? [{ gender: profile.gender }, { gender: null }] : [{ gender: null }];
-  return { AND: [base, { building: { OR: genders } }] };
+  // Mọi tài khoản STUDENT đều có hồ sơ (tạo lúc đăng ký); thiếu thì chưa rõ giới tính -> không xếp được đâu.
+  if (!profile) return { id: { in: [] } };
+  return { AND: [base, roomForGender(profile.gender)] };
 }
 
 /**
- * Phòng còn chỗ cho sinh viên xem. Không dùng buildingScope (vốn chặn STUDENT)
- * mà chỉ trả thông tin công khai: không có giường cụ thể, không có người ở.
+ * Chỗ trống gom theo tòa × loại phòng — trang "Chỗ trống" của sinh viên.
+ *
+ * Sinh viên nộp đơn theo nguyện vọng tòa + loại phòng, Manager mới là người xếp
+ * giường cụ thể (US-03), nên trang này không liệt kê từng phòng.
  */
-export async function listAvailable(user: AuthUser, query: AvailableRoomQuery) {
-  const where: Prisma.RoomWhereInput = {
-    AND: [
-      await availableWhere(user),
-      query.buildingId ? { buildingId: query.buildingId } : {},
-      query.roomTypeId ? { roomTypeId: query.roomTypeId } : {},
-      // Tòa hỗn hợp lưu gender = null trong DB. Với sinh viên, availableWhere đã khóa giới tính.
-      query.gender && user.role !== 'STUDENT'
-        ? { building: { gender: query.gender === 'MIXED' ? null : query.gender } }
-        : {},
-      query.search ? { code: { contains: query.search, mode: 'insensitive' } } : {},
-    ],
+export async function availableSummary(user: AuthUser) {
+  const rooms = await prisma.room.findMany({
+    where: await availableWhere(user),
+    // Sắp sẵn ở DB — Map giữ thứ tự chèn nên các nhóm ra đúng thứ tự tòa rồi loại phòng.
+    orderBy: [{ building: { name: 'asc' } }, { roomType: { name: 'asc' } }],
+    select: {
+      building: { select: BUILDING_REF_SELECT },
+      roomType: { select: ROOM_TYPE_SELECT },
+      _count: { select: { beds: { where: FREE_BED } } },
+    },
+  });
+
+  type Group = Pick<(typeof rooms)[number], 'building' | 'roomType'> & {
+    roomCount: number;
+    availableBeds: number;
   };
+  const groups = new Map<string, Group>();
+  for (const { building, roomType, _count } of rooms) {
+    const key = `${building.id}:${roomType.id}`;
+    const group = groups.get(key) ?? { building, roomType, roomCount: 0, availableBeds: 0 };
+    group.roomCount += 1;
+    group.availableBeds += _count.beds;
+    groups.set(key, group);
+  }
 
-  const result = await paginate(
-    query,
-    SORT,
-    (page) =>
-      prisma.room.findMany({
-        where,
-        ...page,
-        select: {
-          id: true,
-          code: true,
-          floor: true,
-          building: { select: { id: true, name: true, gender: true } },
-          roomType: { select: ROOM_TYPE_SELECT },
-          beds: { where: { status: 'AVAILABLE' }, select: { id: true } },
-        },
-      }),
-    () => prisma.room.count({ where }),
-  );
-
-  return {
-    data: result.data.map(({ beds, ...room }) => ({ ...room, availableBeds: beds.length })),
-    meta: result.meta,
-  };
-}
-
-/**
- * Tòa và loại phòng đang có phòng còn chỗ mà người này xem được — cho bộ lọc
- * của trang phòng còn chỗ (sinh viên không gọi được /buildings, /room-types).
- */
-export async function listAvailableOptions(user: AuthUser) {
-  const rooms = { some: await availableWhere(user) };
-  const [buildings, roomTypes] = await Promise.all([
-    prisma.building.findMany({
-      where: { rooms },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, gender: true },
-    }),
-    prisma.roomType.findMany({
-      where: { rooms },
-      orderBy: { name: 'asc' },
-      select: ROOM_TYPE_SELECT,
-    }),
-  ]);
-  return { buildings, roomTypes };
+  return [...groups.values()];
 }
 
 // ── Ghi ─────────────────────────────────────────────────────────────────────

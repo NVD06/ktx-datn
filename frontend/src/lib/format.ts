@@ -27,6 +27,11 @@ export function formatDateTime(value: Date | string | null | undefined): string 
   return `${formatDate(d)} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`
 }
 
+/** "07/09/2026 – 31/01/2027" */
+export function formatDateRange(start: Date | string, end: Date | string): string {
+  return `${formatDate(start)} – ${formatDate(end)}`
+}
+
 /** Giá trị rỗng hiển thị thống nhất bằng dấu gạch, không để ô trắng. */
 export function orDash(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === '') return '—'

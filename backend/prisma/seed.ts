@@ -165,11 +165,12 @@ async function main() {
   });
 
   // 4 sinh viên: 2 nam, 2 nữ — đủ để test lọc theo giới tính ở US-02
+  // sv004 cố ý thiếu ngày sinh + CCCD để demo chặn nộp đơn khi hồ sơ chưa đủ (US-02.3).
   const studentSeed = [
-    { code: '001', name: 'Lê Minh An', gender: 'MALE' as const },
-    { code: '002', name: 'Phạm Quốc Bảo', gender: 'MALE' as const },
-    { code: '003', name: 'Ngô Thu Cúc', gender: 'FEMALE' as const },
-    { code: '004', name: 'Đỗ Hải Duyên', gender: 'FEMALE' as const },
+    { code: '001', name: 'Lê Minh An', gender: 'MALE' as const, complete: true },
+    { code: '002', name: 'Phạm Quốc Bảo', gender: 'MALE' as const, complete: true },
+    { code: '003', name: 'Ngô Thu Cúc', gender: 'FEMALE' as const, complete: true },
+    { code: '004', name: 'Đỗ Hải Duyên', gender: 'FEMALE' as const, complete: false },
   ];
 
   for (const s of studentSeed) {
@@ -187,6 +188,9 @@ async function main() {
             className: 'CNTT1',
             faculty: 'Công nghệ thông tin',
             hometown: 'Hà Nội',
+            ...(s.complete
+              ? { dob: new Date('2005-01-15T00:00:00+07:00'), citizenId: `001205000${s.code}` }
+              : {}),
           },
         },
       },
@@ -199,6 +203,8 @@ async function main() {
       name: 'Đăng ký học kỳ 2 năm 2025-2026',
       startAt: new Date('2026-01-05T00:00:00+07:00'),
       endAt: new Date('2026-01-31T23:59:59+07:00'),
+      stayStartAt: new Date('2026-02-02T00:00:00+07:00'),
+      stayEndAt: new Date('2026-06-30T23:59:59+07:00'),
       isOpen: false,
     },
   });
@@ -206,13 +212,15 @@ async function main() {
     data: {
       name: 'Đăng ký học kỳ 1 năm 2026-2027',
       startAt: new Date('2026-09-01T00:00:00+07:00'),
-      endAt: new Date('2026-12-31T23:59:59+07:00'),
+      endAt: new Date('2026-10-15T23:59:59+07:00'),
+      stayStartAt: new Date('2026-09-07T00:00:00+07:00'),
+      stayEndAt: new Date('2027-01-31T23:59:59+07:00'),
       isOpen: true,
     },
   });
 
   console.log(`
-Seed xong (phạm vi US-00 + US-01 + US-02.1):
+Seed xong (phạm vi US-00 + US-01 + US-02):
   Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
   Phòng      : ${roomCount}  (${bedCount} giường)
@@ -223,7 +231,7 @@ Seed xong (phạm vi US-00 + US-01 + US-02.1):
   ${admin.email}       → ADMIN
   ${manager1.email}    → MANAGER (tòa ${b1.name})
   ${manager2.email}    → MANAGER (tòa ${b2.name})
-  sv001@ktx.edu.vn … sv004@ktx.edu.vn  → STUDENT
+  sv001@ktx.edu.vn … sv004@ktx.edu.vn  → STUDENT (sv004 hồ sơ chưa đủ)
 `);
 }
 

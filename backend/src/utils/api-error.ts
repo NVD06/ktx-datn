@@ -17,6 +17,11 @@ export class ApiError extends Error {
     return new ApiError(400, code, message, details);
   }
 
+  /** 400 lỗi theo từng field — cùng dạng với lỗi zod, FE gắn thẳng vào form. */
+  static validation(details: Record<string, string[]>) {
+    return new ApiError(400, 'VALIDATION_ERROR', 'Dữ liệu không hợp lệ', details);
+  }
+
   static unauthorized(message = 'Bạn cần đăng nhập') {
     return new ApiError(401, 'UNAUTHORIZED', message);
   }

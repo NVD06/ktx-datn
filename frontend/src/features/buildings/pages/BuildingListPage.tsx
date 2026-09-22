@@ -14,7 +14,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useListParams } from '@/hooks/useListParams'
-import { ACTIVE_STATUS, GENDER, MIXED_GENDER } from '@/lib/labels'
+import { ACTIVE_STATUS, buildingGender } from '@/lib/labels'
 import type { Building } from '@/types/facility'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
@@ -93,7 +93,7 @@ export function BuildingListPage() {
       id: 'gender',
       header: 'Giới tính',
       cell: ({ row }) => {
-        const gender = row.original.gender ? GENDER[row.original.gender] : MIXED_GENDER
+        const gender = buildingGender(row.original.gender)
         return <StatusBadge label={gender.label} tone={gender.tone} />
       },
     },

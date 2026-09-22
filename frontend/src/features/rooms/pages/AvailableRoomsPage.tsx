@@ -1,109 +1,151 @@
-import { FilterSelect } from '@/components/shared/FilterSelect'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/shared/PageHeader'
-import { Pagination } from '@/components/shared/Pagination'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
-import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { useListParams } from '@/hooks/useListParams'
-import { formatMoney } from '@/lib/format'
-import { GENDER, MIXED_GENDER } from '@/lib/labels'
-import { useAvailableRoomOptions, useAvailableRooms } from '../hooks/useRooms'
+import { Button } from '@/components/ui/button'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { RegistrationFormDialog } from '@/features/registrations/components/RegistrationFormDialog'
+import { useRegistrationEligibility } from '@/features/registrations/hooks/useRegistrations'
+import { formatDateRange, formatMoney } from '@/lib/format'
+import { buildingGender, missingFieldLabels, REGISTRATION_STATUS } from '@/lib/labels'
+import type { AvailableSummary } from '@/types/facility'
+import { useAvailableSummary } from '../hooks/useRooms'
 
 /**
- * Phòng còn chỗ cho sinh viên (US-02.2). Chỉ gồm phòng đang nhận người — backend
- * đã lọc tòa/phòng/loại phòng ngừng hoạt động, chỉ trả tòa cùng giới tính với
- * sinh viên và tòa hỗn hợp, và không trả thông tin giường.
+ * Chỗ trống cho sinh viên (US-02.2), gom theo tòa × loại phòng, kiêm nơi nộp đơn
+ * (US-02.3): bấm "Đăng ký" ở một dòng là nộp đơn với nguyện vọng đó.
+ *
+ * Không liệt kê từng phòng: ban quản lý mới là người xếp giường cụ thể khi duyệt
+ * (US-03). Backend chỉ trả phòng sinh viên được ở — tòa cùng giới tính, phòng
+ * tòa hỗn hợp chưa có người khác giới.
  */
 export function AvailableRoomsPage() {
-  const list = useListParams(['buildingId', 'roomTypeId'] as const)
-  const query = useAvailableRooms({ ...list.params, sortBy: 'code', order: 'asc' })
-  const options = useAvailableRoomOptions()
+  const query = useAvailableSummary()
+  const eligibility = useRegistrationEligibility()
+  const [target, setTarget] = useState<AvailableSummary | null>(null)
 
-  const buildingOptions = (options.data?.buildings ?? []).map((b) => ({
-    value: b.id,
-    label: `Tòa ${b.name} (${(b.gender ? GENDER[b.gender] : MIXED_GENDER).label})`,
-  }))
-  const roomTypeOptions = (options.data?.roomTypes ?? []).map((t) => ({
-    value: t.id,
-    label: t.name,
-  }))
-  const filtered = list.search || list.filters.buildingId || list.filters.roomTypeId
+  // Giữ thứ tự backend trả về (đã sắp theo tòa rồi loại phòng).
+  const byBuilding = new Map<string, AvailableSummary[]>()
+  for (const row of query.data ?? []) {
+    const rows = byBuilding.get(row.building.id)
+    if (rows) rows.push(row)
+    else byBuilding.set(row.building.id, [row])
+  }
 
   return (
     <>
       <PageHeader
-        title="Phòng còn chỗ"
-        description="Các phòng còn giường trống ở tòa dành cho giới tính của bạn và tòa hỗn hợp. Giá tính cho một sinh viên trong một kỳ."
+        title="Chỗ trống"
+        description="Số giường còn trống ở các tòa dành cho bạn. Giá tính cho một sinh viên trong một kỳ; ban quản lý xếp phòng cụ thể khi duyệt đơn."
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <SearchInput value={list.search} onChange={list.setSearch} placeholder="Tìm mã phòng" />
-        <FilterSelect
-          value={list.filters.buildingId}
-          onChange={(v) => list.setFilter('buildingId', v)}
-          options={buildingOptions}
-          allLabel="Các tòa nhà"
-        />
-        <FilterSelect
-          value={list.filters.roomTypeId}
-          onChange={(v) => list.setFilter('roomTypeId', v)}
-          options={roomTypeOptions}
-          allLabel="Các loại phòng"
-        />
-      </div>
+      {!eligibility.isLoading && <EligibilityNotice {...eligibility} />}
 
       {query.isPending && <LoadingState />}
       {query.isError && <ErrorState error={query.error} />}
-      {query.data?.data.length === 0 && (
+      {query.data?.length === 0 && (
         <EmptyState
-          title="Không có phòng còn chỗ"
-          description={filtered ? 'Thử bỏ bớt bộ lọc.' : undefined}
+          title="Hiện không còn chỗ trống"
+          description="Hãy quay lại sau — ban quản lý cập nhật khi có sinh viên trả phòng."
         />
       )}
 
-      {query.data && query.data.data.length > 0 && (
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {query.data.data.map((room) => {
-              const gender = room.building.gender ? GENDER[room.building.gender] : MIXED_GENDER
-              return (
-                <Card key={room.id}>
-                  <CardHeader>
-                    <CardTitle>Phòng {room.code}</CardTitle>
-                    <CardDescription>
-                      Tòa {room.building.name} · Tầng {room.floor}
-                    </CardDescription>
-                    <CardAction>
-                      <StatusBadge label={gender.label} tone={gender.tone} />
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <p className="text-muted-foreground">{room.roomType.name}</p>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold">
-                        {formatMoney(room.roomType.price)}
-                        <span className="text-muted-foreground font-normal"> / kỳ</span>
+      <div className="space-y-4">
+        {[...byBuilding.values()].map((rows) => {
+          const { building } = rows[0]
+          const gender = buildingGender(building.gender)
+          return (
+            <Card key={building.id}>
+              <CardHeader>
+                <CardTitle>Tòa {building.name}</CardTitle>
+                <CardAction>
+                  <StatusBadge label={gender.label} tone={gender.tone} />
+                </CardAction>
+              </CardHeader>
+              <CardContent className="divide-y">
+                {rows.map((row) => (
+                  <div
+                    key={row.roomType.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{row.roomType.name}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {formatMoney(row.roomType.price)} / kỳ · {row.roomType.capacity} giường/phòng
                       </p>
-                      <span className="tone-success rounded-md border px-2 py-0.5 text-xs font-medium">
-                        Còn {room.availableBeds}/{room.roomType.capacity} chỗ
-                      </span>
                     </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-          <Pagination meta={query.data.meta} onPageChange={list.setPage} />
-        </div>
+                    <div className="flex items-center gap-3">
+                      <span className="tone-success rounded-md border px-2 py-0.5 text-xs font-medium">
+                        Còn {row.availableBeds} giường · {row.roomCount} phòng
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!eligibility.canSubmit}
+                        onClick={() => setTarget(row)}
+                      >
+                        Đăng ký
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {eligibility.period && (
+        <RegistrationFormDialog
+          target={target}
+          onClose={() => setTarget(null)}
+          periodName={eligibility.period.name}
+        />
       )}
     </>
+  )
+}
+
+/** Vì sao nút "Đăng ký" đang tắt — hoặc đợt nào đang nhận đơn. */
+function EligibilityNotice({
+  period,
+  profile,
+  activeInPeriod,
+}: ReturnType<typeof useRegistrationEligibility>) {
+  return (
+    <div className="mb-4 space-y-2">
+      {period ? (
+        <p className="tone-info rounded-md border p-3 text-sm">
+          Đang mở đợt <strong>{period.name}</strong>: nhận đơn{' '}
+          {formatDateRange(period.startAt, period.endAt)}, thời gian ở{' '}
+          {formatDateRange(period.stayStartAt, period.stayEndAt)}.
+        </p>
+      ) : (
+        <p className="bg-muted text-muted-foreground rounded-md border p-3 text-sm">
+          Hiện chưa có đợt đăng ký nào đang mở, bạn chưa nộp đơn được.
+        </p>
+      )}
+
+      {profile && !profile.isComplete && (
+        <p className="tone-warning rounded-md border p-3 text-sm">
+          Hồ sơ còn thiếu: <strong>{missingFieldLabels(profile.missingFields)}</strong>.{' '}
+          <Link to="/student/profile" className="font-medium underline underline-offset-4">
+            Hoàn thiện hồ sơ
+          </Link>{' '}
+          để nộp đơn.
+        </p>
+      )}
+
+      {activeInPeriod && (
+        <p className="text-muted-foreground text-sm">
+          Bạn đã có đơn {REGISTRATION_STATUS[activeInPeriod.status].label.toLowerCase()} trong đợt này —{' '}
+          <Link to="/student/registrations" className="underline underline-offset-4">
+            xem đơn
+          </Link>
+          .
+        </p>
+      )}
+    </div>
   )
 }

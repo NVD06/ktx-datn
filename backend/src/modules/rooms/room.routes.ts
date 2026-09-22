@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import {
   errorResponses,
   jsonBody,
@@ -8,8 +9,7 @@ import {
   registry,
 } from '../../config/openapi.js';
 import {
-  availableRoomOptionsSchema,
-  availableRoomSchema,
+  availableSummarySchema,
   bedSchema,
   deletedSchema,
   roomDetailSchema,
@@ -22,7 +22,6 @@ import * as bedCtrl from '../beds/bed.controller.js';
 import { createBedSchema } from '../beds/bed.schema.js';
 import * as ctrl from './room.controller.js';
 import {
-  availableRoomQuerySchema,
   createRoomSchema,
   roomListQuerySchema,
   updateRoomSchema,
@@ -39,35 +38,20 @@ const security = [{ cookieAuth: [] }];
 // Khai báo TRƯỚC '/:id', nếu không Express hiểu "available" là một id.
 registry.registerPath({
   method: 'get',
-  path: '/rooms/available',
+  path: '/rooms/available/summary',
   tags: ['Rooms'],
-  summary: 'Phòng còn chỗ (mọi vai trò)',
+  summary: 'Chỗ trống theo tòa × loại phòng (mọi vai trò)',
   description:
-    'Chỉ gồm phòng, tòa và loại phòng đang hoạt động, còn ít nhất 1 giường trống. ' +
-    'STUDENT chỉ thấy tòa cùng giới tính với hồ sơ của mình và tòa hỗn hợp. ' +
-    'Không trả thông tin giường hay người ở.',
-  security,
-  request: { query: availableRoomQuerySchema },
-  responses: {
-    200: okResponse('Danh sách có phân trang', pagedSchema(availableRoomSchema)),
-    ...errorResponses(400, 401),
-  },
-});
-roomRoutes.get('/available', ctrl.listAvailable);
-
-registry.registerPath({
-  method: 'get',
-  path: '/rooms/available/options',
-  tags: ['Rooms'],
-  summary: 'Tòa và loại phòng cho bộ lọc phòng còn chỗ (mọi vai trò)',
-  description: 'Chỉ gồm tòa/loại phòng đang có phòng còn chỗ mà người gọi xem được (cùng quy tắc giới tính).',
+    'Phòng, tòa, loại phòng đang hoạt động, còn giường trống (giường bị hợp đồng DRAFT giữ chỗ không tính), ' +
+    'gom theo tòa × loại phòng. STUDENT chỉ thấy phòng ở tòa cùng giới tính, hoặc phòng ở tòa hỗn hợp ' +
+    'chưa có người khác giới. Sinh viên dùng để chọn nguyện vọng khi nộp đơn.',
   security,
   responses: {
-    200: okResponse('Lựa chọn bộ lọc', okSchema(availableRoomOptionsSchema)),
+    200: okResponse('Chỗ trống', okSchema(z.array(availableSummarySchema))),
     ...errorResponses(401),
   },
 });
-roomRoutes.get('/available/options', ctrl.listAvailableOptions);
+roomRoutes.get('/available/summary', ctrl.availableSummary);
 
 registry.registerPath({
   method: 'get',

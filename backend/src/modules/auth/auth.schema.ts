@@ -1,5 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
+import { phoneSchema } from '../../utils/zod-fields.js';
 
 /**
  * Chuẩn hóa TRƯỚC, kiểm tra SAU.
@@ -26,11 +27,7 @@ export const registerSchema = z
     email,
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự').max(72).openapi({ example: 'matkhau123' }),
     fullName: z.string().trim().min(2, 'Họ tên quá ngắn').max(100).openapi({ example: 'Nguyễn Văn A' }),
-    phone: z
-      .string()
-      .regex(/^0\d{9}$/, 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0')
-      .optional()
-      .openapi({ example: '0912345678' }),
+    phone: phoneSchema.optional(),
     studentCode: z.string().trim().min(3, 'Mã sinh viên quá ngắn').max(20).openapi({ example: 'SV001' }),
     gender: z.enum(['MALE', 'FEMALE']),
     className: z.string().trim().max(50).optional().openapi({ example: 'CNTT1' }),

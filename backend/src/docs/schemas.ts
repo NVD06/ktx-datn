@@ -73,9 +73,11 @@ export const registrationPeriodSchema = z
   .object({
     id: z.uuid(),
     name: z.string().openapi({ example: 'Đăng ký học kỳ 1 năm 2026-2027' }),
-    startAt: z.iso.datetime(),
-    endAt: z.iso.datetime(),
+    startAt: z.iso.datetime().openapi({ description: 'Bắt đầu nhận đơn' }),
+    endAt: z.iso.datetime().openapi({ description: 'Hết hạn nhận đơn (chỉ để thông báo)' }),
     isOpen: z.boolean().openapi({ description: 'Tối đa 1 đợt mở tại một thời điểm' }),
+    stayStartAt: z.iso.datetime().openapi({ description: 'Bắt đầu ở — kỳ hạn hợp đồng' }),
+    stayEndAt: z.iso.datetime().openapi({ description: 'Kết thúc ở — kỳ hạn hợp đồng' }),
     registrationCount: z.int(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
@@ -124,25 +126,61 @@ export const roomDetailSchema = roomSchema
   })
   .openapi('RoomDetail');
 
-export const availableRoomSchema = z
+const buildingRefSchema = z.object({ id: z.uuid(), name: z.string(), gender: genderSchema.nullable() });
+const roomTypeRefSchema = z.object({ id: z.uuid(), name: z.string(), capacity: z.int(), price: moneySchema });
+
+export const availableSummarySchema = z
+  .object({
+    building: buildingRefSchema,
+    roomType: roomTypeRefSchema,
+    roomCount: z.int().openapi({ description: 'Số phòng còn chỗ' }),
+    availableBeds: z.int().openapi({ description: 'Tổng số giường còn trống' }),
+  })
+  .openapi('AvailableSummary');
+
+export const studentProfileSchema = z
+  .object({
+    id: z.uuid().openapi({ description: 'id của User' }),
+    email: z.email(),
+    fullName: z.string(),
+    phone: z.string().nullable(),
+    studentCode: z.string().openapi({ example: 'SV001' }),
+    gender: genderSchema,
+    dob: z.iso.datetime().nullable(),
+    className: z.string().nullable(),
+    faculty: z.string().nullable(),
+    hometown: z.string().nullable(),
+    citizenId: z.string().nullable(),
+    isComplete: z.boolean().openapi({ description: 'Đủ thông tin để nộp đơn đăng ký' }),
+    missingFields: z
+      .array(z.enum(['phone', 'dob', 'className', 'faculty', 'hometown', 'citizenId']))
+      .openapi({ description: 'Các trường bắt buộc còn trống' }),
+  })
+  .openapi('StudentProfile');
+
+export const registrationStatusSchema = z
+  .enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'])
+  .openapi('RegistrationStatus');
+
+export const registrationSchema = z
   .object({
     id: z.uuid(),
-    code: z.string(),
-    floor: z.int(),
-    building: z.object({ id: z.uuid(), name: z.string(), gender: genderSchema.nullable() }),
-    roomType: z.object({ id: z.uuid(), name: z.string(), capacity: z.int(), price: moneySchema }),
-    availableBeds: z.int(),
+    periodId: z.uuid(),
+    studentId: z.uuid(),
+    period: registrationPeriodSchema.omit({ registrationCount: true, createdAt: true, updatedAt: true }),
+    building: buildingRefSchema
+      .nullable()
+      .openapi({ description: 'Nguyện vọng tòa, null = tòa nào cũng được' }),
+    preferredRoomTypeId: z.uuid().nullable(),
+    preferredRoomType: roomTypeRefSchema.nullable(),
+    note: z.string().nullable(),
+    status: registrationStatusSchema,
+    reviewedById: z.uuid().nullable(),
+    reviewNote: z.string().nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
   })
-  .openapi('AvailableRoom');
-
-export const availableRoomOptionsSchema = z
-  .object({
-    buildings: z.array(z.object({ id: z.uuid(), name: z.string(), gender: genderSchema.nullable() })),
-    roomTypes: z.array(
-      z.object({ id: z.uuid(), name: z.string(), capacity: z.int(), price: moneySchema }),
-    ),
-  })
-  .openapi('AvailableRoomOptions');
+  .openapi('Registration');
 
 export const userSchema = z
   .object({

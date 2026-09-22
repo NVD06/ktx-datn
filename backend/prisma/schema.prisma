@@ -185,9 +185,13 @@ model Bed {
 model RegistrationPeriod {
   id      String   @id @default(uuid())
   name    String
+  // Thời gian NHẬN ĐƠN — chỉ để thông báo; mở/đóng thật sự do isOpen quyết định.
   startAt DateTime
   endAt   DateTime
   isOpen  Boolean  @default(false) // Admin bật/tắt tay, không tự đóng theo endAt
+  // Thời gian Ở của đợt (học kỳ) — hợp đồng sinh từ đợt này lấy kỳ hạn ở đây.
+  stayStartAt DateTime
+  stayEndAt   DateTime
 
   registrations Registration[]
 

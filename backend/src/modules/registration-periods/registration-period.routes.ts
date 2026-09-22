@@ -27,7 +27,6 @@ const admin = requireRole('ADMIN');
 
 const security = [{ cookieAuth: [] }];
 
-// Khai báo TRƯỚC '/:id', nếu không Express hiểu "current" là một id.
 registry.registerPath({
   method: 'get',
   path: '/registration-periods/current',
@@ -72,19 +71,6 @@ registry.registerPath({
 });
 registrationPeriodRoutes.post('/', admin, validate(createRegistrationPeriodSchema), ctrl.create);
 
-registry.registerPath({
-  method: 'get',
-  path: '/registration-periods/{id}',
-  tags: ['Registration periods'],
-  summary: 'Chi tiết đợt đăng ký',
-  security,
-  request: { params: idParamsSchema },
-  responses: {
-    200: okResponse('Đợt đăng ký', okSchema(registrationPeriodSchema)),
-    ...errorResponses(401, 403, 404),
-  },
-});
-registrationPeriodRoutes.get('/:id', staff, ctrl.getById);
 
 registry.registerPath({
   method: 'patch',
@@ -106,7 +92,7 @@ registry.registerPath({
   tags: ['Registration periods'],
   summary: 'Mở đợt đăng ký (ADMIN)',
   description:
-    'Đang có đợt khác mở -> 409 `PERIOD_ALREADY_OPEN`. Đợt đã qua `endAt` -> 409 `PERIOD_ENDED`. ' +
+    'Đang có đợt khác mở -> 409 `PERIOD_ALREADY_OPEN`. Đợt đã hết hạn nhận đơn (`endAt`) -> 409 `PERIOD_ENDED`. ' +
     'Đợt đã mở sẵn thì trả về nguyên trạng.',
   security,
   request: { params: idParamsSchema },

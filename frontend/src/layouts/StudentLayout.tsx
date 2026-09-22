@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
-// US-02 trở đi sẽ bổ sung: Đăng ký ở, Hợp đồng, Hóa đơn, Sửa chữa.
+// US-03 trở đi sẽ bổ sung: Hợp đồng, Hóa đơn, Sửa chữa.
 const NAV = [
   { to: '/student', label: 'Trang cá nhân' },
-  { to: '/student/rooms', label: 'Phòng còn chỗ' },
+  { to: '/student/rooms', label: 'Chỗ trống' },
+  { to: '/student/registrations', label: 'Đơn của tôi' },
+  { to: '/student/profile', label: 'Hồ sơ' },
 ]
 
 export function StudentLayout() {

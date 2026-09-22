@@ -11,7 +11,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { RoomFormDialog } from '@/features/rooms/components/RoomFormDialog'
 import { RoomTable } from '@/features/rooms/components/RoomTable'
 import { orDash } from '@/lib/format'
-import { ACTIVE_STATUS, GENDER, MIXED_GENDER } from '@/lib/labels'
+import { ACTIVE_STATUS, buildingGender } from '@/lib/labels'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
 import { useBuilding } from '../hooks/useBuildings'
@@ -42,7 +42,7 @@ export function BuildingDetailPage() {
   }
 
   const building = query.data
-  const gender = building.gender ? GENDER[building.gender] : MIXED_GENDER
+  const gender = buildingGender(building.gender)
   const status = ACTIVE_STATUS[building.isActive ? 'ACTIVE' : 'INACTIVE']
 
   return (

@@ -13,7 +13,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useListParams } from '@/hooks/useListParams'
-import { formatDate } from '@/lib/format'
+import { formatDateRange } from '@/lib/format'
 import { PERIOD_STATUS } from '@/lib/labels'
 import type { RegistrationPeriod } from '@/types/registration'
 import { RegistrationPeriodFormDialog } from '../components/RegistrationPeriodFormDialog'
@@ -80,15 +80,14 @@ export function RegistrationPeriodListPage() {
     },
     {
       id: 'startAt',
-      header: 'Bắt đầu',
+      header: 'Nhận đơn',
       enableSorting: true,
-      cell: ({ row }) => formatDate(row.original.startAt),
+      cell: ({ row }) => formatDateRange(row.original.startAt, row.original.endAt),
     },
     {
-      id: 'endAt',
-      header: 'Kết thúc',
-      enableSorting: true,
-      cell: ({ row }) => formatDate(row.original.endAt),
+      id: 'stay',
+      header: 'Thời gian ở',
+      cell: ({ row }) => formatDateRange(row.original.stayStartAt, row.original.stayEndAt),
     },
     {
       id: 'registrationCount',
@@ -183,17 +182,12 @@ export function RegistrationPeriodListPage() {
         onOpenChange={(open) => !open && setToggling(null)}
         title={toggling?.isOpen ? 'Đóng đợt đăng ký?' : 'Mở đợt đăng ký?'}
         description={
-          toggling?.isOpen ? (
-            <>
-              Đóng đợt <strong>{toggling.name}</strong>. Sinh viên sẽ không nộp đơn mới được nữa; các
-              đơn đã nộp vẫn được giữ để duyệt.
-            </>
-          ) : (
-            <>
-              Mở đợt <strong>{toggling?.name}</strong> cho sinh viên nộp đơn. Nếu đang có đợt khác mở,
-              hãy đóng đợt đó trước.
-            </>
-          )
+          <>
+            {toggling?.isOpen ? 'Đóng' : 'Mở'} đợt <strong>{toggling?.name}</strong>.{' '}
+            {toggling?.isOpen
+              ? 'Sinh viên sẽ không nộp đơn mới được nữa; các đơn đã nộp vẫn được giữ để duyệt.'
+              : 'Sinh viên nộp được đơn cho tới khi đóng đợt. Chỉ mở được khi không có đợt khác đang mở.'}
+          </>
         }
         confirmLabel={toggling?.isOpen ? 'Đóng đợt' : 'Mở đợt'}
         destructive={!!toggling?.isOpen}

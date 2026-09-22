@@ -9,8 +9,7 @@ export const roomKeys = {
   byBuilding: (buildingId: string, params: ListParams) =>
     ['rooms', 'building', buildingId, params] as const,
   detail: (id: string) => ['rooms', 'detail', id] as const,
-  available: (params: ListParams) => ['rooms', 'available', params] as const,
-  availableOptions: ['rooms', 'available', 'options'] as const,
+  availableSummary: ['rooms', 'available', 'summary'] as const,
 }
 
 export function useBuildingRooms(buildingId: string, params: ListParams) {
@@ -29,19 +28,11 @@ export function useRoom(id: string) {
   })
 }
 
-export function useAvailableRooms(params: ListParams) {
+/** Chỗ trống theo tòa × loại phòng mà sinh viên đang đăng nhập được ở. */
+export function useAvailableSummary() {
   return useQuery({
-    queryKey: roomKeys.available(params),
-    queryFn: () => roomsApi.listAvailableRooms(params),
-    placeholderData: keepPreviousData,
-  })
-}
-
-/** Tòa và loại phòng cho bộ lọc trang phòng còn chỗ. */
-export function useAvailableRoomOptions() {
-  return useQuery({
-    queryKey: roomKeys.availableOptions,
-    queryFn: roomsApi.getAvailableRoomOptions,
+    queryKey: roomKeys.availableSummary,
+    queryFn: roomsApi.getAvailableSummary,
   })
 }
 

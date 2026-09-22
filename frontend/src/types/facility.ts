@@ -52,6 +52,13 @@ export interface RoomTypeInput {
   isActive: boolean
 }
 
+/** Tòa rút gọn đi kèm dữ liệu khác (chỗ trống, đơn đăng ký). */
+export interface BuildingRef {
+  id: string
+  name: string
+  gender: Gender | null
+}
+
 export interface RoomTypeRef {
   id: string
   name: string
@@ -106,18 +113,12 @@ export interface BedUpdateInput {
   status?: 'AVAILABLE' | 'MAINTENANCE'
 }
 
-/** Phòng còn chỗ cho sinh viên — không có thông tin giường hay người ở. */
-export interface AvailableRoom {
-  id: string
-  code: string
-  floor: number
-  building: { id: string; name: string; gender: Gender | null }
+/** Chỗ trống gom theo tòa × loại phòng — trang "Chỗ trống" và form nộp đơn của sinh viên. */
+export interface AvailableSummary {
+  building: BuildingRef
   roomType: RoomTypeRef
+  /** Số phòng còn chỗ. */
+  roomCount: number
+  /** Tổng số giường còn trống. */
   availableBeds: number
-}
-
-/** Lựa chọn cho bộ lọc trang phòng còn chỗ — chỉ gồm tòa/loại phòng đang còn chỗ. */
-export interface AvailableRoomOptions {
-  buildings: { id: string; name: string; gender: Gender | null }[]
-  roomTypes: RoomTypeRef[]
 }

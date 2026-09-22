@@ -38,6 +38,11 @@ export const BED_STATUS = def({
 /** Tòa không đặt giới tính (`gender = null`). */
 export const MIXED_GENDER: LabelDef = { label: 'Hỗn hợp', tone: 'neutral' }
 
+/** Nhãn giới tính của tòa: Nam / Nữ / Hỗn hợp. */
+export function buildingGender(gender: keyof typeof GENDER | null): LabelDef {
+  return gender ? GENDER[gender] : MIXED_GENDER
+}
+
 /**
  * Trạng thái phòng — backend tính từ giường, không lưu DB.
  * FULL dùng `info` như "Đang ở": phòng đầy là đang được dùng bình thường.
@@ -59,6 +64,21 @@ export const PERIOD_STATUS = def({
   OPEN: { label: 'Đang mở', tone: 'success' },
   CLOSED: { label: 'Đã đóng', tone: 'neutral' },
 })
+
+/** Trường hồ sơ sinh viên — dùng cho thông báo "còn thiếu" và nhãn form. */
+export const PROFILE_FIELD = {
+  phone: 'Số điện thoại',
+  dob: 'Ngày sinh',
+  className: 'Lớp',
+  faculty: 'Khoa',
+  hometown: 'Quê quán',
+  citizenId: 'Số CCCD',
+} as const
+
+/** ['dob', 'citizenId'] -> "Ngày sinh, Số CCCD" */
+export function missingFieldLabels(fields: (keyof typeof PROFILE_FIELD)[]): string {
+  return fields.map((f) => PROFILE_FIELD[f]).join(', ')
+}
 
 export const REGISTRATION_STATUS = def({
   PENDING: { label: 'Chờ duyệt', tone: 'warning' },

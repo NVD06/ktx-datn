@@ -114,6 +114,8 @@ export function buildOpenApiDoc() {
       { name: 'Beds', description: 'Giường trong phòng' },
       { name: 'Users', description: 'Tài khoản người dùng (ADMIN)' },
       { name: 'Registration periods', description: 'Đợt đăng ký ở KTX — tối đa 1 đợt mở' },
+      { name: 'Registrations', description: 'Đơn đăng ký ở KTX' },
+      { name: 'Profile', description: 'Hồ sơ của sinh viên đang đăng nhập' },
     ],
   });
 }

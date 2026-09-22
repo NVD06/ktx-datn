@@ -42,6 +42,16 @@ export function errorHandler(
   res: Response<ErrorResponse>,
   _next: NextFunction,
 ) {
+  // Zod lọt tới đây nghĩa là validate ngoài middleware validate() — vẫn trả 400 cho đúng.
+  if (err instanceof ZodError) {
+    const details: Record<string, string[]> = {};
+    for (const issue of err.issues) {
+      const key = issue.path.join('.') || '_';
+      (details[key] ??= []).push(issue.message);
+    }
+    err = ApiError.validation(details);
+  }
+
   if (err instanceof ApiError) {
     res.status(err.status).json({
       success: false,
@@ -50,20 +60,6 @@ export function errorHandler(
         message: err.message,
         ...(err.details ? { details: err.details } : {}),
       },
-    });
-    return;
-  }
-
-  // Zod lọt tới đây nghĩa là validate ngoài middleware validate() — vẫn trả 400 cho đúng.
-  if (err instanceof ZodError) {
-    const details: Record<string, string[]> = {};
-    for (const issue of err.issues) {
-      const key = issue.path.join('.') || '_';
-      (details[key] ??= []).push(issue.message);
-    }
-    res.status(400).json({
-      success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ', details },
     });
     return;
   }

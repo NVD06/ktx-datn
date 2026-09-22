@@ -5,7 +5,9 @@ import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPag
 import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
 import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
+import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
+import { MyRegistrationsPage } from '@/features/registrations/pages/MyRegistrationsPage'
 import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
 import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
 import { RoomDetailPage } from '@/features/rooms/pages/RoomDetailPage'
@@ -55,6 +57,8 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <StudentHomePage /> },
           { path: 'rooms', element: <AvailableRoomsPage /> },
+          { path: 'registrations', element: <MyRegistrationsPage /> },
+          { path: 'profile', element: <ProfilePage /> },
         ],
       },
     ],

@@ -2,15 +2,19 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
-import type {
-  CreateRegistrationPeriodInput,
-  RegistrationPeriodListQuery,
-  UpdateRegistrationPeriodInput,
+import {
+  periodDateIssues,
+  type CreateRegistrationPeriodInput,
+  type RegistrationPeriodListQuery,
+  type UpdateRegistrationPeriodInput,
 } from './registration-period.schema.js';
 
 /*
  * Đợt đăng ký dùng chung toàn hệ thống, không gắn theo tòa nên không có
  * buildingScope. Quyền ghi (chỉ ADMIN) chặn ở route.
+ *
+ * Mỗi đợt có 2 khoảng thời gian: nhận đơn (`startAt`–`endAt`) và ở
+ * (`stayStartAt`–`stayEndAt`, kỳ hạn hợp đồng sinh ra từ đợt).
  *
  * Quy tắc: tại một thời điểm chỉ có tối đa 1 đợt `isOpen`. Đợt chỉ đóng khi
  * Admin bấm đóng — không tự đóng theo `endAt`, không có cron.
@@ -61,10 +65,6 @@ export async function getCurrent() {
   return period ? toDto(period) : null;
 }
 
-export async function getById(id: string) {
-  return toDto(await findOrThrow(id));
-}
-
 export async function create(input: CreateRegistrationPeriodInput) {
   const period = await prisma.registrationPeriod.create({ data: input, include: INCLUDE });
   return toDto(period);
@@ -73,14 +73,14 @@ export async function create(input: CreateRegistrationPeriodInput) {
 export async function update(id: string, input: UpdateRegistrationPeriodInput) {
   const current = await findOrThrow(id);
 
-  // Schema chỉ so được khi gửi cả 2 ngày; gửi 1 ngày thì so với ngày đang lưu.
-  const startAt = input.startAt ?? current.startAt;
-  const endAt = input.endAt ?? current.endAt;
-  if (endAt <= startAt) {
-    throw ApiError.badRequest('VALIDATION_ERROR', 'Dữ liệu không hợp lệ', {
-      [input.endAt ? 'endAt' : 'startAt']: ['Ngày kết thúc phải sau ngày bắt đầu'],
-    });
-  }
+  // Schema chỉ so được các ngày có trong body; PATCH một phần thì ghép với ngày đang lưu.
+  const issues = periodDateIssues({
+    startAt: input.startAt ?? current.startAt,
+    endAt: input.endAt ?? current.endAt,
+    stayStartAt: input.stayStartAt ?? current.stayStartAt,
+    stayEndAt: input.stayEndAt ?? current.stayEndAt,
+  });
+  if (Object.keys(issues).length > 0) throw ApiError.validation(issues);
 
   const period = await prisma.registrationPeriod.update({ where: { id }, data: input, include: INCLUDE });
   return toDto(period);
@@ -97,7 +97,7 @@ export async function open(id: string) {
       if (target.endAt < new Date()) {
         throw ApiError.conflict(
           'PERIOD_ENDED',
-          `Đợt "${target.name}" đã qua ngày kết thúc nên không thể mở. Hãy sửa ngày kết thúc trước.`,
+          `Đợt "${target.name}" đã hết hạn nhận đơn nên không thể mở. Hãy sửa ngày hết hạn nhận đơn trước.`,
         );
       }
 

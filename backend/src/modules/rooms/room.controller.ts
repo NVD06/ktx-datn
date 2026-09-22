@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
 import {
-  availableRoomQuerySchema,
   buildingRoomListQuerySchema,
   roomListQuerySchema,
   type CreateRoomInput,
@@ -24,16 +23,9 @@ export async function listByBuilding(req: Request, res: Response) {
   res.json(ok(data, meta));
 }
 
-/** GET /api/v1/rooms/available */
-export async function listAvailable(req: Request, res: Response) {
-  const query = availableRoomQuerySchema.parse(req.query);
-  const { data, meta } = await roomService.listAvailable(currentUser(req), query);
-  res.json(ok(data, meta));
-}
-
-/** GET /api/v1/rooms/available/options */
-export async function listAvailableOptions(req: Request, res: Response) {
-  res.json(ok(await roomService.listAvailableOptions(currentUser(req))));
+/** GET /api/v1/rooms/available/summary */
+export async function availableSummary(req: Request, res: Response) {
+  res.json(ok(await roomService.availableSummary(currentUser(req))));
 }
 
 /** GET /api/v1/rooms/:id */

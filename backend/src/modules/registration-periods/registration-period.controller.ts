@@ -19,11 +19,6 @@ export async function getCurrent(_req: Request, res: Response) {
   res.json(ok(await periodService.getCurrent()));
 }
 
-/** GET /api/v1/registration-periods/:id */
-export async function getById(req: Request, res: Response) {
-  res.json(ok(await periodService.getById(param(req))));
-}
-
 /** POST /api/v1/registration-periods */
 export async function create(req: Request, res: Response) {
   const period = await periodService.create(req.body as CreateRegistrationPeriodInput);

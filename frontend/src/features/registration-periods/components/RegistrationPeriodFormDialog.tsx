@@ -13,11 +13,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { fromDateInput, toDateInput } from '@/lib/date-input'
 import { showFormError } from '@/lib/form'
 import type { RegistrationPeriod } from '@/types/registration'
 import { useSaveRegistrationPeriod } from '../hooks/useRegistrationPeriods'
 
 // Giữ khớp với backend/src/modules/registration-periods/registration-period.schema.ts.
+// Chuỗi YYYY-MM-DD so sánh được trực tiếp. Cùng ngày vẫn hợp lệ vì ngày kết thúc lấy cuối ngày.
+const day = z.string().min(1, 'Vui lòng chọn ngày')
 const schema = z
   .object({
     name: z
@@ -25,28 +28,36 @@ const schema = z
       .trim()
       .min(1, 'Tên đợt đăng ký không được để trống')
       .max(100, 'Tên đợt đăng ký tối đa 100 ký tự'),
-    startAt: z.string().min(1, 'Vui lòng chọn ngày bắt đầu'),
-    endAt: z.string().min(1, 'Vui lòng chọn ngày kết thúc'),
+    startAt: day,
+    endAt: day,
+    stayStartAt: day,
+    stayEndAt: day,
   })
-  // Chuỗi YYYY-MM-DD so sánh được trực tiếp. Cùng ngày vẫn hợp lệ vì endAt lấy cuối ngày.
-  .refine((v) => !v.startAt || !v.endAt || v.endAt >= v.startAt, {
-    message: 'Ngày kết thúc không được trước ngày bắt đầu',
-    path: ['endAt'],
+  .superRefine((v, ctx) => {
+    const issue = (path: string, message: string) => ctx.addIssue({ code: 'custom', path: [path], message })
+    if (v.startAt && v.endAt && v.endAt < v.startAt) issue('endAt', 'Không được trước ngày bắt đầu nhận đơn')
+    if (v.stayStartAt && v.stayEndAt && v.stayEndAt < v.stayStartAt) issue('stayEndAt', 'Không được trước ngày bắt đầu ở')
+    if (v.startAt && v.stayStartAt && v.stayStartAt < v.startAt) issue('stayStartAt', 'Không được trước ngày bắt đầu nhận đơn')
   })
 
 type FormValues = z.infer<typeof schema>
+type DateField = Exclude<keyof FormValues, 'name'>
 
-/** ISO -> "2026-09-01" theo giờ máy người dùng, cho <input type="date">. */
-function toDateInput(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
-
-/** Ngày bắt đầu tính từ 00:00, ngày kết thúc tính hết 23:59:59 của ngày đó. */
-function toIso(date: string, edge: 'start' | 'end') {
-  return new Date(`${date}T${edge === 'start' ? '00:00:00' : '23:59:59'}`).toISOString()
-}
+/** Hai khoảng thời gian của đợt — cùng một kiểu ô nhập "Từ ngày / Đến ngày". */
+const RANGES: { legend: string; from: DateField; to: DateField; hint: string }[] = [
+  {
+    legend: 'Thời gian nhận đơn',
+    from: 'startAt',
+    to: 'endAt',
+    hint: 'Chỉ để thông báo cho sinh viên — hệ thống không tự đóng đợt, quản trị viên đóng bằng tay.',
+  },
+  {
+    legend: 'Thời gian ở',
+    from: 'stayStartAt',
+    to: 'stayEndAt',
+    hint: 'Kỳ hạn của hợp đồng lập từ đợt này. Sửa sau không ảnh hưởng hợp đồng đã lập.',
+  },
+]
 
 interface Props {
   open: boolean
@@ -80,22 +91,26 @@ function RegistrationPeriodForm({
   onDone: () => void
 }) {
   const save = useSaveRegistrationPeriod()
+  const dateFields = RANGES.flatMap((r) => [r.from, r.to])
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: period
-      ? { name: period.name, startAt: toDateInput(period.startAt), endAt: toDateInput(period.endAt) }
-      : { name: '', startAt: '', endAt: '' },
+    defaultValues: {
+      name: period?.name ?? '',
+      ...Object.fromEntries(dateFields.map((f) => [f, period ? toDateInput(period[f]) : ''])),
+    },
   })
   const err = form.formState.errors
 
   function onSubmit(values: FormValues) {
-    const input = {
-      name: values.name,
-      startAt: toIso(values.startAt, 'start'),
-      endAt: toIso(values.endAt, 'end'),
-    }
+    // Ngày bắt đầu tính từ 00:00, ngày kết thúc tính hết 23:59:59.
+    const dates = Object.fromEntries(
+      RANGES.flatMap((r) => [
+        [r.from, fromDateInput(values[r.from], 'start')],
+        [r.to, fromDateInput(values[r.to], 'end')],
+      ]),
+    ) as Record<DateField, string>
     save.mutate(
-      { id: period?.id, input },
+      { id: period?.id, input: { name: values.name, ...dates } },
       {
         onSuccess() {
           toast.success(period ? 'Đã cập nhật đợt đăng ký' : 'Đã thêm đợt đăng ký')
@@ -112,18 +127,19 @@ function RegistrationPeriodForm({
         <Input id="rp-name" placeholder="Đăng ký học kỳ 1 năm 2026-2027" {...form.register('name')} />
       </FormField>
 
-      <div className="grid grid-cols-2 gap-3">
-        <FormField label="Ngày bắt đầu" htmlFor="rp-start" error={err.startAt?.message}>
-          <Input id="rp-start" type="date" {...form.register('startAt')} />
-        </FormField>
-        <FormField label="Ngày kết thúc" htmlFor="rp-end" error={err.endAt?.message}>
-          <Input id="rp-end" type="date" {...form.register('endAt')} />
-        </FormField>
-      </div>
-
-      <p className="tone-info rounded-md border p-2.5 text-xs">
-        Hệ thống không tự đóng đợt khi qua ngày kết thúc — quản trị viên đóng đợt bằng tay.
-      </p>
+      {RANGES.map(({ legend, from, to, hint }) => (
+        <fieldset key={from} className="space-y-2">
+          <legend className="text-sm font-medium">{legend}</legend>
+          <div className="grid grid-cols-2 gap-3">
+            {[from, to].map((field, i) => (
+              <FormField key={field} label={i ? 'Đến ngày' : 'Từ ngày'} htmlFor={`rp-${field}`} error={err[field]?.message}>
+                <Input id={`rp-${field}`} type="date" {...form.register(field)} />
+              </FormField>
+            ))}
+          </div>
+          <p className="text-muted-foreground text-xs">{hint}</p>
+        </fieldset>
+      ))}
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone} disabled={save.isPending}>

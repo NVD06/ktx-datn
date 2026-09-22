@@ -49,21 +49,7 @@ export const roomListQuerySchema = listQuerySchema.extend({
 
 export const buildingRoomListQuerySchema = listQuerySchema.extend(roomFilters);
 
-export const availableRoomQuerySchema = listQuerySchema.extend({
-  buildingId: z.uuid().optional(),
-  roomTypeId: z.uuid().optional(),
-  gender: z
-    .enum(['MALE', 'FEMALE', 'MIXED'])
-    .optional()
-    .openapi({
-      description:
-        'Lọc theo loại tòa: MALE = tòa nam, FEMALE = tòa nữ, MIXED = tòa hỗn hợp. ' +
-        'Bị bỏ qua với STUDENT — sinh viên luôn chỉ thấy tòa cùng giới tính và tòa hỗn hợp.',
-    }),
-});
-
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
 export type UpdateRoomInput = z.infer<typeof updateRoomSchema>;
 export type RoomListQuery = z.infer<typeof roomListQuerySchema>;
 export type BuildingRoomListQuery = z.infer<typeof buildingRoomListQuerySchema>;
-export type AvailableRoomQuery = z.infer<typeof availableRoomQuerySchema>;

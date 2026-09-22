@@ -1,8 +1,7 @@
-import { api, getPaged } from './client'
-import type { ListParams, SuccessResponse } from '@/types/api'
+import { api } from './client'
+import type { SuccessResponse } from '@/types/api'
 import type {
-  AvailableRoom,
-  AvailableRoomOptions,
+  AvailableSummary,
   Bed,
   BedUpdateInput,
   RoomDetail,
@@ -30,12 +29,8 @@ export async function deleteRoom(id: string) {
   await api.delete(`/rooms/${id}`)
 }
 
-export function listAvailableRooms(params: ListParams) {
-  return getPaged<AvailableRoom>('/rooms/available', params)
-}
-
-export async function getAvailableRoomOptions() {
-  const res = await api.get<SuccessResponse<AvailableRoomOptions>>('/rooms/available/options')
+export async function getAvailableSummary() {
+  const res = await api.get<SuccessResponse<AvailableSummary[]>>('/rooms/available/summary')
   return res.data.data
 }
 
