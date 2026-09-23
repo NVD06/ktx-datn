@@ -9,20 +9,24 @@ export const AUTH_QUERY_KEY = ['auth', 'me'] as const
 /**
  * Người dùng đang đăng nhập.
  *
- * `getMe()` trả null thay vì ném lỗi khi chưa đăng nhập, nên đây là truy vấn
- * luôn thành công — `user === null` nghĩa là khách vãng lai.
+ * `getMe()` trả null khi chưa đăng nhập (401) — `user === null` nghĩa là khách
+ * vãng lai. `error` chỉ có khi không hỏi được máy chủ (mất mạng, lỗi 500): khi
+ * đó chưa biết người dùng là ai, route guard báo lỗi thay vì đẩy về trang đăng nhập.
  */
 export function useAuth() {
+  // Không đặt `retry`: dùng mặc định của queryClient — lỗi mạng/5xx thử lại 2 lần.
   const query = useQuery<AuthUser | null>({
     queryKey: AUTH_QUERY_KEY,
     queryFn: authApi.getMe,
     staleTime: Infinity, // chỉ đổi khi đăng nhập/đăng xuất, không tự làm mới
-    retry: false,
   })
 
   return {
     user: query.data ?? null,
     isLoading: query.isPending,
+    error: query.error,
+    retry: () => void query.refetch(),
+    isRetrying: query.isFetching,
     isAuthenticated: !!query.data,
   }
 }

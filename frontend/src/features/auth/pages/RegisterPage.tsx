@@ -4,24 +4,31 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import * as authApi from '@/api/auth'
-import { getErrorMessage } from '@/api/client'
 import { FormField } from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { applyFormError } from '@/lib/form'
 import { GENDER } from '@/lib/labels'
 
 // Giữ khớp với backend/src/modules/auth/auth.schema.ts — validate 2 lớp,
 // nhưng backend mới là nơi quyết định (xem docs/convention.md §3).
 const registerSchema = z
   .object({
-    email: z.email('Email không hợp lệ'),
-    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    email: z.string().trim().pipe(z.email('Email không hợp lệ')),
+    password: z
+      .string()
+      .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
+      .max(72, 'Mật khẩu tối đa 72 ký tự'),
     confirmPassword: z.string(),
-    fullName: z.string().min(2, 'Họ tên quá ngắn'),
-    studentCode: z.string().min(3, 'Mã sinh viên quá ngắn'),
+    fullName: z.string().trim().min(2, 'Họ tên quá ngắn').max(100, 'Họ tên tối đa 100 ký tự'),
+    studentCode: z
+      .string()
+      .trim()
+      .min(3, 'Mã sinh viên quá ngắn')
+      .max(20, 'Mã sinh viên tối đa 20 ký tự'),
     gender: z.enum(['MALE', 'FEMALE']),
-    className: z.string().optional(),
+    className: z.string().trim().max(50, 'Lớp tối đa 50 ký tự').optional(),
   })
   .refine((v) => v.password === v.confirmPassword, {
     message: 'Mật khẩu nhập lại không khớp',
@@ -57,7 +64,16 @@ export function RegisterPage() {
 
   function onSubmit(values: RegisterForm) {
     const { confirmPassword: _confirm, className, ...rest } = values
-    register.mutate({ ...rest, ...(className ? { className } : {}) })
+    register.mutate(
+      { ...rest, ...(className ? { className } : {}) },
+      {
+        // Lỗi theo field nằm dưới ô nhập; phần còn lại (email đã dùng…) hiện ở khung lỗi chung.
+        onError(error) {
+          const message = applyFormError(form, error)
+          if (message) form.setError('root.server', { message })
+        },
+      },
+    )
   }
 
   const err = form.formState.errors
@@ -96,7 +112,7 @@ export function RegisterPage() {
                   <option value="FEMALE">{GENDER.FEMALE.label}</option>
                 </select>
               </FormField>
-              <FormField label="Lớp" htmlFor="className">
+              <FormField label="Lớp" htmlFor="className" error={err.className?.message}>
                 <Input id="className" placeholder="CNTT1" {...form.register('className')} />
               </FormField>
             </div>
@@ -113,9 +129,9 @@ export function RegisterPage() {
               <Input id="confirmPassword" type="password" {...form.register('confirmPassword')} />
             </FormField>
 
-            {register.isError && (
+            {err.root?.server && (
               <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">
-                {getErrorMessage(register.error)}
+                {err.root.server.message}
               </p>
             )}
 

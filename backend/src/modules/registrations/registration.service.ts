@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope } from '../../utils/scope.js';
 import * as profileService from '../profile/profile.service.js';
-import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
+import { GENDER_LABEL, HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
 import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
 import type { CreateRegistrationInput, RegistrationListQuery } from './registration.schema.js';
 
@@ -46,8 +46,6 @@ async function toDtos<R extends { buildingId: string | null }>(rows: R[]) {
   const byId = new Map(buildings.map((b) => [b.id, b]));
   return rows.map((r) => toDto(r, (r.buildingId && byId.get(r.buildingId)) || null));
 }
-
-const GENDER_LABEL = { MALE: 'nam', FEMALE: 'nữ' } as const;
 
 /** Ngày trong thông báo lỗi, theo giờ Việt Nam: "31/01/2027". */
 function formatDateVN(date: Date) {

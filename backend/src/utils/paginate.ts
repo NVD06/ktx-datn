@@ -28,7 +28,7 @@ export interface SortOptions {
 export interface PageArgs {
   skip: number;
   take: number;
-  orderBy: Record<string, SortOrder>;
+  orderBy: Record<string, SortOrder>[];
 }
 
 export function parseQuery(q: ListQuery, sort: SortOptions) {
@@ -46,7 +46,11 @@ export function parseQuery(q: ListQuery, sort: SortOptions) {
   const sortBy = requested ? (q.sortBy as string) : fallback.field;
   const order: SortOrder = q.order === 'asc' || q.order === 'desc' ? q.order : fallback.order;
 
-  return { skip: (page - 1) * limit, take: limit, orderBy: { [sortBy]: order }, page, limit };
+  // `id` làm khóa phụ: sắp theo cột có giá trị trùng (tầng, trạng thái…) thì Postgres
+  // không đảm bảo thứ tự giữa các dòng bằng nhau, một dòng có thể lặp/sót giữa hai trang.
+  const orderBy = [{ [sortBy]: order }, { id: 'asc' as const }];
+
+  return { skip: (page - 1) * limit, take: limit, orderBy, page, limit };
 }
 
 /**

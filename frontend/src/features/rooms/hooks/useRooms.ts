@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { listBuildingRooms } from '@/api/buildings'
 import * as roomsApi from '@/api/rooms'
 import { useInvalidate } from '@/hooks/useInvalidate'
@@ -55,8 +55,22 @@ export function useSaveRoom() {
 }
 
 export function useDeleteRoom() {
-  const invalidate = useInvalidateRooms()
-  return useMutation({ mutationFn: roomsApi.deleteRoom, onSuccess: invalidate })
+  const queryClient = useQueryClient()
+  const invalidateCounts = useInvalidate(['buildings'], ['room-types'])
+  return useMutation({
+    mutationFn: roomsApi.deleteRoom,
+    onSuccess: (_data, id) =>
+      Promise.all([
+        invalidateCounts(),
+        // Trang chi tiết của chính phòng vừa xóa có thể còn đang mở: tải lại sẽ nhận
+        // 404 và nháy lỗi trước khi kịp chuyển trang — chỉ đánh dấu cũ, không tải lại.
+        queryClient.invalidateQueries({
+          queryKey: roomKeys.all,
+          predicate: (q) => q.queryKey[1] !== 'detail' || q.queryKey[2] !== id,
+        }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.detail(id), refetchType: 'none' }),
+      ]),
+  })
 }
 
 // ── Giường — trạng thái giường quyết định trạng thái phòng nên làm mới cả nhóm 'rooms'.

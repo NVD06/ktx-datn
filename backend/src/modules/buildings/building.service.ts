@@ -1,9 +1,15 @@
 import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import type { Gender } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
 import { outOfScope, ownBuildingScope } from '../../utils/scope.js';
+import {
+  GENDER_LABEL,
+  HOLDING_CONTRACT_STATUSES,
+  OTHER_GENDER,
+} from '../rooms/room-eligibility.js';
 import type {
   BuildingListQuery,
   CreateBuildingInput,
@@ -80,11 +86,51 @@ export async function create(input: CreateBuildingInput) {
   return toDto(building);
 }
 
+/**
+ * Chuyển tòa sang một giới tính (null -> hỗn hợp thì luôn được) chỉ khi trong tòa
+ * không còn sinh viên khác giới đang ở / đã được xếp giường, và không còn đơn
+ * đang chờ duyệt của sinh viên khác giới chọn tòa này.
+ */
+async function assertGenderChangeable(building: { id: string; name: string }, gender: Gender) {
+  const other = OTHER_GENDER[gender];
+  const [residents, pending] = await Promise.all([
+    prisma.contract.count({
+      where: {
+        status: { in: [...HOLDING_CONTRACT_STATUSES] },
+        bed: { room: { buildingId: building.id } },
+        registration: { student: { profile: { gender: other } } },
+      },
+    }),
+    prisma.registration.count({
+      where: { buildingId: building.id, status: 'PENDING', student: { profile: { gender: other } } },
+    }),
+  ]);
+
+  if (residents + pending > 0) {
+    const reasons = [
+      residents > 0 ? `${residents} sinh viên ${GENDER_LABEL[other]} đang ở hoặc đã được xếp giường` : null,
+      pending > 0 ? `${pending} đơn chờ duyệt của sinh viên ${GENDER_LABEL[other]}` : null,
+    ].filter(Boolean);
+    throw ApiError.conflict(
+      'BUILDING_GENDER_IN_USE',
+      `Tòa nhà ${building.name} đang có ${reasons.join(' và ')}, ` +
+        `không thể chuyển thành tòa ${GENDER_LABEL[gender]}.`,
+    );
+  }
+}
+
 export async function update(id: string, input: UpdateBuildingInput) {
-  const current = await prisma.building.findUnique({ where: { id }, select: { id: true } });
+  const current = await prisma.building.findUnique({
+    where: { id },
+    select: { id: true, name: true, gender: true },
+  });
   if (!current) throw ApiError.notFound('Không tìm thấy tòa nhà');
 
   if (input.name !== undefined) await assertNameAvailable(input.name, id);
+
+  if (input.gender && input.gender !== current.gender) {
+    await assertGenderChangeable(current, input.gender);
+  }
 
   if (input.floors !== undefined) {
     const highest = await prisma.room.findFirst({
@@ -128,6 +174,17 @@ export async function remove(id: string) {
       'BUILDING_HAS_MANAGERS',
       `Tòa nhà ${building.name} đang được gán cho ${building._count.managers} quản lý. ` +
         'Hãy gỡ quản lý khỏi tòa nhà trước khi xóa.',
+    );
+  }
+
+  // Registration.buildingId không có khóa ngoại nên DB không tự chặn — xóa tòa sẽ
+  // làm đơn đã chọn tòa này mất nguyện vọng và không quản lý nào nhìn thấy nữa.
+  const registrations = await prisma.registration.count({ where: { buildingId: id } });
+  if (registrations > 0) {
+    throw ApiError.conflict(
+      'BUILDING_HAS_REGISTRATIONS',
+      `Tòa nhà ${building.name} đã có ${registrations} đơn đăng ký chọn làm nguyện vọng nên không thể xóa. ` +
+        'Hãy chuyển tòa nhà sang trạng thái ngừng hoạt động.',
     );
   }
 

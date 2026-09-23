@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { apiGet, apiPost } from './client'
 import type { AuthUser, RegisteredUser, RegisterInput } from '@/types/auth'
 
@@ -22,9 +23,11 @@ async function getCsrfToken(): Promise<string> {
 export async function getMe(): Promise<AuthUser | null> {
   try {
     return await apiGet<AuthUser>('/auth/me')
-  } catch {
-    // 401 là trạng thái hợp lệ: chưa đăng nhập.
-    return null
+  } catch (error) {
+    // 401 là trạng thái hợp lệ: chưa đăng nhập. Lỗi mạng / 500 thì ném tiếp để giao
+    // diện báo lỗi và cho thử lại, thay vì coi như đã đăng xuất.
+    if (error instanceof AxiosError && error.response?.status === 401) return null
+    throw error
   }
 }
 

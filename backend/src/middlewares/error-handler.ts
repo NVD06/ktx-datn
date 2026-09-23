@@ -33,6 +33,24 @@ const PRISMA_ERRORS: Record<string, { status: number; code: string; message: str
 };
 
 /**
+ * Lỗi của express.json()/urlencoded() — body hỏng là lỗi của client, không phải 500.
+ * body-parser gắn sẵn `status` (4xx) và `type` cho từng loại lỗi.
+ */
+const BODY_ERRORS: Record<string, { code: string; message: string }> = {
+  'entity.parse.failed': { code: 'INVALID_JSON', message: 'Dữ liệu gửi lên không đúng định dạng JSON' },
+  'entity.too.large': { code: 'PAYLOAD_TOO_LARGE', message: 'Dữ liệu gửi lên quá lớn' },
+};
+
+function bodyParserError(err: unknown) {
+  if (typeof err !== 'object' || err === null) return null;
+  const { type, status } = err as { type?: unknown; status?: unknown };
+  if (typeof type !== 'string' || typeof status !== 'number' || status < 400 || status >= 500) {
+    return null;
+  }
+  return { status, ...(BODY_ERRORS[type] ?? { code: 'BAD_REQUEST', message: 'Yêu cầu không hợp lệ' }) };
+}
+
+/**
  * Nơi duy nhất biến lỗi thành HTTP response.
  * Express 5 tự bắt cả lỗi từ async handler nên không cần wrapper.
  */
@@ -50,6 +68,15 @@ export function errorHandler(
       (details[key] ??= []).push(issue.message);
     }
     err = ApiError.validation(details);
+  }
+
+  const bodyError = bodyParserError(err);
+  if (bodyError) {
+    res.status(bodyError.status).json({
+      success: false,
+      error: { code: bodyError.code, message: bodyError.message },
+    });
+    return;
   }
 
   if (err instanceof ApiError) {

@@ -21,7 +21,10 @@ export const FREE_BED = {
   contracts: { none: { status: 'DRAFT' } },
 } as const satisfies Prisma.BedWhereInput;
 
-const OTHER_GENDER: Record<Gender, Gender> = { MALE: 'FEMALE', FEMALE: 'MALE' };
+export const OTHER_GENDER: Record<Gender, Gender> = { MALE: 'FEMALE', FEMALE: 'MALE' };
+
+/** Giới tính trong câu thông báo: "sinh viên nam", "tòa nữ". */
+export const GENDER_LABEL = { MALE: 'nam', FEMALE: 'nữ' } as const satisfies Record<Gender, string>;
 
 /**
  * Phòng mà sinh viên giới tính `gender` được ở:

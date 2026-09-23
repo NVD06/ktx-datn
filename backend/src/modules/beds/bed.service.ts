@@ -31,11 +31,20 @@ export async function create(user: AuthUser, roomId: string, input: CreateBedInp
         where: { id: roomId, ...buildingScope(user) },
         select: {
           code: true,
+          building: { select: { name: true, isActive: true } },
           roomType: { select: { name: true, capacity: true } },
           beds: { select: { code: true } },
         },
       });
       if (!room) throw outOfScope(user, 'Không tìm thấy phòng');
+
+      // Cùng quy tắc với thêm phòng: tòa ngừng hoạt động thì không mở rộng thêm chỗ.
+      if (!room.building.isActive) {
+        throw ApiError.conflict(
+          'BUILDING_INACTIVE',
+          `Tòa nhà ${room.building.name} đang ngừng hoạt động, không thể thêm giường`,
+        );
+      }
 
       if (room.beds.length >= room.roomType.capacity) {
         throw ApiError.conflict(

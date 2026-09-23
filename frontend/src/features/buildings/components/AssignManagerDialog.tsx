@@ -58,7 +58,8 @@ function AssignManagerContent({
   // kết quả sau mỗi lần gán/gỡ — danh sách này được làm mới sau mutation.
   const all = managers.data?.data ?? []
   const current = all.filter((m) => m.buildingId === building.id)
-  const candidates = all.filter((m) => m.buildingId !== building.id)
+  // Tài khoản đã khóa không gán được (backend trả 409) — vẫn hiện ở "Đang quản lý" để gỡ ra.
+  const candidates = all.filter((m) => m.buildingId !== building.id && m.isActive)
   const selected = candidates.find((m) => m.id === selectedId)
 
   function change(userId: string, buildingId: string | null, success: string) {
@@ -98,7 +99,12 @@ function AssignManagerContent({
                 {current.map((m) => (
                   <li key={m.id} className="flex items-center justify-between gap-2 px-3 py-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{m.fullName}</p>
+                      <p className="truncate text-sm font-medium">
+                        {m.fullName}
+                        {!m.isActive && (
+                          <span className="text-muted-foreground font-normal"> (đã khóa)</span>
+                        )}
+                      </p>
                       <p className="text-muted-foreground truncate text-xs">{m.email}</p>
                     </div>
                     <Button

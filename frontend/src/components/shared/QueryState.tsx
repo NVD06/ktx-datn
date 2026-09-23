@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { getErrorMessage } from '@/api/client'
+import { Button } from '@/components/ui/button'
 
 /**
  * Ba trạng thái mà màn hình dữ liệu nào cũng phải xử lý: đang tải, lỗi, rỗng.
@@ -42,6 +43,26 @@ export function FullPageLoading() {
   return (
     <div className="text-muted-foreground flex min-h-svh items-center justify-center text-sm">
       Đang tải…
+    </div>
+  )
+}
+
+/** Không hỏi được máy chủ ngay từ đầu (route guard gọi /auth/me thất bại) — kèm nút thử lại. */
+export function FullPageError({
+  error,
+  onRetry,
+  isRetrying = false,
+}: {
+  error: unknown
+  onRetry: () => void
+  isRetrying?: boolean
+}) {
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-3 p-8">
+      <ErrorState error={error} />
+      <Button variant="outline" onClick={onRetry} disabled={isRetrying}>
+        {isRetrying ? 'Đang thử lại…' : 'Thử lại'}
+      </Button>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { FullPageLoading } from '@/components/shared/QueryState'
+import { FullPageError, FullPageLoading } from '@/components/shared/QueryState'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { Role } from '@/types/auth'
 
@@ -16,7 +16,7 @@ interface Props {
  * backend kiểm tra lại ở requireRole + buildingScope (docs/convention.md §5.5).
  */
 export function ProtectedRoute({ roles }: Props) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, error, retry, isRetrying } = useAuth()
   const location = useLocation()
 
   // Chờ /auth/me trả lời xong mới quyết định, tránh chớp trang login rồi
@@ -25,9 +25,14 @@ export function ProtectedRoute({ roles }: Props) {
     return <FullPageLoading />
   }
 
+  // Máy chủ không trả lời: chưa biết đã đăng nhập hay chưa nên không đẩy về /login.
+  if (error) {
+    return <FullPageError error={error} onRetry={retry} isRetrying={isRetrying} />
+  }
+
   if (!user) {
-    // Nhớ trang đang muốn vào để đăng nhập xong quay lại đúng chỗ.
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+    // Nhớ trang đang muốn vào (kèm bộ lọc trên URL) để đăng nhập xong quay lại đúng chỗ.
+    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />
   }
 
   if (roles && !roles.includes(user.role)) {

@@ -8,7 +8,9 @@ const name = z
   .min(1, 'Tên đợt đăng ký không được để trống')
   .max(100, 'Tên đợt đăng ký tối đa 100 ký tự');
 // Nhận cả "2026-09-01" lẫn ISO đầy đủ — FE gửi từ <input type="date">.
-const date = (label: string) => z.coerce.date(`${label} không hợp lệ`);
+// Bắt buộc là chuỗi: `z.coerce.date()` đứng một mình biến `null`/`0`/`true` thành ngày 01/01/1970.
+const date = (label: string) =>
+  z.string(`${label} không hợp lệ`).pipe(z.coerce.date(`${label} không hợp lệ`));
 
 type PeriodDates = { startAt?: Date; endAt?: Date; stayStartAt?: Date; stayEndAt?: Date };
 
@@ -28,6 +30,10 @@ export function periodDateIssues(v: PeriodDates): Record<string, string[]> {
   // (KTX thường cho SV vào ở trong lúc vẫn nhận đơn bổ sung).
   if (v.startAt && v.stayStartAt && v.stayStartAt < v.startAt) {
     issues.stayStartAt = ['Ngày bắt đầu ở không được trước ngày bắt đầu nhận đơn'];
+  }
+  // Còn nhận đơn sau khi thời gian ở đã kết thúc thì đơn nộp muộn không có gì để ở.
+  if (v.endAt && v.stayEndAt && v.endAt > v.stayEndAt && !issues.endAt) {
+    issues.endAt = ['Ngày hết hạn nhận đơn không được sau ngày kết thúc ở'];
   }
   return issues;
 }

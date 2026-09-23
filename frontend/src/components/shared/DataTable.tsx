@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-table'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useMemo, type ReactNode } from 'react'
 import { Pagination } from '@/components/shared/Pagination'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import {
@@ -66,6 +66,16 @@ export function DataTable<TData extends { id: string }, TValue>({
   const rows = useMemo(() => data?.data ?? [], [data])
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: order === 'desc' }] : []
 
+  // Trang trên URL đã vượt trang cuối — ví dụ vừa xóa dòng cuối cùng của trang cuối,
+  // hoặc mở lại link cũ — thì lùi về trang cuối thay vì báo "chưa có dữ liệu".
+  const pageCount = meta ? Math.max(1, Math.ceil(meta.total / meta.limit)) : 1
+  const beyondLastPage = !!meta && meta.page > pageCount
+  const goToPage = useEffectEvent((page: number) => list.setPage(page))
+  useEffect(() => {
+    // Chờ hết fetch: dữ liệu giữ chỗ (keepPreviousData) vẫn mang số trang cũ.
+    if (beyondLastPage && !isFetching) goToPage(pageCount)
+  }, [beyondLastPage, isFetching, pageCount])
+
   const table = useReactTable({
     data: rows,
     columns,
@@ -92,7 +102,7 @@ export function DataTable<TData extends { id: string }, TValue>({
 
   let body: ReactNode
   if (error) body = stateRow(<ErrorState error={error} />)
-  else if (isLoading) body = stateRow(<LoadingState />)
+  else if (isLoading || beyondLastPage) body = stateRow(<LoadingState />)
   else if (rows.length === 0) {
     body = stateRow(<EmptyState title={emptyTitle} description={emptyDescription} />)
   } else {
@@ -157,7 +167,7 @@ export function DataTable<TData extends { id: string }, TValue>({
         </Table>
       </div>
 
-      {meta && !error && <Pagination meta={meta} onPageChange={list.setPage} />}
+      {meta && !error && !beyondLastPage && <Pagination meta={meta} onPageChange={list.setPage} />}
     </div>
   )
 }

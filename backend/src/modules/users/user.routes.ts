@@ -22,7 +22,7 @@ userRoutes.patch(
   '/:id',
   {
     summary: 'Gán quản lý vào tòa nhà (ADMIN)',
-    description: 'Người dùng không phải MANAGER -> 409.',
+    description: 'Người dùng không phải MANAGER, hoặc gán tài khoản đang bị khóa -> 409.',
     body: updateUserSchema,
     data: userSchema,
     errors: [400, 401, 403, 404, 409],

@@ -48,7 +48,10 @@ export async function list(query: UserListQuery) {
  * (`User.buildingId`) — đổi tòa là ghi đè, không cộng dồn.
  */
 export async function update(id: string, input: UpdateUserInput) {
-  const user = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { role: true, isActive: true, fullName: true },
+  });
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng');
 
   if (input.buildingId !== undefined) {
@@ -57,6 +60,14 @@ export async function update(id: string, input: UpdateUserInput) {
     }
 
     if (input.buildingId !== null) {
+      // Gỡ (null) thì vẫn cho, để dọn tòa của tài khoản đã khóa.
+      if (!user.isActive) {
+        throw ApiError.conflict(
+          'USER_INACTIVE',
+          `Tài khoản ${user.fullName} đang bị khóa, không thể gán vào tòa nhà`,
+        );
+      }
+
       const building = await prisma.building.findUnique({
         where: { id: input.buildingId },
         select: { name: true, isActive: true },

@@ -28,6 +28,7 @@ const schema = z
   .superRefine((v, ctx) => {
     const issue = (path: string, message: string) => ctx.addIssue({ code: 'custom', path: [path], message })
     if (v.startAt && v.endAt && v.endAt < v.startAt) issue('endAt', 'Không được trước ngày bắt đầu nhận đơn')
+    else if (v.endAt && v.stayEndAt && v.endAt > v.stayEndAt) issue('endAt', 'Không được sau ngày kết thúc ở')
     if (v.stayStartAt && v.stayEndAt && v.stayEndAt < v.stayStartAt) issue('stayEndAt', 'Không được trước ngày bắt đầu ở')
     if (v.startAt && v.stayStartAt && v.stayStartAt < v.startAt) issue('stayStartAt', 'Không được trước ngày bắt đầu nhận đơn')
   })

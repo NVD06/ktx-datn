@@ -54,7 +54,9 @@ buildingRoutes.patch(
   '/:id',
   {
     summary: 'Sửa tòa nhà (ADMIN)',
-    description: 'Không cho giảm số tầng xuống dưới tầng cao nhất đang có phòng (409).',
+    description:
+      'Không cho giảm số tầng xuống dưới tầng cao nhất đang có phòng (409). ' +
+      'Không cho chuyển tòa sang một giới tính khi còn sinh viên khác giới đang ở hoặc có đơn chờ duyệt (409).',
     body: updateBuildingSchema,
     data: buildingSchema,
     errors: [400, 401, 403, 404, 409],
@@ -68,7 +70,7 @@ buildingRoutes.delete(
   {
     summary: 'Xóa tòa nhà (ADMIN)',
     description:
-      'Chỉ xóa được tòa chưa có phòng và chưa gán quản lý. Ngược lại trả 409 kèm lý do — ' +
+      'Chỉ xóa được tòa chưa có phòng, chưa gán quản lý và chưa có đơn đăng ký chọn. Ngược lại trả 409 kèm lý do — ' +
       'dùng PATCH `isActive: false` để ngừng hoạt động.',
     data: deletedSchema,
     errors: [401, 403, 404, 409],

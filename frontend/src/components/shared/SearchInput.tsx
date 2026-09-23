@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { Input } from '@/components/ui/input'
 
 /** Ô tìm kiếm có debounce: ngừng gõ 300ms mới gọi `onChange`, không gọi API theo từng phím. */
@@ -13,12 +13,27 @@ export function SearchInput({
   placeholder?: string
 }) {
   const [text, setText] = useState(value)
+  const [lastValue, setLastValue] = useState(value)
+
+  // `value` đổi từ bên ngoài (bấm menu để xóa lọc, quay lại trang…) thì ô nhập
+  // theo URL — nếu không, lần debounce kế tiếp ghi chữ cũ trở lại URL. Bỏ qua khi
+  // `value` chỉ là bản đã trim của chữ đang gõ, để không nuốt dấu cách giữa hai từ.
+  if (value !== lastValue) {
+    setLastValue(value)
+    if (value !== text.trim()) setText(value)
+  }
+
+  // `onChange` của cha là hàm mới sau mỗi lần render; đưa vào deps thì timer bị đặt lại liên tục.
+  const emit = useEffectEvent((next: string) => onChange(next))
 
   useEffect(() => {
-    if (text === value) return
-    const timer = setTimeout(() => onChange(text.trim()), 300)
+    // So với bản đã trim: "abc " và URL "abc" là như nhau, không gọi lại (gọi lại
+    // sẽ xóa `page` trên URL, bấm sang trang 2 bị đá về trang 1).
+    const next = text.trim()
+    if (next === value) return
+    const timer = setTimeout(() => emit(next), 300)
     return () => clearTimeout(timer)
-  }, [text, value, onChange])
+  }, [text, value])
 
   return (
     <div className="relative w-64">

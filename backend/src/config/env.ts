@@ -5,14 +5,19 @@ import { z } from 'zod';
  * Thiếu biến nào thì dừng hẳn, thay vì để lỗi mơ hồ lúc chạy.
  */
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // Mặc định production: quên khai báo thì không lộ chi tiết lỗi ra ngoài.
+  // Máy dev đặt NODE_ENV=development trong .env.
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('production'),
   PORT: z.coerce.number().int().positive().default(3000),
-  DATABASE_URL: z.string().min(1, 'Thiếu chuỗi kết nối PostgreSQL'),
-  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET phải dài tối thiểu 32 ký tự'),
-  FRONTEND_URL: z.url('FRONTEND_URL phải là URL hợp lệ').default('http://localhost:5173'),
+  DATABASE_URL: z.string('Thiếu chuỗi kết nối PostgreSQL').min(1, 'Thiếu chuỗi kết nối PostgreSQL'),
+  AUTH_SECRET: z.string('Thiếu AUTH_SECRET').min(32, 'AUTH_SECRET phải dài tối thiểu 32 ký tự'),
 });
 
-const parsed = envSchema.safeParse(process.env);
+// Dòng `PORT=` để trống trong .env cho ra chuỗi rỗng — coi như chưa khai báo
+// để `.default()` còn tác dụng.
+const input = Object.fromEntries(Object.entries(process.env).filter(([, value]) => value !== ''));
+
+const parsed = envSchema.safeParse(input);
 
 if (!parsed.success) {
   console.error('\nBiến môi trường không hợp lệ — kiểm tra lại file backend/.env:\n');
