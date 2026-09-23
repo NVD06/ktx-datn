@@ -13,17 +13,12 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useRoomTypeOptions } from '@/features/room-types/hooks/useRoomTypes'
 import { useListParams } from '@/hooks/useListParams'
 import { formatMoney } from '@/lib/format'
-import { ACTIVE_STATUS, ROOM_STATUS } from '@/lib/labels'
+import { ACTIVE_OPTIONS, ACTIVE_STATUS, ROOM_STATUS } from '@/lib/labels'
 import type { Building, Room } from '@/types/facility'
 import { useBuildingRooms, useDeleteRoom } from '../hooks/useRooms'
 import { RoomFormDialog } from './RoomFormDialog'
 
 const STATUS_OPTIONS = Object.entries(ROOM_STATUS).map(([value, { label }]) => ({ value, label }))
-
-const ACTIVE_OPTIONS = [
-  { value: 'true', label: 'Đang hoạt động' },
-  { value: 'false', label: 'Ngừng hoạt động' },
-]
 
 /** Bảng phòng của một tòa, lọc theo tầng / loại phòng / trạng thái — tất cả ở server. */
 export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name' | 'floors'> }) {
@@ -98,17 +93,12 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
     {
       id: 'status',
       header: 'Trạng thái',
-      cell: ({ row }) => {
-        const status = ROOM_STATUS[row.original.status]
-        return (
-          <div className="flex gap-1">
-            <StatusBadge label={status.label} tone={status.tone} />
-            {!row.original.isActive && (
-              <StatusBadge label={ACTIVE_STATUS.INACTIVE.label} tone={ACTIVE_STATUS.INACTIVE.tone} />
-            )}
-          </div>
-        )
-      },
+      cell: ({ row }) => (
+        <div className="flex gap-1">
+          <StatusBadge {...ROOM_STATUS[row.original.status]} />
+          {!row.original.isActive && <StatusBadge {...ACTIVE_STATUS.INACTIVE} />}
+        </div>
+      ),
     },
     {
       id: 'actions',
@@ -139,15 +129,8 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
     <>
       <DataTable
         columns={columns}
-        data={query.data?.data}
-        meta={query.data?.meta}
-        isLoading={query.isPending}
-        isFetching={query.isFetching}
-        error={query.error}
-        sortBy={list.sortBy}
-        order={list.order}
-        onSortChange={list.setSort}
-        onPageChange={list.setPage}
+        query={query}
+        list={list}
         emptyTitle={hasFilter ? 'Không có phòng nào khớp bộ lọc' : 'Tòa nhà chưa có phòng'}
         emptyDescription={hasFilter ? 'Thử bỏ bớt bộ lọc.' : 'Bấm “Thêm phòng” để tạo phòng đầu tiên.'}
         toolbar={

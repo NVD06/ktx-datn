@@ -2,16 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -56,17 +48,14 @@ interface Props {
 
 export function BuildingFormDialog({ open, onOpenChange, building }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{building ? `Sửa tòa nhà ${building.name}` : 'Thêm tòa nhà'}</DialogTitle>
-          <DialogDescription>
-            Phòng thêm vào tòa chỉ được đặt ở tầng không vượt quá số tầng.
-          </DialogDescription>
-        </DialogHeader>
-        <BuildingForm building={building} onDone={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={building ? `Sửa tòa nhà ${building.name}` : 'Thêm tòa nhà'}
+      description="Phòng thêm vào tòa chỉ được đặt ở tầng không vượt quá số tầng."
+    >
+      <BuildingForm building={building} onDone={() => onOpenChange(false)} />
+    </FormDialog>
   )
 }
 
@@ -162,14 +151,7 @@ function BuildingForm({ building, onDone }: { building?: Building | null; onDone
         )}
       />
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone} disabled={save.isPending}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Đang lưu…' : 'Lưu'}
-        </Button>
-      </DialogFooter>
+      <FormDialogFooter onCancel={onDone} isPending={save.isPending} />
     </form>
   )
 }

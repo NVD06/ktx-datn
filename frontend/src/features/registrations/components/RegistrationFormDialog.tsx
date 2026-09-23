@@ -2,16 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { formatMoney } from '@/lib/format'
 import { showFormError } from '@/lib/form'
@@ -36,18 +28,14 @@ interface Props {
 /** Nộp đơn với nguyện vọng là tòa × loại phòng đã chọn — sinh viên chỉ thêm ghi chú. */
 export function RegistrationFormDialog({ target, onClose, periodName }: Props) {
   return (
-    <Dialog open={!!target} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Nộp đơn đăng ký ở</DialogTitle>
-          <DialogDescription>
-            Đợt {periodName}. Nguyện vọng giúp ban quản lý xếp giường, không đảm bảo được xếp đúng.
-          </DialogDescription>
-        </DialogHeader>
-        {/* Form nằm trong DialogContent nên được tạo mới mỗi lần mở — không cần reset tay. */}
-        {target && <RegistrationForm target={target} onDone={onClose} />}
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={!!target}
+      onOpenChange={(open) => !open && onClose()}
+      title="Nộp đơn đăng ký ở"
+      description={`Đợt ${periodName}. Nguyện vọng giúp ban quản lý xếp giường, không đảm bảo được xếp đúng.`}
+    >
+      {target && <RegistrationForm target={target} onDone={onClose} />}
+    </FormDialog>
   )
 }
 
@@ -95,14 +83,12 @@ function RegistrationForm({ target, onDone }: { target: AvailableSummary; onDone
         />
       </FormField>
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone} disabled={create.isPending}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={create.isPending}>
-          {create.isPending ? 'Đang nộp…' : 'Nộp đơn'}
-        </Button>
-      </DialogFooter>
+      <FormDialogFooter
+        onCancel={onDone}
+        isPending={create.isPending}
+        submitLabel="Nộp đơn"
+        pendingLabel="Đang nộp…"
+      />
     </form>
   )
 }

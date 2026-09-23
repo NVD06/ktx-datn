@@ -1,13 +1,10 @@
-import { api } from './client'
-import type { SuccessResponse } from '@/types/api'
+import { apiGet, apiPatch } from './client'
 import type { ProfileInput, StudentProfile } from '@/types/profile'
 
-export async function getProfile() {
-  const res = await api.get<SuccessResponse<StudentProfile>>('/profile')
-  return res.data.data
+export function getProfile() {
+  return apiGet<StudentProfile>('/profile')
 }
 
-export async function updateProfile(input: ProfileInput) {
-  const res = await api.patch<SuccessResponse<StudentProfile>>('/profile', input)
-  return res.data.data
+export function updateProfile(input: ProfileInput) {
+  return apiPatch<StudentProfile>('/profile', input)
 }

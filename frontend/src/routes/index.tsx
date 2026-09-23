@@ -8,6 +8,7 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
 import { MyRegistrationsPage } from '@/features/registrations/pages/MyRegistrationsPage'
+import { RegistrationListPage } from '@/features/registrations/pages/RegistrationListPage'
 import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
 import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
 import { RoomDetailPage } from '@/features/rooms/pages/RoomDetailPage'
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: 'rooms/:id', element: <RoomDetailPage /> },
           { path: 'room-types', element: <RoomTypeListPage /> },
           { path: 'registration-periods', element: <RegistrationPeriodListPage /> },
+          { path: 'registrations', element: <RegistrationListPage /> },
         ],
       },
     ],

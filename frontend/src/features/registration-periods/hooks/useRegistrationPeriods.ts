@@ -1,5 +1,6 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as periodsApi from '@/api/registration-periods'
+import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
 import type { RegistrationPeriodInput } from '@/types/registration'
 
@@ -27,8 +28,7 @@ export function useCurrentRegistrationPeriod() {
 
 /** Mọi thao tác ghi đều làm mới cả danh sách lẫn đợt đang mở. */
 function useInvalidatePeriods() {
-  const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: registrationPeriodKeys.all })
+  return useInvalidate(registrationPeriodKeys.all)
 }
 
 export function useSaveRegistrationPeriod() {
@@ -51,8 +51,5 @@ export function useToggleRegistrationPeriod() {
 
 export function useDeleteRegistrationPeriod() {
   const invalidate = useInvalidatePeriods()
-  return useMutation({
-    mutationFn: periodsApi.deleteRegistrationPeriod,
-    onSuccess: invalidate,
-  })
+  return useMutation({ mutationFn: periodsApi.deleteRegistrationPeriod, onSuccess: invalidate })
 }

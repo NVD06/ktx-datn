@@ -1,5 +1,6 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as buildingsApi from '@/api/buildings'
+import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
 import type { BuildingInput } from '@/types/facility'
 
@@ -26,18 +27,15 @@ export function useBuilding(id: string) {
 }
 
 export function useSaveBuilding() {
-  const queryClient = useQueryClient()
+  const invalidate = useInvalidate(buildingKeys.all)
   return useMutation({
     mutationFn: ({ id, input }: { id?: string; input: BuildingInput }) =>
       id ? buildingsApi.updateBuilding(id, input) : buildingsApi.createBuilding(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: buildingKeys.all }),
+    onSuccess: invalidate,
   })
 }
 
 export function useDeleteBuilding() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: buildingsApi.deleteBuilding,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: buildingKeys.all }),
-  })
+  const invalidate = useInvalidate(buildingKeys.all)
+  return useMutation({ mutationFn: buildingsApi.deleteBuilding, onSuccess: invalidate })
 }

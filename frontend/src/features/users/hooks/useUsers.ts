@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import * as usersApi from '@/api/users'
+import { useInvalidate } from '@/hooks/useInvalidate'
 
 const MANAGER_PARAMS = { role: 'MANAGER', limit: 100, sortBy: 'fullName', order: 'asc' }
 
@@ -12,15 +13,11 @@ export function useManagers() {
 }
 
 export function useAssignManager() {
-  const queryClient = useQueryClient()
+  // Tòa nhà hiển thị danh sách quản lý của mình.
+  const invalidate = useInvalidate(['users'], ['buildings'])
   return useMutation({
     mutationFn: ({ userId, buildingId }: { userId: string; buildingId: string | null }) =>
       usersApi.updateUser(userId, { buildingId }),
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['users'] }),
-        // Tòa nhà hiển thị danh sách quản lý của mình.
-        queryClient.invalidateQueries({ queryKey: ['buildings'] }),
-      ]),
+    onSuccess: invalidate,
   })
 }

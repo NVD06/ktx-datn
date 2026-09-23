@@ -39,7 +39,6 @@ export function RoomDetailPage() {
   }
 
   const room = query.data
-  const status = ROOM_STATUS[room.status]
   const isFull = room.bedCount >= room.roomType.capacity
 
   function addBed() {
@@ -93,10 +92,8 @@ export function RoomDetailPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Tình trạng">
           <div className="flex flex-wrap gap-1">
-            <StatusBadge label={status.label} tone={status.tone} />
-            {!room.isActive && (
-              <StatusBadge label={ACTIVE_STATUS.INACTIVE.label} tone={ACTIVE_STATUS.INACTIVE.tone} />
-            )}
+            <StatusBadge {...ROOM_STATUS[room.status]} />
+            {!room.isActive && <StatusBadge {...ACTIVE_STATUS.INACTIVE} />}
           </div>
         </StatCard>
         <StatCard label="Giường">

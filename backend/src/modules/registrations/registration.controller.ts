@@ -1,8 +1,17 @@
 import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
-import type { CreateRegistrationInput } from './registration.schema.js';
+import { registrationListQuerySchema, type CreateRegistrationInput } from './registration.schema.js';
 import * as registrationService from './registration.service.js';
+
+/** GET /api/v1/registrations */
+export async function list(req: Request, res: Response) {
+  const { data, meta } = await registrationService.list(
+    currentUser(req),
+    registrationListQuerySchema.parse(req.query),
+  );
+  res.json(ok(data, meta));
+}
 
 /** GET /api/v1/registrations/me */
 export async function listMine(req: Request, res: Response) {

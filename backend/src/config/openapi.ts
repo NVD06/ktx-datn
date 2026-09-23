@@ -10,8 +10,8 @@ import { z } from 'zod';
  * để validate — không viết tay YAML. Nhờ vậy schema chỉ có một nguồn duy nhất:
  * sửa zod là tài liệu đổi theo.
  *
- * Cách dùng ở mỗi module: import `registry` rồi gọi `registry.registerPath()`
- * ngay trong file *.routes.ts, cạnh dòng khai báo route (xem auth.routes.ts).
+ * Các module không gọi `registry` trực tiếp mà khai báo route qua
+ * `defineRoutes()` (utils/define-routes.ts) — vừa gắn handler vừa sinh tài liệu.
  *
  * File này phải được import TRƯỚC mọi schema có dùng `.openapi()` — nên các
  * file *.schema.ts import nó ở dòng đầu tiên.
@@ -31,6 +31,9 @@ registry.registerComponent('securitySchemes', 'cookieAuth', {
     'Cookie phiên do Auth.js cấp sau khi đăng nhập qua POST /auth/callback/credentials. ' +
     'Trình duyệt tự gửi kèm nếu đã đăng nhập trên cùng origin.',
 });
+
+/** `security` của mọi endpoint cần đăng nhập — defineRoutes() tự gắn, trừ route `public`. */
+export const security = [{ cookieAuth: [] }];
 
 // ---- Schema dùng chung cho response (khớp types/response.ts) ----
 

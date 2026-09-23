@@ -7,6 +7,7 @@ import {
   type SortingState,
   type Updater,
 } from '@tanstack/react-table'
+import type { UseQueryResult } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { useMemo, type ReactNode } from 'react'
 import { Pagination } from '@/components/shared/Pagination'
@@ -19,8 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import type { useListParams } from '@/hooks/useListParams'
 import { cn } from '@/lib/utils'
-import type { PaginationMeta, SortOrder } from '@/types/api'
+import type { Paged } from '@/types/api'
 
 /** Gắn vào `meta` của cột, ví dụ cột số: `meta: { className: 'text-right' }`. */
 export interface ColumnClassMeta {
@@ -30,16 +32,10 @@ export interface ColumnClassMeta {
 interface DataTableProps<TData extends { id: string }, TValue> {
   /** Cột nào sắp xếp được ở server thì khai báo `enableSorting: true`, id cột = tên field của backend. */
   columns: ColumnDef<TData, TValue>[]
-  data: TData[] | undefined
-  meta: PaginationMeta | undefined
-  isLoading: boolean
-  /** Đang tải trang/bộ lọc mới trong khi vẫn hiện dữ liệu cũ. */
-  isFetching?: boolean
-  error: unknown
-  sortBy: string | undefined
-  order: SortOrder | undefined
-  onSortChange: (sortBy: string | undefined, order: SortOrder | undefined) => void
-  onPageChange: (page: number) => void
+  /** Kết quả useQuery của API danh sách (getPaged). */
+  query: Pick<UseQueryResult<Paged<TData>>, 'data' | 'isPending' | 'isFetching' | 'error'>
+  /** Trang/sắp xếp đang lưu trên URL — kết quả của useListParams. */
+  list: Pick<ReturnType<typeof useListParams>, 'sortBy' | 'order' | 'setSort' | 'setPage'>
   /** Ô tìm kiếm, bộ lọc — đặt phía trên bảng. */
   toolbar?: ReactNode
   emptyTitle?: string
@@ -58,20 +54,16 @@ function columnClass<TData>(column: Column<TData, unknown>) {
  */
 export function DataTable<TData extends { id: string }, TValue>({
   columns,
-  data,
-  meta,
-  isLoading,
-  isFetching = false,
-  error,
-  sortBy,
-  order,
-  onSortChange,
-  onPageChange,
+  query,
+  list,
   toolbar,
   emptyTitle,
   emptyDescription,
 }: DataTableProps<TData, TValue>) {
-  const rows = useMemo(() => data ?? [], [data])
+  const { data, isPending: isLoading, isFetching, error } = query
+  const { sortBy, order } = list
+  const meta = data?.meta
+  const rows = useMemo(() => data?.data ?? [], [data])
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: order === 'desc' }] : []
 
   const table = useReactTable({
@@ -86,7 +78,7 @@ export function DataTable<TData extends { id: string }, TValue>({
     onSortingChange: (updater: Updater<SortingState>) => {
       const next = typeof updater === 'function' ? updater(sorting) : updater
       const first = next[0]
-      onSortChange(first?.id, first ? (first.desc ? 'desc' : 'asc') : undefined)
+      list.setSort(first?.id, first ? (first.desc ? 'desc' : 'asc') : undefined)
     },
   })
 
@@ -165,7 +157,7 @@ export function DataTable<TData extends { id: string }, TValue>({
         </Table>
       </div>
 
-      {meta && !error && <Pagination meta={meta} onPageChange={onPageChange} />}
+      {meta && !error && <Pagination meta={meta} onPageChange={list.setPage} />}
     </div>
   )
 }

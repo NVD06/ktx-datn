@@ -4,6 +4,7 @@
  */
 
 import type { BuildingRef, RoomTypeRef } from './facility'
+import type { StudentProfile } from './profile'
 
 export interface RegistrationPeriod {
   id: string
@@ -50,6 +51,20 @@ export interface Registration {
   reviewNote: string | null
   createdAt: string
   updatedAt: string
+}
+
+/** Đơn trong danh sách của ADMIN/MANAGER — kèm hồ sơ sinh viên để xem trong drawer. */
+export interface RegistrationListItem extends Registration {
+  student: {
+    id: string
+    fullName: string
+    email: string
+    phone: string | null
+    profile: Pick<
+      StudentProfile,
+      'studentCode' | 'gender' | 'dob' | 'className' | 'faculty' | 'hometown' | 'citizenId'
+    > | null
+  }
 }
 
 export interface RegistrationInput {

@@ -1,5 +1,5 @@
-import { api, getPaged } from './client'
-import type { ListParams, SuccessResponse } from '@/types/api'
+import { api, apiGet, apiPatch, apiPost, getPaged } from './client'
+import type { ListParams } from '@/types/api'
 import type { RegistrationPeriod, RegistrationPeriodInput } from '@/types/registration'
 
 export function listRegistrationPeriods(params: ListParams) {
@@ -7,29 +7,24 @@ export function listRegistrationPeriods(params: ListParams) {
 }
 
 /** Đợt đang mở, `null` nếu không có. */
-export async function getCurrentRegistrationPeriod() {
-  const res = await api.get<SuccessResponse<RegistrationPeriod | null>>('/registration-periods/current')
-  return res.data.data
+export function getCurrentRegistrationPeriod() {
+  return apiGet<RegistrationPeriod | null>('/registration-periods/current')
 }
 
-export async function createRegistrationPeriod(input: RegistrationPeriodInput) {
-  const res = await api.post<SuccessResponse<RegistrationPeriod>>('/registration-periods', input)
-  return res.data.data
+export function createRegistrationPeriod(input: RegistrationPeriodInput) {
+  return apiPost<RegistrationPeriod>('/registration-periods', input)
 }
 
-export async function updateRegistrationPeriod(id: string, input: Partial<RegistrationPeriodInput>) {
-  const res = await api.patch<SuccessResponse<RegistrationPeriod>>(`/registration-periods/${id}`, input)
-  return res.data.data
+export function updateRegistrationPeriod(id: string, input: Partial<RegistrationPeriodInput>) {
+  return apiPatch<RegistrationPeriod>(`/registration-periods/${id}`, input)
 }
 
-export async function openRegistrationPeriod(id: string) {
-  const res = await api.post<SuccessResponse<RegistrationPeriod>>(`/registration-periods/${id}/open`)
-  return res.data.data
+export function openRegistrationPeriod(id: string) {
+  return apiPost<RegistrationPeriod>(`/registration-periods/${id}/open`)
 }
 
-export async function closeRegistrationPeriod(id: string) {
-  const res = await api.post<SuccessResponse<RegistrationPeriod>>(`/registration-periods/${id}/close`)
-  return res.data.data
+export function closeRegistrationPeriod(id: string) {
+  return apiPost<RegistrationPeriod>(`/registration-periods/${id}/close`)
 }
 
 export async function deleteRegistrationPeriod(id: string) {

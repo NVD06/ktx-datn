@@ -9,6 +9,18 @@
 
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info'
 
+/**
+ * Lớp màu của từng tone — định nghĩa ở styles/theme.css (`@utility tone-*`).
+ * Viết đủ tên lớp, không ghép chuỗi, để Tailwind quét thấy mà sinh CSS.
+ */
+export const TONE_CLASS: Record<Tone, string> = {
+  neutral: 'tone-neutral',
+  success: 'tone-success',
+  warning: 'tone-warning',
+  danger: 'tone-danger',
+  info: 'tone-info',
+}
+
 interface LabelDef {
   label: string
   tone: Tone
@@ -58,6 +70,16 @@ export const ACTIVE_STATUS = def({
   ACTIVE: { label: 'Hoạt động', tone: 'success' },
   INACTIVE: { label: 'Ngừng hoạt động', tone: 'neutral' },
 })
+
+export function activeStatus(isActive: boolean): LabelDef {
+  return ACTIVE_STATUS[isActive ? 'ACTIVE' : 'INACTIVE']
+}
+
+/** Bộ lọc `?isActive=` của tòa nhà và phòng. */
+export const ACTIVE_OPTIONS = [
+  { value: 'true', label: 'Đang hoạt động' },
+  { value: 'false', label: 'Ngừng hoạt động' },
+]
 
 /** Cờ `isOpen` của đợt đăng ký. */
 export const PERIOD_STATUS = def({

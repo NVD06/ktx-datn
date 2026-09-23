@@ -1,5 +1,12 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Building2, CalendarRange, Layers, LayoutDashboard, LogOut } from 'lucide-react'
+import {
+  Building2,
+  CalendarRange,
+  ClipboardList,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
@@ -14,12 +21,13 @@ interface NavItem {
 }
 
 // Phòng và giường không có mục riêng: vào qua Tòa nhà → chi tiết tòa → chi tiết phòng.
-// Sẽ bổ sung dần: Đơn đăng ký, Hợp đồng, Hóa đơn, Sửa chữa, Vệ sinh, Báo cáo.
+// Sẽ bổ sung dần: Hợp đồng, Hóa đơn, Sửa chữa, Vệ sinh, Báo cáo.
 const NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/admin/buildings', label: 'Tòa nhà', icon: Building2 },
   { to: '/admin/room-types', label: 'Loại phòng', icon: Layers },
   { to: '/admin/registration-periods', label: 'Đợt đăng ký', icon: CalendarRange },
+  { to: '/admin/registrations', label: 'Đơn đăng ký', icon: ClipboardList },
 ]
 
 export function AdminLayout() {

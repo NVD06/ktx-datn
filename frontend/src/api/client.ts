@@ -34,6 +34,23 @@ export function getFieldErrors(error: unknown): Record<string, string[]> | undef
   return undefined
 }
 
+/*
+ * Endpoint trả `{ success, data }` — ba hàm dưới bóc sẵn `data` để các file
+ * api/* chỉ còn khai báo đường dẫn và kiểu.
+ */
+
+export async function apiGet<T>(url: string): Promise<T> {
+  return (await api.get<SuccessResponse<T>>(url)).data.data
+}
+
+export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
+  return (await api.post<SuccessResponse<T>>(url, body)).data.data
+}
+
+export async function apiPatch<T>(url: string, body: unknown): Promise<T> {
+  return (await api.patch<SuccessResponse<T>>(url, body)).data.data
+}
+
 /**
  * Gọi API danh sách có phân trang. Tham số rỗng bị bỏ đi để backend không nhận
  * chuỗi "" (ví dụ `?status=` sẽ bị zod từ chối vì không thuộc enum).

@@ -1,6 +1,7 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { listBuildingRooms } from '@/api/buildings'
 import * as roomsApi from '@/api/rooms'
+import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
 import type { BedUpdateInput, RoomInput } from '@/types/facility'
 
@@ -36,15 +37,9 @@ export function useAvailableSummary() {
   })
 }
 
-/** Phòng thay đổi thì số phòng của tòa cũng đổi. */
+/** Phòng thay đổi thì số phòng của tòa và của loại phòng cũng đổi. */
 function useInvalidateRooms() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: roomKeys.all }),
-      queryClient.invalidateQueries({ queryKey: ['buildings'] }),
-      queryClient.invalidateQueries({ queryKey: ['room-types'] }),
-    ])
+  return useInvalidate(roomKeys.all, ['buildings'], ['room-types'])
 }
 
 export function useSaveRoom() {
@@ -67,26 +62,20 @@ export function useDeleteRoom() {
 // ── Giường — trạng thái giường quyết định trạng thái phòng nên làm mới cả nhóm 'rooms'.
 
 export function useCreateBed() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: roomsApi.createBed,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomKeys.all }),
-  })
+  const invalidate = useInvalidate(roomKeys.all)
+  return useMutation({ mutationFn: roomsApi.createBed, onSuccess: invalidate })
 }
 
 export function useUpdateBed() {
-  const queryClient = useQueryClient()
+  const invalidate = useInvalidate(roomKeys.all)
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: BedUpdateInput }) =>
       roomsApi.updateBed(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomKeys.all }),
+    onSuccess: invalidate,
   })
 }
 
 export function useDeleteBed() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: roomsApi.deleteBed,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomKeys.all }),
-  })
+  const invalidate = useInvalidate(roomKeys.all)
+  return useMutation({ mutationFn: roomsApi.deleteBed, onSuccess: invalidate })
 }

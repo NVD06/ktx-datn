@@ -54,13 +54,12 @@ export function AvailableRoomsPage() {
       <div className="space-y-4">
         {[...byBuilding.values()].map((rows) => {
           const { building } = rows[0]
-          const gender = buildingGender(building.gender)
           return (
             <Card key={building.id}>
               <CardHeader>
                 <CardTitle>Tòa {building.name}</CardTitle>
                 <CardAction>
-                  <StatusBadge label={gender.label} tone={gender.tone} />
+                  <StatusBadge {...buildingGender(building.gender)} />
                 </CardAction>
               </CardHeader>
               <CardContent className="divide-y">

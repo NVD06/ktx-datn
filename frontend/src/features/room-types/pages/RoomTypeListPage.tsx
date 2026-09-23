@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useListParams } from '@/hooks/useListParams'
 import { formatMoney } from '@/lib/format'
-import { ACTIVE_STATUS } from '@/lib/labels'
+import { activeStatus } from '@/lib/labels'
 import type { RoomType } from '@/types/facility'
 import { RoomTypeFormDialog } from '../components/RoomTypeFormDialog'
 import { useDeleteRoomType, useRoomTypes } from '../hooks/useRoomTypes'
@@ -89,10 +89,7 @@ export function RoomTypeListPage() {
     {
       id: 'isActive',
       header: 'Trạng thái',
-      cell: ({ row }) => {
-        const status = ACTIVE_STATUS[row.original.isActive ? 'ACTIVE' : 'INACTIVE']
-        return <StatusBadge label={status.label} tone={status.tone} />
-      },
+      cell: ({ row }) => <StatusBadge {...activeStatus(row.original.isActive)} />,
     },
     ...(isAdmin
       ? [
@@ -139,15 +136,8 @@ export function RoomTypeListPage() {
 
       <DataTable
         columns={columns}
-        data={query.data?.data}
-        meta={query.data?.meta}
-        isLoading={query.isPending}
-        isFetching={query.isFetching}
-        error={query.error}
-        sortBy={list.sortBy}
-        order={list.order}
-        onSortChange={list.setSort}
-        onPageChange={list.setPage}
+        query={query}
+        list={list}
         emptyTitle="Không có loại phòng nào"
         emptyDescription={list.search || list.filters.isActive ? 'Thử bỏ bớt bộ lọc.' : undefined}
         toolbar={

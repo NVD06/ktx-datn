@@ -5,17 +5,10 @@ import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/QueryState'
 import { RowActions, type RowAction } from '@/components/shared/RowActions'
-import { BED_STATUS } from '@/lib/labels'
+import { BED_STATUS, TONE_CLASS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
-import type { Bed, BedStatus } from '@/types/facility'
+import type { Bed } from '@/types/facility'
 import { useDeleteBed, useUpdateBed } from '../hooks/useRooms'
-
-// Lớp màu lấy từ theme.css (convention.md §8.7), khớp tone của BED_STATUS.
-const TONE_CLASS: Record<BedStatus, string> = {
-  AVAILABLE: 'tone-success',
-  OCCUPIED: 'tone-info',
-  MAINTENANCE: 'tone-warning',
-}
 
 /**
  * Sơ đồ giường trong phòng — mỗi ô một giường, tô màu theo trạng thái.
@@ -92,7 +85,7 @@ export function BedGrid({ beds }: { beds: Bed[] }) {
           return (
             <div
               key={bed.id}
-              className={cn('flex min-h-24 flex-col gap-2 rounded-xl border p-3', TONE_CLASS[bed.status])}
+              className={cn('flex min-h-24 flex-col gap-2 rounded-xl border p-3', TONE_CLASS[BED_STATUS[bed.status].tone])}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">

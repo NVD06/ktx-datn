@@ -11,7 +11,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { RoomFormDialog } from '@/features/rooms/components/RoomFormDialog'
 import { RoomTable } from '@/features/rooms/components/RoomTable'
 import { orDash } from '@/lib/format'
-import { ACTIVE_STATUS, buildingGender } from '@/lib/labels'
+import { activeStatus, buildingGender } from '@/lib/labels'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
 import { useBuilding } from '../hooks/useBuildings'
@@ -42,8 +42,6 @@ export function BuildingDetailPage() {
   }
 
   const building = query.data
-  const gender = buildingGender(building.gender)
-  const status = ACTIVE_STATUS[building.isActive ? 'ACTIVE' : 'INACTIVE']
 
   return (
     <>
@@ -83,7 +81,7 @@ export function BuildingDetailPage() {
           <span className="text-muted-foreground text-sm font-normal"> / {building.floors} tầng</span>
         </StatCard>
         <StatCard label="Giới tính ở">
-          <StatusBadge label={gender.label} tone={gender.tone} />
+          <StatusBadge {...buildingGender(building.gender)} />
         </StatCard>
         <StatCard label="Quản lý">
           <span className="text-sm">
@@ -93,7 +91,7 @@ export function BuildingDetailPage() {
           </span>
         </StatCard>
         <StatCard label="Trạng thái">
-          <StatusBadge label={status.label} tone={status.tone} />
+          <StatusBadge {...activeStatus(building.isActive)} />
         </StatCard>
       </div>
 

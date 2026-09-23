@@ -1,6 +1,7 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
 import { booleanQuery, listQuerySchema } from '../../utils/query-schema.js';
+import { optionalText } from '../../utils/zod-fields.js';
 
 const name = z
   .string()
@@ -15,7 +16,7 @@ const gender = z
   .enum(['MALE', 'FEMALE'], 'Giới tính không hợp lệ')
   .nullable()
   .openapi({ description: 'null = tòa hỗn hợp' });
-const description = z.string().trim().max(500, 'Mô tả tối đa 500 ký tự').nullable();
+const description = optionalText('Mô tả', 500);
 
 export const createBuildingSchema = z
   .object({

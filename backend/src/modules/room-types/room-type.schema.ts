@@ -1,6 +1,7 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
 import { booleanQuery, listQuerySchema } from '../../utils/query-schema.js';
+import { optionalText } from '../../utils/zod-fields.js';
 
 const name = z
   .string()
@@ -15,7 +16,7 @@ const price = z
   .int('Giá phải là số nguyên (đồng)')
   .min(0, 'Giá không được âm')
   .max(100_000_000, 'Giá tối đa là 100.000.000 đ');
-const description = z.string().trim().max(500, 'Mô tả tối đa 500 ký tự').nullable();
+const description = optionalText('Mô tả', 500);
 
 export const createRoomTypeSchema = z
   .object({

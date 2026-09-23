@@ -3,10 +3,10 @@ import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage } from '@/api/client'
+import { FormField } from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useAuth, useLogin } from '@/features/auth/hooks/useAuth'
 import { redirectAfterLogin } from '@/routes/paths'
 
@@ -34,6 +34,8 @@ export function LoginPage() {
     return <Navigate to={redirectAfterLogin(user.role, from)} replace />
   }
 
+  const err = form.formState.errors
+
   function onSubmit(values: LoginForm) {
     login.mutate(values)
   }
@@ -48,8 +50,7 @@ export function LoginPage() {
 
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <FormField label="Email" htmlFor="email" error={err.email?.message}>
               <Input
                 id="email"
                 type="email"
@@ -57,23 +58,16 @@ export function LoginPage() {
                 placeholder="sv001@ktx.edu.vn"
                 {...form.register('email')}
               />
-              {form.formState.errors.email && (
-                <p className="text-destructive text-sm">{form.formState.errors.email.message}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
+            <FormField label="Mật khẩu" htmlFor="password" error={err.password?.message}>
               <Input
                 id="password"
                 type="password"
                 autoComplete="current-password"
                 {...form.register('password')}
               />
-              {form.formState.errors.password && (
-                <p className="text-destructive text-sm">{form.formState.errors.password.message}</p>
-              )}
-            </div>
+            </FormField>
 
             {login.isError && (
               <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">

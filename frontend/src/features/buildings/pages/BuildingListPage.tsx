@@ -14,7 +14,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useListParams } from '@/hooks/useListParams'
-import { ACTIVE_STATUS, buildingGender } from '@/lib/labels'
+import { ACTIVE_OPTIONS, activeStatus, buildingGender } from '@/lib/labels'
 import type { Building } from '@/types/facility'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
@@ -23,11 +23,6 @@ import { useBuildings, useDeleteBuilding } from '../hooks/useBuildings'
 const GENDER_OPTIONS = [
   { value: 'MALE', label: 'Tòa nam' },
   { value: 'FEMALE', label: 'Tòa nữ' },
-]
-
-const ACTIVE_OPTIONS = [
-  { value: 'true', label: 'Đang hoạt động' },
-  { value: 'false', label: 'Ngừng hoạt động' },
 ]
 
 /**
@@ -92,10 +87,7 @@ export function BuildingListPage() {
     {
       id: 'gender',
       header: 'Giới tính',
-      cell: ({ row }) => {
-        const gender = buildingGender(row.original.gender)
-        return <StatusBadge label={gender.label} tone={gender.tone} />
-      },
+      cell: ({ row }) => <StatusBadge {...buildingGender(row.original.gender)} />,
     },
     {
       id: 'managers',
@@ -118,10 +110,7 @@ export function BuildingListPage() {
     {
       id: 'isActive',
       header: 'Trạng thái',
-      cell: ({ row }) => {
-        const status = ACTIVE_STATUS[row.original.isActive ? 'ACTIVE' : 'INACTIVE']
-        return <StatusBadge label={status.label} tone={status.tone} />
-      },
+      cell: ({ row }) => <StatusBadge {...activeStatus(row.original.isActive)} />,
     },
     {
       id: 'actions',
@@ -167,15 +156,8 @@ export function BuildingListPage() {
 
       <DataTable
         columns={columns}
-        data={query.data?.data}
-        meta={query.data?.meta}
-        isLoading={query.isPending}
-        isFetching={query.isFetching}
-        error={query.error}
-        sortBy={list.sortBy}
-        order={list.order}
-        onSortChange={list.setSort}
-        onPageChange={list.setPage}
+        query={query}
+        list={list}
         emptyTitle="Không có tòa nhà nào"
         toolbar={
           <>

@@ -1,16 +1,6 @@
-import { Router } from 'express';
-import {
-  errorResponses,
-  jsonBody,
-  okResponse,
-  okSchema,
-  pagedSchema,
-  registry,
-} from '../../config/openapi.js';
 import { deletedSchema, registrationPeriodSchema } from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
-import { validate } from '../../middlewares/validate.js';
-import { idParamsSchema } from '../../utils/query-schema.js';
+import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './registration-period.controller.js';
 import {
   createRegistrationPeriodSchema,
@@ -18,117 +8,99 @@ import {
   updateRegistrationPeriodSchema,
 } from './registration-period.schema.js';
 
-export const registrationPeriodRoutes = Router();
-
 // Không chặn vai trò chung cho cả router: /current dành cho sinh viên.
-registrationPeriodRoutes.use(requireAuth);
+export const registrationPeriodRoutes = defineRoutes(
+  '/registration-periods',
+  'Registration periods',
+  requireAuth,
+);
 const staff = requireRole('ADMIN', 'MANAGER');
 const admin = requireRole('ADMIN');
 
-const security = [{ cookieAuth: [] }];
-
-registry.registerPath({
-  method: 'get',
-  path: '/registration-periods/current',
-  tags: ['Registration periods'],
-  summary: 'Đợt đăng ký đang mở (mọi vai trò)',
-  description: '`data` là `null` khi không có đợt nào mở.',
-  security,
-  responses: {
-    200: okResponse('Đợt đang mở', okSchema(registrationPeriodSchema.nullable())),
-    ...errorResponses(401),
+registrationPeriodRoutes.get(
+  '/current',
+  {
+    summary: 'Đợt đăng ký đang mở (mọi vai trò)',
+    description: '`data` là `null` khi không có đợt nào mở.',
+    data: registrationPeriodSchema.nullable(),
+    errors: [401],
   },
-});
-registrationPeriodRoutes.get('/current', ctrl.getCurrent);
+  ctrl.getCurrent,
+);
 
-registry.registerPath({
-  method: 'get',
-  path: '/registration-periods',
-  tags: ['Registration periods'],
-  summary: 'Danh sách đợt đăng ký',
-  description: 'Sắp xếp: name, startAt, endAt, createdAt. Mặc định startAt giảm dần.',
-  security,
-  request: { query: registrationPeriodListQuerySchema },
-  responses: {
-    200: okResponse('Danh sách có phân trang', pagedSchema(registrationPeriodSchema)),
-    ...errorResponses(400, 401, 403),
+registrationPeriodRoutes.get(
+  '/',
+  {
+    summary: 'Danh sách đợt đăng ký',
+    description: 'Sắp xếp: name, startAt, endAt, createdAt. Mặc định startAt giảm dần.',
+    query: registrationPeriodListQuerySchema,
+    paged: registrationPeriodSchema,
+    errors: [400, 401, 403],
   },
-});
-registrationPeriodRoutes.get('/', staff, ctrl.list);
+  staff,
+  ctrl.list,
+);
 
-registry.registerPath({
-  method: 'post',
-  path: '/registration-periods',
-  tags: ['Registration periods'],
-  summary: 'Tạo đợt đăng ký (ADMIN)',
-  description: 'Đợt mới luôn ở trạng thái đóng, mở bằng `POST /registration-periods/{id}/open`.',
-  security,
-  request: { body: jsonBody(createRegistrationPeriodSchema) },
-  responses: {
-    201: okResponse('Đã tạo', okSchema(registrationPeriodSchema)),
-    ...errorResponses(400, 401, 403),
+registrationPeriodRoutes.post(
+  '/',
+  {
+    summary: 'Tạo đợt đăng ký (ADMIN)',
+    description: 'Đợt mới luôn ở trạng thái đóng, mở bằng `POST /registration-periods/{id}/open`.',
+    body: createRegistrationPeriodSchema,
+    status: 201,
+    data: registrationPeriodSchema,
+    errors: [400, 401, 403],
   },
-});
-registrationPeriodRoutes.post('/', admin, validate(createRegistrationPeriodSchema), ctrl.create);
+  admin,
+  ctrl.create,
+);
 
-
-registry.registerPath({
-  method: 'patch',
-  path: '/registration-periods/{id}',
-  tags: ['Registration periods'],
-  summary: 'Sửa tên / thời gian đợt đăng ký (ADMIN)',
-  security,
-  request: { params: idParamsSchema, body: jsonBody(updateRegistrationPeriodSchema) },
-  responses: {
-    200: okResponse('Đã cập nhật', okSchema(registrationPeriodSchema)),
-    ...errorResponses(400, 401, 403, 404),
+registrationPeriodRoutes.patch(
+  '/:id',
+  {
+    summary: 'Sửa tên / thời gian đợt đăng ký (ADMIN)',
+    body: updateRegistrationPeriodSchema,
+    data: registrationPeriodSchema,
+    errors: [400, 401, 403, 404],
   },
-});
-registrationPeriodRoutes.patch('/:id', admin, validate(updateRegistrationPeriodSchema), ctrl.update);
+  admin,
+  ctrl.update,
+);
 
-registry.registerPath({
-  method: 'post',
-  path: '/registration-periods/{id}/open',
-  tags: ['Registration periods'],
-  summary: 'Mở đợt đăng ký (ADMIN)',
-  description:
-    'Đang có đợt khác mở -> 409 `PERIOD_ALREADY_OPEN`. Đợt đã hết hạn nhận đơn (`endAt`) -> 409 `PERIOD_ENDED`. ' +
-    'Đợt đã mở sẵn thì trả về nguyên trạng.',
-  security,
-  request: { params: idParamsSchema },
-  responses: {
-    200: okResponse('Đã mở', okSchema(registrationPeriodSchema)),
-    ...errorResponses(401, 403, 404, 409),
+registrationPeriodRoutes.post(
+  '/:id/open',
+  {
+    summary: 'Mở đợt đăng ký (ADMIN)',
+    description:
+      'Đang có đợt khác mở -> 409 `PERIOD_ALREADY_OPEN`. Đợt đã hết hạn nhận đơn (`endAt`) -> 409 `PERIOD_ENDED`. ' +
+      'Đợt đã mở sẵn thì trả về nguyên trạng.',
+    data: registrationPeriodSchema,
+    errors: [401, 403, 404, 409],
   },
-});
-registrationPeriodRoutes.post('/:id/open', admin, ctrl.open);
+  admin,
+  ctrl.open,
+);
 
-registry.registerPath({
-  method: 'post',
-  path: '/registration-periods/{id}/close',
-  tags: ['Registration periods'],
-  summary: 'Đóng đợt đăng ký (ADMIN)',
-  description: 'Đóng bằng tay — hệ thống không tự đóng theo `endAt`.',
-  security,
-  request: { params: idParamsSchema },
-  responses: {
-    200: okResponse('Đã đóng', okSchema(registrationPeriodSchema)),
-    ...errorResponses(401, 403, 404),
+registrationPeriodRoutes.post(
+  '/:id/close',
+  {
+    summary: 'Đóng đợt đăng ký (ADMIN)',
+    description: 'Đóng bằng tay — hệ thống không tự đóng theo `endAt`.',
+    data: registrationPeriodSchema,
+    errors: [401, 403, 404],
   },
-});
-registrationPeriodRoutes.post('/:id/close', admin, ctrl.close);
+  admin,
+  ctrl.close,
+);
 
-registry.registerPath({
-  method: 'delete',
-  path: '/registration-periods/{id}',
-  tags: ['Registration periods'],
-  summary: 'Xóa đợt đăng ký (ADMIN)',
-  description: 'Đợt đang mở -> 409 `PERIOD_OPEN`. Đợt đã có đơn -> 409 `PERIOD_HAS_REGISTRATIONS`.',
-  security,
-  request: { params: idParamsSchema },
-  responses: {
-    200: okResponse('Đã xóa', okSchema(deletedSchema)),
-    ...errorResponses(401, 403, 404, 409),
+registrationPeriodRoutes.delete(
+  '/:id',
+  {
+    summary: 'Xóa đợt đăng ký (ADMIN)',
+    description: 'Đợt đang mở -> 409 `PERIOD_OPEN`. Đợt đã có đơn -> 409 `PERIOD_HAS_REGISTRATIONS`.',
+    data: deletedSchema,
+    errors: [401, 403, 404, 409],
   },
-});
-registrationPeriodRoutes.delete('/:id', admin, ctrl.remove);
+  admin,
+  ctrl.remove,
+);

@@ -1,24 +1,21 @@
-import { api, getPaged } from './client'
-import type { ListParams, SuccessResponse } from '@/types/api'
+import { api, apiGet, apiPatch, apiPost, getPaged } from './client'
+import type { ListParams } from '@/types/api'
 import type { Building, BuildingInput, Room } from '@/types/facility'
 
 export function listBuildings(params: ListParams) {
   return getPaged<Building>('/buildings', params)
 }
 
-export async function getBuilding(id: string) {
-  const res = await api.get<SuccessResponse<Building>>(`/buildings/${id}`)
-  return res.data.data
+export function getBuilding(id: string) {
+  return apiGet<Building>(`/buildings/${id}`)
 }
 
-export async function createBuilding(input: BuildingInput) {
-  const res = await api.post<SuccessResponse<Building>>('/buildings', input)
-  return res.data.data
+export function createBuilding(input: BuildingInput) {
+  return apiPost<Building>('/buildings', input)
 }
 
-export async function updateBuilding(id: string, input: Partial<BuildingInput>) {
-  const res = await api.patch<SuccessResponse<Building>>(`/buildings/${id}`, input)
-  return res.data.data
+export function updateBuilding(id: string, input: Partial<BuildingInput>) {
+  return apiPatch<Building>(`/buildings/${id}`, input)
 }
 
 export async function deleteBuilding(id: string) {

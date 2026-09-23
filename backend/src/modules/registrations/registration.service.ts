@@ -2,14 +2,16 @@ import { prisma } from '../../config/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
+import { paginate } from '../../utils/paginate.js';
+import { buildingScope } from '../../utils/scope.js';
 import * as profileService from '../profile/profile.service.js';
 import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
 import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
-import type { CreateRegistrationInput } from './registration.schema.js';
+import type { CreateRegistrationInput, RegistrationListQuery } from './registration.schema.js';
 
 /*
  * Đơn đăng ký ở KTX. Phần của sinh viên (US-02.3) luôn lọc theo
- * `studentId = user.id`; phần của Manager (US-02.4) lọc theo buildingScope.
+ * `studentId = user.id`; phần của Manager (US-02.4) lọc theo reviewerScope.
  */
 
 const INCLUDE = {
@@ -17,10 +19,18 @@ const INCLUDE = {
   preferredRoomType: { select: ROOM_TYPE_SELECT },
 } as const satisfies Prisma.RegistrationInclude;
 
-type RegistrationRow = Prisma.RegistrationGetPayload<{ include: typeof INCLUDE }>;
+/** Danh sách cho người duyệt kèm hồ sơ sinh viên — drawer chi tiết đọc luôn từ đây. */
+const LIST_INCLUDE = {
+  ...INCLUDE,
+  student: { select: profileService.STUDENT_SELECT },
+} as const satisfies Prisma.RegistrationInclude;
+
 type BuildingRef = Prisma.BuildingGetPayload<{ select: typeof BUILDING_REF_SELECT }>;
 
-function toDto({ buildingId: _, ...row }: RegistrationRow, building: BuildingRef | null) {
+function toDto<R extends { buildingId: string | null }>(
+  { buildingId: _, ...row }: R,
+  building: BuildingRef | null,
+) {
   return { ...row, building };
 }
 
@@ -28,7 +38,7 @@ function toDto({ buildingId: _, ...row }: RegistrationRow, building: BuildingRef
  * `buildingId` là cột scalar không có khóa ngoại (database.md), nên tên tòa
  * phải tự tra — gom một query cho cả danh sách.
  */
-async function toDtos(rows: RegistrationRow[]) {
+async function toDtos<R extends { buildingId: string | null }>(rows: R[]) {
   const ids = [...new Set(rows.flatMap((r) => (r.buildingId ? [r.buildingId] : [])))];
   const buildings = ids.length
     ? await prisma.building.findMany({ where: { id: { in: ids } }, select: BUILDING_REF_SELECT })
@@ -47,6 +57,58 @@ function formatDateVN(date: Date) {
     month: '2-digit',
     year: 'numeric',
   });
+}
+
+/**
+ * Đơn mà người duyệt được thấy. ADMIN: tất cả. MANAGER: đơn nguyện vọng vào tòa
+ * mình **và** đơn "tòa nào cũng được" của sinh viên hợp giới tính tòa (tòa hỗn
+ * hợp: mọi sinh viên) — ai duyệt trước thì nhận. Nhờ vậy đơn nào cũng có tòa
+ * nhìn thấy, không có đơn mồ côi; còn đơn đã chọn tòa khác thì không lộ ra.
+ */
+async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereInput> {
+  const { buildingId } = buildingScope(user);
+  if (!buildingId) return {};
+
+  const building = await prisma.building.findUnique({ where: { id: buildingId }, select: { gender: true } });
+  // Không tra được tòa thì chỉ thấy đơn chọn đích danh tòa đó — không mở rộng phạm vi.
+  if (!building) return { buildingId };
+
+  return {
+    OR: [
+      { buildingId },
+      building.gender
+        ? { buildingId: null, student: { profile: { gender: building.gender } } }
+        : { buildingId: null },
+    ],
+  };
+}
+
+export async function list(user: AuthUser, query: RegistrationListQuery) {
+  const search: Prisma.RegistrationWhereInput = query.search
+    ? {
+        OR: [
+          { student: { fullName: { contains: query.search, mode: 'insensitive' } } },
+          { student: { email: { contains: query.search, mode: 'insensitive' } } },
+          { student: { profile: { studentCode: { contains: query.search, mode: 'insensitive' } } } },
+        ],
+      }
+    : {};
+  const where: Prisma.RegistrationWhereInput = {
+    AND: [
+      await reviewerScope(user),
+      search,
+      query.status ? { status: query.status } : {},
+      query.periodId ? { periodId: query.periodId } : {},
+    ],
+  };
+
+  const result = await paginate(
+    query,
+    { sortable: ['createdAt', 'status'], defaultSort: { field: 'createdAt', order: 'desc' } },
+    (page) => prisma.registration.findMany({ where, ...page, include: LIST_INCLUDE }),
+    () => prisma.registration.count({ where }),
+  );
+  return { data: await toDtos(result.data), meta: result.meta };
 }
 
 /** Đơn của chính sinh viên, mới nhất trước — mỗi đợt tối đa vài đơn nên không phân trang. */

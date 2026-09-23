@@ -1,14 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as registrationsApi from '@/api/registrations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import {
   registrationPeriodKeys,
   useCurrentRegistrationPeriod,
 } from '@/features/registration-periods/hooks/useRegistrationPeriods'
+import { useInvalidate } from '@/hooks/useInvalidate'
+import type { ListParams } from '@/types/api'
 
 export const registrationKeys = {
   all: ['registrations'] as const,
+  list: (params: ListParams) => ['registrations', 'list', params] as const,
   mine: ['registrations', 'mine'] as const,
+}
+
+export function useRegistrations(params: ListParams) {
+  return useQuery({
+    queryKey: registrationKeys.list(params),
+    queryFn: () => registrationsApi.listRegistrations(params),
+    placeholderData: keepPreviousData,
+  })
 }
 
 export function useMyRegistrations() {
@@ -17,12 +28,7 @@ export function useMyRegistrations() {
 
 /** Nộp/hủy đơn làm đổi số đơn của đợt nên làm mới cả đợt đăng ký. */
 function useInvalidateRegistrations() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: registrationKeys.all }),
-      queryClient.invalidateQueries({ queryKey: registrationPeriodKeys.all }),
-    ])
+  return useInvalidate(registrationKeys.all, registrationPeriodKeys.all)
 }
 
 export function useCreateRegistration() {

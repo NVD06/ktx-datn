@@ -182,6 +182,28 @@ export const registrationSchema = z
   })
   .openapi('Registration');
 
+export const registrationListItemSchema = registrationSchema
+  .extend({
+    student: z.object({
+      id: z.uuid(),
+      fullName: z.string(),
+      email: z.email(),
+      phone: z.string().nullable(),
+      profile: studentProfileSchema
+        .pick({
+          studentCode: true,
+          gender: true,
+          dob: true,
+          className: true,
+          faculty: true,
+          hometown: true,
+          citizenId: true,
+        })
+        .nullable(),
+    }),
+  })
+  .openapi('RegistrationListItem');
+
 export const userSchema = z
   .object({
     id: z.uuid(),

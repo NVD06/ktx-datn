@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { DetailList, type DetailRow } from '@/components/shared/DetailList'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -89,8 +90,7 @@ function RegistrationCard({
   registration: Registration
   onCancel: () => void
 }) {
-  const status = REGISTRATION_STATUS[r.status]
-  const rows: [label: string, value: string | null, wide?: boolean][] = [
+  const rows: DetailRow[] = [
     ['Nguyện vọng tòa', r.building ? `Tòa ${r.building.name}` : 'Tòa nào cũng được'],
     [
       'Nguyện vọng loại phòng',
@@ -111,21 +111,11 @@ function RegistrationCard({
           {formatDateTime(r.createdAt)}
         </CardDescription>
         <CardAction>
-          <StatusBadge label={status.label} tone={status.tone} />
+          <StatusBadge {...REGISTRATION_STATUS[r.status]} />
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-          {rows.map(
-            ([label, value, wide]) =>
-              value && (
-                <div key={label} className={wide ? 'sm:col-span-2' : undefined}>
-                  <dt className="text-muted-foreground text-xs">{label}</dt>
-                  <dd className="whitespace-pre-line">{value}</dd>
-                </div>
-              ),
-          )}
-        </dl>
+        <DetailList rows={rows} hideEmpty />
 
         {r.status === 'PENDING' && (
           <div className="flex justify-end">

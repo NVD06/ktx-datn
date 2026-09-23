@@ -1,19 +1,17 @@
-import { api, getPaged } from './client'
-import type { ListParams, SuccessResponse } from '@/types/api'
+import { api, apiPatch, apiPost, getPaged } from './client'
+import type { ListParams } from '@/types/api'
 import type { RoomType, RoomTypeInput } from '@/types/facility'
 
 export function listRoomTypes(params: ListParams) {
   return getPaged<RoomType>('/room-types', params)
 }
 
-export async function createRoomType(input: RoomTypeInput) {
-  const res = await api.post<SuccessResponse<RoomType>>('/room-types', input)
-  return res.data.data
+export function createRoomType(input: RoomTypeInput) {
+  return apiPost<RoomType>('/room-types', input)
 }
 
-export async function updateRoomType(id: string, input: Partial<RoomTypeInput>) {
-  const res = await api.patch<SuccessResponse<RoomType>>(`/room-types/${id}`, input)
-  return res.data.data
+export function updateRoomType(id: string, input: Partial<RoomTypeInput>) {
+  return apiPatch<RoomType>(`/room-types/${id}`, input)
 }
 
 export async function deleteRoomType(id: string) {

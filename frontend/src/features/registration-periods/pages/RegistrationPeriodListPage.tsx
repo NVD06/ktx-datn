@@ -98,10 +98,9 @@ export function RegistrationPeriodListPage() {
     {
       id: 'isOpen',
       header: 'Trạng thái',
-      cell: ({ row }) => {
-        const status = PERIOD_STATUS[row.original.isOpen ? 'OPEN' : 'CLOSED']
-        return <StatusBadge label={status.label} tone={status.tone} />
-      },
+      cell: ({ row }) => (
+        <StatusBadge {...PERIOD_STATUS[row.original.isOpen ? 'OPEN' : 'CLOSED']} />
+      ),
     },
     ...(isAdmin
       ? [
@@ -151,15 +150,8 @@ export function RegistrationPeriodListPage() {
 
       <DataTable
         columns={columns}
-        data={query.data?.data}
-        meta={query.data?.meta}
-        isLoading={query.isPending}
-        isFetching={query.isFetching}
-        error={query.error}
-        sortBy={list.sortBy}
-        order={list.order}
-        onSortChange={list.setSort}
-        onPageChange={list.setPage}
+        query={query}
+        list={list}
         emptyTitle="Chưa có đợt đăng ký nào"
         emptyDescription={list.search || list.filters.isOpen ? 'Thử bỏ bớt bộ lọc.' : undefined}
         toolbar={

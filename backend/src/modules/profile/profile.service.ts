@@ -24,7 +24,8 @@ const REQUIRED_FIELDS = {
 
 type RequiredField = keyof typeof REQUIRED_FIELDS;
 
-const SELECT = {
+/** Thông tin liên hệ + hồ sơ sinh viên — danh sách đơn của người duyệt (US-02.4) dùng lại. */
+export const STUDENT_SELECT = {
   id: true,
   email: true,
   fullName: true,
@@ -32,7 +33,7 @@ const SELECT = {
   profile: { omit: { id: true, userId: true } },
 } as const satisfies Prisma.UserSelect;
 
-type UserRow = Prisma.UserGetPayload<{ select: typeof SELECT }>;
+type UserRow = Prisma.UserGetPayload<{ select: typeof STUDENT_SELECT }>;
 
 function toDto({ profile, ...user }: UserRow) {
   if (!profile) {
@@ -45,7 +46,7 @@ function toDto({ profile, ...user }: UserRow) {
 
 /** `db` cho phép đọc trong transaction của service khác (nộp đơn). */
 export async function get(user: AuthUser, db: Prisma.TransactionClient = prisma) {
-  return toDto(await db.user.findUniqueOrThrow({ where: { id: user.id }, select: SELECT }));
+  return toDto(await db.user.findUniqueOrThrow({ where: { id: user.id }, select: STUDENT_SELECT }));
 }
 
 export async function update(user: AuthUser, { phone, ...profile }: UpdateProfileInput) {
@@ -53,7 +54,7 @@ export async function update(user: AuthUser, { phone, ...profile }: UpdateProfil
   const row = await prisma.user.update({
     where: { id: user.id },
     data: { ...(phone !== undefined ? { phone } : {}), profile: { update: profile } },
-    select: SELECT,
+    select: STUDENT_SELECT,
   });
   return toDto(row);
 }

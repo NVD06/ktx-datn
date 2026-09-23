@@ -2,16 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { fromDateInput, toDateInput } from '@/lib/date-input'
 import { showFormError } from '@/lib/form'
@@ -68,18 +60,18 @@ interface Props {
 
 export function RegistrationPeriodFormDialog({ open, onOpenChange, period }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{period ? 'Sửa đợt đăng ký' : 'Thêm đợt đăng ký'}</DialogTitle>
-          <DialogDescription>
-            {period ? 'Đổi tên hoặc thời gian của đợt.' : 'Đợt mới tạo ở trạng thái đóng — mở đợt từ bảng.'}
-          </DialogDescription>
-        </DialogHeader>
-        {/* Form nằm trong DialogContent nên được tạo mới mỗi lần mở — không cần reset tay. */}
-        <RegistrationPeriodForm period={period} onDone={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={period ? 'Sửa đợt đăng ký' : 'Thêm đợt đăng ký'}
+      description={
+        period
+          ? 'Đổi tên hoặc thời gian của đợt.'
+          : 'Đợt mới tạo ở trạng thái đóng — mở đợt từ bảng.'
+      }
+    >
+      <RegistrationPeriodForm period={period} onDone={() => onOpenChange(false)} />
+    </FormDialog>
   )
 }
 
@@ -141,14 +133,7 @@ function RegistrationPeriodForm({
         </fieldset>
       ))}
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone} disabled={save.isPending}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Đang lưu…' : 'Lưu'}
-        </Button>
-      </DialogFooter>
+      <FormDialogFooter onCancel={onDone} isPending={save.isPending} />
     </form>
   )
 }

@@ -19,9 +19,11 @@ export function StudentHomePage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Chỗ ở hiện tại</CardTitle>
-          <CardDescription>Đếch có gì đâu bnaj ei</CardDescription>
+          <CardDescription>
+            Bạn chưa có chỗ ở. Phòng và giường sẽ hiện ở đây sau khi đơn được duyệt và bạn ký
+            hợp đồng.
+          </CardDescription>
         </CardHeader>
-     
       </Card>
     </>
   )

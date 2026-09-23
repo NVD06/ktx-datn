@@ -4,16 +4,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -63,17 +55,14 @@ interface Props {
 
 export function RoomFormDialog({ open, onOpenChange, building, room }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{room ? `Sửa phòng ${room.code}` : 'Thêm phòng'}</DialogTitle>
-          <DialogDescription>
-            Tòa {building.name} · {building.floors} tầng
-          </DialogDescription>
-        </DialogHeader>
-        <RoomForm building={building} room={room} onDone={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={room ? `Sửa phòng ${room.code}` : 'Thêm phòng'}
+      description={`Tòa ${building.name} · ${building.floors} tầng`}
+    >
+      <RoomForm building={building} room={room} onDone={() => onOpenChange(false)} />
+    </FormDialog>
   )
 }
 
@@ -201,14 +190,7 @@ function RoomForm({
         />
       )}
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone} disabled={save.isPending}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Đang lưu…' : 'Lưu'}
-        </Button>
-      </DialogFooter>
+      <FormDialogFooter onCancel={onDone} isPending={save.isPending} />
     </form>
   )
 }

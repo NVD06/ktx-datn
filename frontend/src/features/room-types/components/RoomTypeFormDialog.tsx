@@ -2,16 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
@@ -52,16 +44,14 @@ interface Props {
 
 export function RoomTypeFormDialog({ open, onOpenChange, roomType }: Props) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{roomType ? 'Sửa loại phòng' : 'Thêm loại phòng'}</DialogTitle>
-          <DialogDescription>Danh mục dùng chung cho mọi tòa nhà.</DialogDescription>
-        </DialogHeader>
-        {/* Form nằm trong DialogContent nên được tạo mới mỗi lần mở — không cần reset tay. */}
-        <RoomTypeForm roomType={roomType} onDone={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={roomType ? 'Sửa loại phòng' : 'Thêm loại phòng'}
+      description="Danh mục dùng chung cho mọi tòa nhà."
+    >
+      <RoomTypeForm roomType={roomType} onDone={() => onOpenChange(false)} />
+    </FormDialog>
   )
 }
 
@@ -158,14 +148,7 @@ function RoomTypeForm({ roomType, onDone }: { roomType?: RoomType | null; onDone
         )}
       />
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone} disabled={save.isPending}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? 'Đang lưu…' : 'Lưu'}
-        </Button>
-      </DialogFooter>
+      <FormDialogFooter onCancel={onDone} isPending={save.isPending} />
     </form>
   )
 }

@@ -1,5 +1,4 @@
-import { api } from './client'
-import type { SuccessResponse } from '@/types/api'
+import { apiGet, apiPost } from './client'
 import type { AuthUser, RegisteredUser, RegisterInput } from '@/types/auth'
 
 /**
@@ -22,8 +21,7 @@ async function getCsrfToken(): Promise<string> {
 /** Người dùng hiện tại, hoặc null nếu chưa đăng nhập. */
 export async function getMe(): Promise<AuthUser | null> {
   try {
-    const res = await api.get<SuccessResponse<AuthUser>>('/auth/me')
-    return res.data.data
+    return await apiGet<AuthUser>('/auth/me')
   } catch {
     // 401 là trạng thái hợp lệ: chưa đăng nhập.
     return null
@@ -64,7 +62,6 @@ export async function logout(): Promise<void> {
 }
 
 /** Đăng ký tài khoản sinh viên. Không tự động đăng nhập sau khi tạo. */
-export async function register(input: RegisterInput): Promise<RegisteredUser> {
-  const res = await api.post<SuccessResponse<RegisteredUser>>('/auth/register', input)
-  return res.data.data
+export function register(input: RegisterInput): Promise<RegisteredUser> {
+  return apiPost<RegisteredUser>('/auth/register', input)
 }

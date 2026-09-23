@@ -9,33 +9,37 @@ import { registrationRoutes } from '../modules/registrations/registration.routes
 import { roomTypeRoutes } from '../modules/room-types/room-type.routes.js';
 import { roomRoutes } from '../modules/rooms/room.routes.js';
 import { userRoutes } from '../modules/users/user.routes.js';
-import { okResponse, okSchema, registry } from '../config/openapi.js';
 import { ok } from '../types/response.js';
+import { defineRoutes } from '../utils/define-routes.js';
+
+const systemRoutes = defineRoutes('/health', 'System');
+
+systemRoutes.get(
+  '/',
+  {
+    summary: 'Kiểm tra API còn sống',
+    public: true,
+    data: z.object({ status: z.literal('ok'), time: z.iso.datetime() }),
+  },
+  (_req, res) => {
+    res.json(ok({ status: 'ok', time: new Date().toISOString() }));
+  },
+);
 
 export const apiRouter = Router();
 
-registry.registerPath({
-  method: 'get',
-  path: '/health',
-  tags: ['System'],
-  summary: 'Kiểm tra API còn sống',
-  responses: {
-    200: okResponse(
-      'OK',
-      okSchema(z.object({ status: z.literal('ok'), time: z.iso.datetime() })),
-    ),
-  },
-});
-apiRouter.get('/health', (_req, res) => {
-  res.json(ok({ status: 'ok', time: new Date().toISOString() }));
-});
-
-apiRouter.use('/auth', authRoutes);
-apiRouter.use('/buildings', buildingRoutes);
-apiRouter.use('/room-types', roomTypeRoutes);
-apiRouter.use('/rooms', roomRoutes);
-apiRouter.use('/beds', bedRoutes);
-apiRouter.use('/users', userRoutes);
-apiRouter.use('/registration-periods', registrationPeriodRoutes);
-apiRouter.use('/registrations', registrationRoutes);
-apiRouter.use('/profile', profileRoutes);
+// Mỗi module tự khai báo tiền tố của mình trong defineRoutes().
+for (const routes of [
+  systemRoutes,
+  authRoutes,
+  buildingRoutes,
+  roomTypeRoutes,
+  roomRoutes,
+  bedRoutes,
+  userRoutes,
+  registrationPeriodRoutes,
+  registrationRoutes,
+  profileRoutes,
+]) {
+  apiRouter.use(routes.prefix, routes.router);
+}

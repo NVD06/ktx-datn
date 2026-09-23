@@ -19,7 +19,6 @@ export function DashboardPage() {
               : 'Chỉ tòa nhà được gán quản lý.'}
           </CardDescription>
         </CardHeader>
-        
       </Card>
     </>
   )

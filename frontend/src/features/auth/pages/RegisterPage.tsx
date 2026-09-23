@@ -5,10 +5,11 @@ import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import * as authApi from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
+import { FormField } from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { GENDER } from '@/lib/labels'
 
 // Giữ khớp với backend/src/modules/auth/auth.schema.ts — validate 2 lớp,
 // nhưng backend mới là nơi quyết định (xem docs/convention.md §3).
@@ -72,57 +73,45 @@ export function RegisterPage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Họ và tên</Label>
+              <FormField label="Họ và tên" htmlFor="fullName" error={err.fullName?.message}>
                 <Input id="fullName" {...form.register('fullName')} />
-                {err.fullName && <p className="text-destructive text-sm">{err.fullName.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="studentCode">Mã sinh viên</Label>
+              </FormField>
+              <FormField label="Mã sinh viên" htmlFor="studentCode" error={err.studentCode?.message}>
                 <Input id="studentCode" placeholder="SV005" {...form.register('studentCode')} />
-                {err.studentCode && (
-                  <p className="text-destructive text-sm">{err.studentCode.message}</p>
-                )}
-              </div>
+              </FormField>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <FormField label="Email" htmlFor="email" error={err.email?.message}>
               <Input id="email" type="email" {...form.register('email')} />
-              {err.email && <p className="text-destructive text-sm">{err.email.message}</p>}
-            </div>
+            </FormField>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="gender">Giới tính</Label>
+              <FormField label="Giới tính" htmlFor="gender">
                 <select
                   id="gender"
                   className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
                   {...form.register('gender')}
                 >
-                  <option value="MALE">Nam</option>
-                  <option value="FEMALE">Nữ</option>
+                  <option value="MALE">{GENDER.MALE.label}</option>
+                  <option value="FEMALE">{GENDER.FEMALE.label}</option>
                 </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="className">Lớp</Label>
+              </FormField>
+              <FormField label="Lớp" htmlFor="className">
                 <Input id="className" placeholder="CNTT1" {...form.register('className')} />
-              </div>
+              </FormField>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
+            <FormField label="Mật khẩu" htmlFor="password" error={err.password?.message}>
               <Input id="password" type="password" {...form.register('password')} />
-              {err.password && <p className="text-destructive text-sm">{err.password.message}</p>}
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Nhập lại mật khẩu</Label>
+            <FormField
+              label="Nhập lại mật khẩu"
+              htmlFor="confirmPassword"
+              error={err.confirmPassword?.message}
+            >
               <Input id="confirmPassword" type="password" {...form.register('confirmPassword')} />
-              {err.confirmPassword && (
-                <p className="text-destructive text-sm">{err.confirmPassword.message}</p>
-              )}
-            </div>
+            </FormField>
 
             {register.isError && (
               <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">

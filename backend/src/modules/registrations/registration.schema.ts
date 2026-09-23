@@ -1,5 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
+import { listQuerySchema } from '../../utils/query-schema.js';
 import { optionalText } from '../../utils/zod-fields.js';
 
 export const createRegistrationSchema = z
@@ -18,4 +19,10 @@ export const createRegistrationSchema = z
   })
   .openapi('CreateRegistrationInput');
 
+export const registrationListQuerySchema = listQuerySchema.extend({
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']).optional(),
+  periodId: z.uuid().optional(),
+});
+
 export type CreateRegistrationInput = z.infer<typeof createRegistrationSchema>;
+export type RegistrationListQuery = z.infer<typeof registrationListQuerySchema>;

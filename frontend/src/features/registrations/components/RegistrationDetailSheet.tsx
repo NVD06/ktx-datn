@@ -1,0 +1,97 @@
+import { DetailList, type DetailRow } from '@/components/shared/DetailList'
+import { StatusBadge } from '@/components/shared/StatusBadge'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
+import { GENDER, REGISTRATION_STATUS } from '@/lib/labels'
+import type { RegistrationListItem } from '@/types/registration'
+
+/**
+ * Chi tiết đơn + hồ sơ sinh viên cho người duyệt (US-02.4). Dữ liệu lấy sẵn từ
+ * dòng của bảng, không gọi API riêng.
+ *
+ * `registration` tách khỏi `open` để nội dung còn nguyên trong lúc drawer trượt ra.
+ */
+export function RegistrationDetailSheet({
+  registration: r,
+  open,
+  onOpenChange,
+}: {
+  registration: RegistrationListItem | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="overflow-y-auto data-[side=right]:sm:max-w-md">
+        {r && <Content registration={r} />}
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function Content({ registration: r }: { registration: RegistrationListItem }) {
+  const { student } = r
+  const profile = student.profile
+
+  const application: DetailRow[] = [
+    ['Đợt đăng ký', r.period.name, true],
+    ['Thời gian ở', formatDateRange(r.period.stayStartAt, r.period.stayEndAt)],
+    ['Nộp lúc', formatDateTime(r.createdAt)],
+    ['Nguyện vọng tòa', r.building ? `Tòa ${r.building.name}` : 'Tòa nào cũng được'],
+    [
+      'Nguyện vọng loại phòng',
+      r.preferredRoomType
+        ? `${r.preferredRoomType.name} — ${formatMoney(r.preferredRoomType.price)} / kỳ`
+        : 'Loại nào cũng được',
+    ],
+    ['Ghi chú của sinh viên', r.note, true],
+    ['Phản hồi của ban quản lý', r.reviewNote, true],
+  ]
+
+  const studentRows: DetailRow[] = [
+    ['Mã sinh viên', profile?.studentCode],
+    ['Giới tính', profile && GENDER[profile.gender].label],
+    ['Ngày sinh', profile?.dob && formatDate(profile.dob)],
+    ['Số CCCD', profile?.citizenId],
+    ['Lớp', profile?.className],
+    ['Khoa', profile?.faculty],
+    ['Số điện thoại', student.phone],
+    ['Email', student.email],
+    ['Quê quán', profile?.hometown, true],
+  ]
+
+  return (
+    <>
+      <SheetHeader className="border-b pr-12">
+        <SheetTitle>{student.fullName}</SheetTitle>
+        <SheetDescription>
+          {profile ? `${profile.studentCode} · ` : ''}
+          {student.email}
+        </SheetDescription>
+        <div className="pt-2">
+          <StatusBadge {...REGISTRATION_STATUS[r.status]} />
+        </div>
+      </SheetHeader>
+
+      <div className="space-y-6 px-4 pb-6">
+        <Section title="Đơn đăng ký" rows={application} hideEmpty />
+        <Section title="Hồ sơ sinh viên" rows={studentRows} />
+      </div>
+    </>
+  )
+}
+
+function Section({ title, rows, hideEmpty }: { title: string; rows: DetailRow[]; hideEmpty?: boolean }) {
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <DetailList rows={rows} hideEmpty={hideEmpty} />
+    </section>
+  )
+}
