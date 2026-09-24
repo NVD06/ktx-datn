@@ -170,7 +170,7 @@ export function BuildingListPage() {
               value={list.filters.isActive}
               onChange={(v) => list.setFilter('isActive', v)}
               options={ACTIVE_OPTIONS}
-              allLabel="Các trạng thái"
+              allLabel="Trạng thái"
             />
           </>
         }

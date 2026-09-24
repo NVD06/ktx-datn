@@ -166,7 +166,7 @@ export function RegistrationPeriodListPage() {
               value={list.filters.isOpen}
               onChange={(v) => list.setFilter('isOpen', v)}
               options={OPEN_OPTIONS}
-              allLabel="Các trạng thái"
+              allLabel="Trạng thái"
             />
           </>
         }
