@@ -201,6 +201,7 @@ async function main() {
   await prisma.registrationPeriod.create({
     data: {
       name: 'Đăng ký học kỳ 2 năm 2025-2026',
+      term: '2025-HK2',
       startAt: new Date('2026-01-05T00:00:00+07:00'),
       endAt: new Date('2026-01-31T23:59:59+07:00'),
       stayStartAt: new Date('2026-02-02T00:00:00+07:00'),
@@ -211,6 +212,7 @@ async function main() {
   const openPeriod = await prisma.registrationPeriod.create({
     data: {
       name: 'Đăng ký học kỳ 1 năm 2026-2027',
+      term: '2026-HK1',
       startAt: new Date('2026-09-01T00:00:00+07:00'),
       endAt: new Date('2026-10-15T23:59:59+07:00'),
       stayStartAt: new Date('2026-09-07T00:00:00+07:00'),

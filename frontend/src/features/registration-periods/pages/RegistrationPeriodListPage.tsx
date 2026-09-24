@@ -79,6 +79,11 @@ export function RegistrationPeriodListPage() {
       cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
     },
     {
+      id: 'term',
+      header: 'Học kỳ',
+      cell: ({ row }) => row.original.term,
+    },
+    {
       id: 'startAt',
       header: 'Nhận đơn',
       enableSorting: true,

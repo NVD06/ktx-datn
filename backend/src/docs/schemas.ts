@@ -78,6 +78,7 @@ export const registrationPeriodSchema = z
     isOpen: z.boolean().openapi({ description: 'Tối đa 1 đợt mở tại một thời điểm' }),
     stayStartAt: z.iso.datetime().openapi({ description: 'Bắt đầu ở — kỳ hạn hợp đồng' }),
     stayEndAt: z.iso.datetime().openapi({ description: 'Kết thúc ở — kỳ hạn hợp đồng' }),
+    term: z.string().openapi({ example: '2026-HK1', description: 'Mã học kỳ — kỳ của hóa đơn tiền phòng' }),
     registrationCount: z.int(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),

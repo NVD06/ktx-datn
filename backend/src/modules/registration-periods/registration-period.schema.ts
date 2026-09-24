@@ -7,6 +7,13 @@ const name = z
   .trim()
   .min(1, 'Tên đợt đăng ký không được để trống')
   .max(100, 'Tên đợt đăng ký tối đa 100 ký tự');
+// Năm bắt đầu năm học + học kỳ: HK2 của năm học 2026-2027 là "2026-HK2", HE = học kỳ hè.
+// Thành Invoice.period của hóa đơn tiền phòng nên phải đúng một dạng duy nhất.
+const term = z
+  .string('Mã học kỳ không hợp lệ')
+  .trim()
+  .toUpperCase()
+  .regex(/^\d{4}-(HK1|HK2|HE)$/, 'Mã học kỳ có dạng 2026-HK1, 2026-HK2 hoặc 2026-HE (học kỳ hè)');
 // Nhận cả "2026-09-01" lẫn ISO đầy đủ — FE gửi từ <input type="date">.
 // Bắt buộc là chuỗi: `z.coerce.date()` đứng một mình biến `null`/`0`/`true` thành ngày 01/01/1970.
 const date = (label: string) =>
@@ -49,6 +56,10 @@ function refineDates(v: PeriodDates, ctx: z.RefinementCtx) {
 export const createRegistrationPeriodSchema = z
   .object({
     name: name.openapi({ example: 'Đăng ký học kỳ 1 năm 2026-2027' }),
+    term: term.openapi({
+      example: '2026-HK1',
+      description: 'Mã học kỳ — kỳ của hóa đơn tiền phòng lập từ hợp đồng của đợt',
+    }),
     startAt: date('Ngày bắt đầu nhận đơn').openapi({
       example: '2026-08-01T00:00:00.000Z',
       description: 'Thời gian nhận đơn — để thông báo, mở/đóng thật do Admin bấm',
@@ -66,6 +77,7 @@ export const createRegistrationPeriodSchema = z
 export const updateRegistrationPeriodSchema = z
   .object({
     name: name.exactOptional(),
+    term: term.exactOptional(),
     startAt: date('Ngày bắt đầu nhận đơn').exactOptional(),
     endAt: date('Ngày hết hạn nhận đơn').exactOptional(),
     stayStartAt: date('Ngày bắt đầu ở').exactOptional(),

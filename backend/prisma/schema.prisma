@@ -10,8 +10,10 @@
 //   Nhờ vậy sửa giá phòng / đơn giá điện nước không hồi tố dữ liệu cũ.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  // Unique index có điều kiện — chặn 2 hợp đồng cùng giữ một giường (model Contract).
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -192,6 +194,10 @@ model RegistrationPeriod {
   // Thời gian Ở của đợt (học kỳ) — hợp đồng sinh từ đợt này lấy kỳ hạn ở đây.
   stayStartAt DateTime
   stayEndAt   DateTime
+  // Mã học kỳ "2026-HK1" | "2026-HK2" | "2026-HE" (năm = năm bắt đầu năm học).
+  // Thành Invoice.period của hóa đơn tiền phòng khi sinh viên ký hợp đồng.
+  // Không unique: một học kỳ có thể có nhiều đợt (đợt chính + đợt bổ sung).
+  term        String
 
   registrations Registration[]
 
@@ -235,13 +241,21 @@ model Contract {
   price     Decimal        @db.Decimal(12, 0) // snapshot từ RoomType.price lúc tạo
   status    ContractStatus @default(DRAFT)
 
-  signedAt     DateTime?
-  terminatedAt DateTime?
+  signedAt          DateTime?
+  terminatedAt      DateTime?
+  terminationReason String? // bắt buộc khi Manager chấm dứt — kiểm tra ở service
 
   invoices Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Một giường tại một thời điểm chỉ có tối đa 1 hợp đồng đang giữ (DRAFT chờ ký
+  // hoặc ACTIVE đang ở). Lớp chặn cuối ở database cho tranh chấp giường: 2 lệnh
+  // duyệt song song lọt qua kiểm tra ở service thì lệnh sau vẫn vỡ ở đây (P2002).
+  // Điều kiện viết đúng dạng Postgres tự chuẩn hóa (`IN (...)` → `= ANY (ARRAY[...])`),
+  // viết kiểu khác thì mỗi lần `migrate dev` Prisma lại tưởng lệch và đòi tạo lại index.
+  @@unique([bedId], map: "Contract_bedId_holding_key", where: raw("(status = ANY (ARRAY['DRAFT'::\"ContractStatus\", 'ACTIVE'::\"ContractStatus\"]))"))
 }
 
 model Invoice {

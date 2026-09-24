@@ -20,6 +20,11 @@ const schema = z
       .trim()
       .min(1, 'Tên đợt đăng ký không được để trống')
       .max(100, 'Tên đợt đăng ký tối đa 100 ký tự'),
+    term: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^\d{4}-(HK1|HK2|HE)$/, 'Mã học kỳ có dạng 2026-HK1, 2026-HK2 hoặc 2026-HE (học kỳ hè)'),
     startAt: day,
     endAt: day,
     stayStartAt: day,
@@ -34,7 +39,7 @@ const schema = z
   })
 
 type FormValues = z.infer<typeof schema>
-type DateField = Exclude<keyof FormValues, 'name'>
+type DateField = Exclude<keyof FormValues, 'name' | 'term'>
 
 /** Hai khoảng thời gian của đợt — cùng một kiểu ô nhập "Từ ngày / Đến ngày". */
 const RANGES: { legend: string; from: DateField; to: DateField; hint: string }[] = [
@@ -89,6 +94,7 @@ function RegistrationPeriodForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: period?.name ?? '',
+      term: period?.term ?? '',
       ...Object.fromEntries(dateFields.map((f) => [f, period ? toDateInput(period[f]) : ''])),
     },
   })
@@ -103,7 +109,7 @@ function RegistrationPeriodForm({
       ]),
     ) as Record<DateField, string>
     save.mutate(
-      { id: period?.id, input: { name: values.name, ...dates } },
+      { id: period?.id, input: { name: values.name, term: values.term, ...dates } },
       {
         onSuccess() {
           toast.success(period ? 'Đã cập nhật đợt đăng ký' : 'Đã thêm đợt đăng ký')
@@ -118,6 +124,15 @@ function RegistrationPeriodForm({
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <FormField label="Tên đợt" htmlFor="rp-name" error={err.name?.message}>
         <Input id="rp-name" placeholder="Đăng ký học kỳ 1 năm 2026-2027" {...form.register('name')} />
+      </FormField>
+
+      <FormField
+        label="Mã học kỳ"
+        htmlFor="rp-term"
+        error={err.term?.message}
+        hint="Năm bắt đầu năm học + học kỳ, ví dụ HK2 năm học 2026-2027 là 2026-HK2. Dùng làm kỳ của hóa đơn tiền phòng."
+      >
+        <Input id="rp-term" placeholder="2026-HK1" className="uppercase" {...form.register('term')} />
       </FormField>
 
       {RANGES.map(({ legend, from, to, hint }) => (

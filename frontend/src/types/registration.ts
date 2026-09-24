@@ -17,6 +17,8 @@ export interface RegistrationPeriod {
   /** Thời gian ở — kỳ hạn hợp đồng sinh ra từ đợt. */
   stayStartAt: string
   stayEndAt: string
+  /** Mã học kỳ "2026-HK1" — kỳ của hóa đơn tiền phòng lập từ hợp đồng của đợt. */
+  term: string
   registrationCount: number
   createdAt: string
   updatedAt: string
@@ -25,6 +27,7 @@ export interface RegistrationPeriod {
 /** Không có `isOpen` — mở/đóng đi qua endpoint riêng. */
 export interface RegistrationPeriodInput {
   name: string
+  term: string
   startAt: string
   endAt: string
   stayStartAt: string
@@ -39,7 +42,7 @@ export interface Registration {
   studentId: string
   period: Pick<
     RegistrationPeriod,
-    'id' | 'name' | 'isOpen' | 'startAt' | 'endAt' | 'stayStartAt' | 'stayEndAt'
+    'id' | 'name' | 'isOpen' | 'startAt' | 'endAt' | 'stayStartAt' | 'stayEndAt' | 'term'
   >
   /** Nguyện vọng tòa, null = tòa nào cũng được. */
   building: BuildingRef | null
