@@ -1,5 +1,7 @@
 import { api, apiGet, apiPatch, apiPost } from './client'
 import type {
+  AvailableBedParams,
+  AvailableRoom,
   AvailableSummary,
   Bed,
   BedUpdateInput,
@@ -42,4 +44,9 @@ export function updateBed(id: string, input: BedUpdateInput) {
 
 export async function deleteBed(id: string) {
   await api.delete(`/beds/${id}`)
+}
+
+/** Giường còn xếp được cho một sinh viên, gom theo phòng — dialog duyệt đơn. */
+export function listAvailableBeds(params: AvailableBedParams) {
+  return apiGet<AvailableRoom[]>('/beds/available', params)
 }

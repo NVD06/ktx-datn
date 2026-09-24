@@ -1,19 +1,21 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Eye } from 'lucide-react'
+import { BedDouble, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { RowActions, type RowAction } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useRegistrationPeriods } from '@/features/registration-periods/hooks/useRegistrationPeriods'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateTime, orDash } from '@/lib/format'
 import { GENDER, REGISTRATION_STATUS } from '@/lib/labels'
 import type { RegistrationListItem } from '@/types/registration'
+import { ApproveRegistrationDialog } from '../components/ApproveRegistrationDialog'
 import { RegistrationDetailSheet } from '../components/RegistrationDetailSheet'
+import { RejectRegistrationDialog } from '../components/RejectRegistrationDialog'
 import { useRegistrations } from '../hooks/useRegistrations'
 
 const STATUS_OPTIONS = Object.entries(REGISTRATION_STATUS).map(([value, { label }]) => ({ value, label }))
@@ -22,8 +24,9 @@ const STATUS_OPTIONS = Object.entries(REGISTRATION_STATUS).map(([value, { label 
 const PERIOD_OPTION_PARAMS = { limit: 100 }
 
 /**
- * Đơn đăng ký ở KTX cho người duyệt (US-02.4). Backend tự giới hạn phạm vi:
- * MANAGER chỉ thấy đơn chọn tòa mình và đơn "tòa nào cũng được" hợp giới tính tòa.
+ * Đơn đăng ký ở KTX cho người duyệt: xem (US-02.4), duyệt + xếp giường, từ chối
+ * (US-03.1/2). Backend tự giới hạn phạm vi: MANAGER chỉ thấy đơn chọn tòa mình và
+ * đơn "tòa nào cũng được" hợp giới tính tòa.
  */
 export function RegistrationListPage() {
   const { user } = useAuth()
@@ -36,10 +39,23 @@ export function RegistrationListPage() {
 
   const [selected, setSelected] = useState<RegistrationListItem | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [approving, setApproving] = useState<RegistrationListItem | null>(null)
+  const [rejecting, setRejecting] = useState<RegistrationListItem | null>(null)
 
   function openDetail(registration: RegistrationListItem) {
     setSelected(registration)
     setDetailOpen(true)
+  }
+
+  // Bấm duyệt/từ chối từ drawer: đóng drawer để dialog không chồng lên nó.
+  function openApprove(registration: RegistrationListItem) {
+    setDetailOpen(false)
+    setApproving(registration)
+  }
+
+  function openReject(registration: RegistrationListItem) {
+    setDetailOpen(false)
+    setRejecting(registration)
   }
 
   const columns: ColumnDef<RegistrationListItem>[] = [
@@ -102,13 +118,20 @@ export function RegistrationListPage() {
     {
       id: 'actions',
       header: '',
-      meta: { className: 'w-20 text-right' },
-      cell: ({ row }) => (
-        <Button variant="ghost" size="sm" onClick={() => openDetail(row.original)}>
-          <Eye />
-          Xem
-        </Button>
-      ),
+      meta: { className: 'w-12 text-right' },
+      cell: ({ row }) => {
+        const registration = row.original
+        const actions: RowAction[] = [
+          { label: 'Xem chi tiết', icon: Eye, onSelect: () => openDetail(registration) },
+        ]
+        if (registration.status === 'PENDING') {
+          actions.push(
+            { label: 'Duyệt và xếp giường', icon: BedDouble, onSelect: () => openApprove(registration) },
+            { label: 'Từ chối', icon: XCircle, destructive: true, onSelect: () => openReject(registration) },
+          )
+        }
+        return <RowActions actions={actions} />
+      },
     },
   ]
 
@@ -142,7 +165,7 @@ export function RegistrationListPage() {
               value={list.filters.status}
               onChange={(v) => list.setFilter('status', v)}
               options={STATUS_OPTIONS}
-              allLabel="Các trạng thái"
+              allLabel="Trạng thái"
             />
             <FilterSelect
               value={list.filters.periodId}
@@ -158,7 +181,11 @@ export function RegistrationListPage() {
         registration={selected}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        onApprove={openApprove}
+        onReject={openReject}
       />
+      <ApproveRegistrationDialog registration={approving} onClose={() => setApproving(null)} />
+      <RejectRegistrationDialog registration={rejecting} onClose={() => setRejecting(null)} />
     </>
   )
 }

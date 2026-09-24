@@ -25,6 +25,15 @@ export function getErrorMessage(error: unknown, fallback = 'Đã có lỗi xảy
   return fallback
 }
 
+/** Mã lỗi nghiệp vụ của backend (`BED_TAKEN`, `REGISTRATION_NOT_PENDING`…) — để xử lý riêng từng loại. */
+export function getErrorCode(error: unknown): string | undefined {
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as ErrorResponse | undefined
+    if (data && data.success === false) return data.error.code
+  }
+  return undefined
+}
+
 /** Lỗi validate theo từng field (response 400) — để gắn vào react-hook-form. */
 export function getFieldErrors(error: unknown): Record<string, string[]> | undefined {
   if (error instanceof AxiosError) {
@@ -39,8 +48,8 @@ export function getFieldErrors(error: unknown): Record<string, string[]> | undef
  * api/* chỉ còn khai báo đường dẫn và kiểu.
  */
 
-export async function apiGet<T>(url: string): Promise<T> {
-  return (await api.get<SuccessResponse<T>>(url)).data.data
+export async function apiGet<T>(url: string, params?: object): Promise<T> {
+  return (await api.get<SuccessResponse<T>>(url, { params })).data.data
 }
 
 export async function apiPost<T>(url: string, body?: unknown): Promise<T> {

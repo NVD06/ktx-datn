@@ -123,3 +123,21 @@ export interface AvailableSummary {
   /** Tổng số giường còn trống. */
   availableBeds: number
 }
+
+/** Phòng còn giường xếp được cho một sinh viên — dialog duyệt đơn (GET /beds/available). */
+export interface AvailableRoom {
+  id: string
+  code: string
+  floor: number
+  building: BuildingRef
+  roomType: RoomTypeRef
+  /** Chỉ giường còn xếp được, sắp theo mã. */
+  beds: { id: string; code: string }[]
+}
+
+export interface AvailableBedParams {
+  /** Giới tính SV cần xếp — backend chỉ trả phòng SV đó được ở. */
+  gender: Gender
+  buildingId?: string
+  roomTypeId?: string
+}

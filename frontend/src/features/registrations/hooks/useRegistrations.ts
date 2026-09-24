@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as registrationsApi from '@/api/registrations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { roomKeys } from '@/features/rooms/hooks/useRooms'
 import {
   registrationPeriodKeys,
   useCurrentRegistrationPeriod,
@@ -39,6 +40,29 @@ export function useCreateRegistration() {
 export function useCancelRegistration() {
   const invalidate = useInvalidateRegistrations()
   return useMutation({ mutationFn: registrationsApi.cancelRegistration, onSuccess: invalidate })
+}
+
+/**
+ * Duyệt đơn + xếp giường. Làm mới cả khi LỖI: 409 thường nghĩa là dữ liệu trên
+ * màn hình đã cũ (giường vừa bị người khác lấy, đơn vừa được người khác xử lý),
+ * nên tải lại danh sách đơn và giường trống để Manager chọn lại cho đúng.
+ */
+export function useApproveRegistration() {
+  const invalidate = useInvalidate(registrationKeys.all, roomKeys.all)
+  return useMutation({
+    mutationFn: ({ id, bedId }: { id: string; bedId: string }) =>
+      registrationsApi.approveRegistration(id, bedId),
+    onSettled: invalidate,
+  })
+}
+
+export function useRejectRegistration() {
+  const invalidate = useInvalidate(registrationKeys.all)
+  return useMutation({
+    mutationFn: ({ id, reviewNote }: { id: string; reviewNote: string }) =>
+      registrationsApi.rejectRegistration(id, reviewNote),
+    onSettled: invalidate,
+  })
 }
 
 /**

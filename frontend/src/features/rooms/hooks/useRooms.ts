@@ -1,9 +1,15 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { listBuildingRooms } from '@/api/buildings'
 import * as roomsApi from '@/api/rooms'
 import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
-import type { BedUpdateInput, RoomInput } from '@/types/facility'
+import type { AvailableBedParams, BedUpdateInput, RoomInput } from '@/types/facility'
 
 export const roomKeys = {
   all: ['rooms'] as const,
@@ -11,6 +17,7 @@ export const roomKeys = {
     ['rooms', 'building', buildingId, params] as const,
   detail: (id: string) => ['rooms', 'detail', id] as const,
   availableSummary: ['rooms', 'available', 'summary'] as const,
+  availableBeds: (params: AvailableBedParams | null) => ['rooms', 'available', 'beds', params] as const,
 }
 
 export function useBuildingRooms(buildingId: string, params: ListParams) {
@@ -34,6 +41,20 @@ export function useAvailableSummary() {
   return useQuery({
     queryKey: roomKeys.availableSummary,
     queryFn: roomsApi.getAvailableSummary,
+  })
+}
+
+/**
+ * Giường còn xếp được cho một sinh viên — dialog duyệt đơn. `null` = chưa biết
+ * giới tính SV, không gọi. Luôn tải lại khi mở dialog: danh sách cũ vài phút
+ * trước có thể đã có giường vừa được người khác xếp.
+ */
+export function useAvailableBeds(params: AvailableBedParams | null) {
+  return useQuery({
+    queryKey: roomKeys.availableBeds(params),
+    queryFn: params ? () => roomsApi.listAvailableBeds(params) : skipToken,
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
 }
 
