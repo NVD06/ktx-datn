@@ -1,8 +1,14 @@
 import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
-import type { CreateBedInput, UpdateBedInput } from './bed.schema.js';
+import { availableBedQuerySchema, type CreateBedInput, type UpdateBedInput } from './bed.schema.js';
 import * as bedService from './bed.service.js';
+
+/** GET /api/v1/beds/available */
+export async function available(req: Request, res: Response) {
+  const query = availableBedQuerySchema.parse(req.query);
+  res.json(ok(await bedService.listAvailable(currentUser(req), query)));
+}
 
 /** POST /api/v1/rooms/:id/beds */
 export async function create(req: Request, res: Response) {

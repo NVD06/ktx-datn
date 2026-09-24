@@ -3,8 +3,10 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
-import { nextBedCode } from './bed-code.js';
-import type { CreateBedInput, UpdateBedInput } from './bed.schema.js';
+import { ASSIGNABLE_ROOM, FREE_BED, roomForGender } from '../rooms/room-eligibility.js';
+import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
+import { compareBedCode, nextBedCode } from './bed-code.js';
+import type { AvailableBedQuery, CreateBedInput, UpdateBedInput } from './bed.schema.js';
 
 /*
  * Giường cách Building hai cấp nên scope lồng qua quan hệ:
@@ -19,6 +21,39 @@ const SELECT = {
   createdAt: true,
   updatedAt: true,
 } as const satisfies Prisma.BedSelect;
+
+/**
+ * Giường còn xếp được cho một sinh viên, gom theo phòng — danh sách chọn giường
+ * khi duyệt đơn (US-03.2). Cùng quy tắc với lệnh duyệt: phòng đang hoạt động,
+ * hợp giới tính SV, giường chưa có người và chưa bị hợp đồng DRAFT giữ chỗ.
+ *
+ * Đây chỉ là gợi ý — lệnh duyệt kiểm tra lại mọi điều kiện sau khi khóa phòng,
+ * vì giữa lúc xem và lúc bấm duyệt có thể người khác đã lấy giường.
+ */
+export async function listAvailable(user: AuthUser, query: AvailableBedQuery) {
+  const rooms = await prisma.room.findMany({
+    where: {
+      AND: [
+        buildingScope(user),
+        ASSIGNABLE_ROOM,
+        roomForGender(query.gender),
+        { beds: { some: FREE_BED } },
+        query.buildingId ? { buildingId: query.buildingId } : {},
+        query.roomTypeId ? { roomTypeId: query.roomTypeId } : {},
+      ],
+    },
+    orderBy: [{ building: { name: 'asc' } }, { floor: 'asc' }, { code: 'asc' }],
+    select: {
+      id: true,
+      code: true,
+      floor: true,
+      building: { select: BUILDING_REF_SELECT },
+      roomType: { select: ROOM_TYPE_SELECT },
+      beds: { where: FREE_BED, select: { id: true, code: true } },
+    },
+  });
+  return rooms.map((room) => ({ ...room, beds: room.beds.sort(compareBedCode) }));
+}
 
 /**
  * Chạy trong transaction Serializable: hai request thêm giường cùng lúc không

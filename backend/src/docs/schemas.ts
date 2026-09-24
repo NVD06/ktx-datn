@@ -48,7 +48,10 @@ export const buildingSchema = z
     gender: genderSchema.nullable().openapi({ description: 'null = tòa hỗn hợp' }),
     description: z.string().nullable(),
     isActive: z.boolean(),
-    managers: z.array(z.object({ id: z.uuid(), fullName: z.string(), email: z.email() })),
+    manager: z
+      .object({ id: z.uuid(), fullName: z.string(), email: z.email() })
+      .nullable()
+      .openapi({ description: 'Mỗi tòa tối đa 1 quản lý, null = chưa gán' }),
     roomCount: z.int(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
@@ -139,6 +142,19 @@ export const availableSummarySchema = z
   })
   .openapi('AvailableSummary');
 
+export const availableRoomSchema = z
+  .object({
+    id: z.uuid(),
+    code: z.string().openapi({ example: '301' }),
+    floor: z.int(),
+    building: buildingRefSchema,
+    roomType: roomTypeRefSchema,
+    beds: z
+      .array(z.object({ id: z.uuid(), code: z.string().openapi({ example: 'G2' }) }))
+      .openapi({ description: 'Chỉ giường còn xếp được, sắp theo mã' }),
+  })
+  .openapi('AvailableRoom');
+
 export const studentProfileSchema = z
   .object({
     id: z.uuid().openapi({ description: 'id của User' }),
@@ -204,6 +220,32 @@ export const registrationListItemSchema = registrationSchema
     }),
   })
   .openapi('RegistrationListItem');
+
+export const contractStatusSchema = z
+  .enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED'])
+  .openapi('ContractStatus');
+
+export const approvedContractSchema = z
+  .object({
+    id: z.uuid(),
+    code: z.string().openapi({ example: 'HD-2026-0001' }),
+    registrationId: z.uuid(),
+    status: contractStatusSchema.openapi({ description: 'Luôn DRAFT — chờ sinh viên ký' }),
+    startDate: z.iso.datetime().openapi({ description: 'Bắt đầu ở của đợt' }),
+    endDate: z.iso.datetime().openapi({ description: 'Kết thúc ở của đợt' }),
+    price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt' }),
+    bed: z.object({
+      id: z.uuid(),
+      code: z.string().openapi({ example: 'G2' }),
+      room: z.object({
+        id: z.uuid(),
+        code: z.string().openapi({ example: '301' }),
+        floor: z.int(),
+        building: z.object({ id: z.uuid(), name: z.string() }),
+      }),
+    }),
+  })
+  .openapi('ApprovedContract');
 
 export const userSchema = z
   .object({

@@ -21,6 +21,16 @@ export const FREE_BED = {
   contracts: { none: { status: 'DRAFT' } },
 } as const satisfies Prisma.BedWhereInput;
 
+/**
+ * Phòng còn nhận người mới: phòng, tòa và loại phòng đều đang hoạt động.
+ * Cùng một điều kiện cho trang chỗ trống, danh sách giường khi duyệt và lệnh duyệt.
+ */
+export const ASSIGNABLE_ROOM = {
+  isActive: true,
+  building: { isActive: true },
+  roomType: { isActive: true },
+} as const satisfies Prisma.RoomWhereInput;
+
 export const OTHER_GENDER: Record<Gender, Gender> = { MALE: 'FEMALE', FEMALE: 'MALE' };
 
 /** Giới tính trong câu thông báo: "sinh viên nam", "tòa nữ". */

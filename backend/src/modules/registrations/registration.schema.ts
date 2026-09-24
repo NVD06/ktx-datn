@@ -24,5 +24,26 @@ export const registrationListQuerySchema = listQuerySchema.extend({
   periodId: z.uuid().optional(),
 });
 
+export const approveRegistrationSchema = z
+  .object({
+    bedId: z
+      .uuid('Vui lòng chọn giường')
+      .openapi({ description: 'Giường xếp cho sinh viên — chọn từ GET /beds/available' }),
+  })
+  .openapi('ApproveRegistrationInput');
+
+export const rejectRegistrationSchema = z
+  .object({
+    reviewNote: z
+      .string('Vui lòng nhập lý do từ chối')
+      .trim()
+      .min(1, 'Vui lòng nhập lý do từ chối')
+      .max(500, 'Lý do từ chối tối đa 500 ký tự')
+      .openapi({ example: 'Hồ sơ không thuộc diện ưu tiên của đợt này' }),
+  })
+  .openapi('RejectRegistrationInput');
+
 export type CreateRegistrationInput = z.infer<typeof createRegistrationSchema>;
+export type ApproveRegistrationInput = z.infer<typeof approveRegistrationSchema>;
+export type RejectRegistrationInput = z.infer<typeof rejectRegistrationSchema>;
 export type RegistrationListQuery = z.infer<typeof registrationListQuerySchema>;

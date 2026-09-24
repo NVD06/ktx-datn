@@ -5,7 +5,7 @@ import { ApiError } from '../../utils/api-error.js';
 import { paginate, type SortOptions } from '../../utils/paginate.js';
 import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { bedCodes, compareBedCode } from '../beds/bed-code.js';
-import { FREE_BED, roomForGender } from './room-eligibility.js';
+import { ASSIGNABLE_ROOM, FREE_BED, roomForGender } from './room-eligibility.js';
 import { roomStatusWhere, summarizeBeds } from './room-status.js';
 import type {
   BuildingRoomListQuery,
@@ -147,12 +147,7 @@ export async function getById(user: AuthUser, id: string) {
  * URL bị bỏ qua để không xem được tòa khác giới.
  */
 async function availableWhere(user: AuthUser): Promise<Prisma.RoomWhereInput> {
-  const base: Prisma.RoomWhereInput = {
-    isActive: true,
-    building: { isActive: true },
-    roomType: { isActive: true },
-    beds: { some: FREE_BED },
-  };
+  const base: Prisma.RoomWhereInput = { ...ASSIGNABLE_ROOM, beds: { some: FREE_BED } };
   if (user.role !== 'STUDENT') return base;
 
   const profile = await prisma.studentProfile.findUnique({

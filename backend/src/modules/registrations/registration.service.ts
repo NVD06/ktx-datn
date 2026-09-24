@@ -2,16 +2,31 @@ import { prisma } from '../../config/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
+import { nextDocumentCode } from '../../utils/document-code.js';
 import { paginate } from '../../utils/paginate.js';
-import { buildingScope } from '../../utils/scope.js';
+import { isUniqueViolation } from '../../utils/prisma-error.js';
+import { buildingScope, outOfScope } from '../../utils/scope.js';
 import * as profileService from '../profile/profile.service.js';
-import { GENDER_LABEL, HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
+import {
+  ASSIGNABLE_ROOM,
+  FREE_BED,
+  GENDER_LABEL,
+  HOLDING_CONTRACT_STATUSES,
+  OTHER_GENDER,
+  roomForGender,
+} from '../rooms/room-eligibility.js';
 import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
-import type { CreateRegistrationInput, RegistrationListQuery } from './registration.schema.js';
+import type {
+  ApproveRegistrationInput,
+  CreateRegistrationInput,
+  RegistrationListQuery,
+  RejectRegistrationInput,
+} from './registration.schema.js';
 
 /*
  * Đơn đăng ký ở KTX. Phần của sinh viên (US-02.3) luôn lọc theo
- * `studentId = user.id`; phần của Manager (US-02.4) lọc theo reviewerScope.
+ * `studentId = user.id`; phần của Manager — xem danh sách (US-02.4), duyệt và
+ * từ chối (US-03.1/2) — lọc theo reviewerScope.
  */
 
 const INCLUDE = {
@@ -54,6 +69,27 @@ function formatDateVN(date: Date) {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+  });
+}
+
+/**
+ * Hợp đồng đang giữ chỗ (DRAFT đã duyệt chờ ký, hoặc ACTIVE đang ở) của sinh viên
+ * trùng thời gian ở của đợt. Sinh viên đang ở vẫn được đăng ký kỳ sau, miễn hợp
+ * đồng hiện tại kết thúc trước khi kỳ mới bắt đầu.
+ */
+function findOverlappingContract(
+  db: Prisma.TransactionClient,
+  studentId: string,
+  period: { stayStartAt: Date; stayEndAt: Date },
+) {
+  return db.contract.findFirst({
+    where: {
+      status: { in: [...HOLDING_CONTRACT_STATUSES] },
+      registration: { studentId },
+      startDate: { lte: period.stayEndAt },
+      endDate: { gte: period.stayStartAt },
+    },
+    select: { code: true, endDate: true },
   });
 }
 
@@ -191,17 +227,7 @@ export async function create(user: AuthUser, input: CreateRegistrationInput) {
         );
       }
 
-      // Sinh viên đang ở vẫn được đăng ký kỳ sau, miễn hợp đồng hiện tại (đang ở
-      // hoặc đã duyệt chờ ký) không trùng thời gian ở của đợt này.
-      const overlapping = await tx.contract.findFirst({
-        where: {
-          status: { in: [...HOLDING_CONTRACT_STATUSES] },
-          registration: { studentId: user.id },
-          startDate: { lte: period.stayEndAt },
-          endDate: { gte: period.stayStartAt },
-        },
-        select: { code: true, endDate: true },
-      });
+      const overlapping = await findOverlappingContract(tx, user.id, period);
       if (overlapping) {
         throw ApiError.conflict(
           'CONTRACT_OVERLAP',
@@ -254,4 +280,198 @@ export async function cancel(user: AuthUser, id: string) {
   // Đơn của người khác cũng trả 404 — không lộ việc id đó có tồn tại.
   if (!own) throw ApiError.notFound('Không tìm thấy đơn đăng ký');
   throw ApiError.conflict('REGISTRATION_NOT_PENDING', `Đơn ${STATUS_LABEL[own.status]} nên không thể hủy.`);
+}
+
+// ── Duyệt / từ chối (US-03.1, US-03.2) ──────────────────────────────────────
+
+/**
+ * Đơn không còn PENDING. Vừa đọc thấy PENDING mà ghi không được nghĩa là người
+ * khác vừa xử lý xong trong lúc mình đang thao tác.
+ */
+function notPendingError(status: keyof typeof STATUS_LABEL, action: string) {
+  return ApiError.conflict(
+    'REGISTRATION_NOT_PENDING',
+    status === 'PENDING'
+      ? 'Đơn vừa được người khác xử lý. Hãy tải lại danh sách.'
+      : `Đơn ${STATUS_LABEL[status]} nên không thể ${action}.`,
+  );
+}
+
+/** Hợp đồng DRAFT sinh ra khi duyệt, kèm chỗ ở để FE báo lại cho người duyệt. */
+const CONTRACT_SELECT = {
+  id: true,
+  code: true,
+  registrationId: true,
+  status: true,
+  startDate: true,
+  endDate: true,
+  price: true,
+  bed: {
+    select: {
+      id: true,
+      code: true,
+      room: {
+        select: { id: true, code: true, floor: true, building: { select: { id: true, name: true } } },
+      },
+    },
+  },
+} as const satisfies Prisma.ContractSelect;
+
+/** Unique index một phần trên Contract(bedId) — schema.prisma, model Contract. */
+const BED_HOLDING_INDEX = 'Contract_bedId_holding_key';
+
+function bedTakenError(label = 'Giường này') {
+  return ApiError.conflict(
+    'BED_TAKEN',
+    `${label} vừa được xếp cho sinh viên khác hoặc không còn trống. Hãy chọn giường khác.`,
+  );
+}
+
+/**
+ * Duyệt đơn: xếp giường và sinh hợp đồng DRAFT chờ sinh viên ký.
+ *
+ * Tranh chấp giường (registration-contract-flow.md): duyệt xong giường vẫn
+ * AVAILABLE, chỉ có thêm hợp đồng DRAFT — hai lệnh duyệt song song ở READ
+ * COMMITTED đều đọc thấy giường trống. Vì vậy phải KHÓA DÒNG PHÒNG trước rồi mới
+ * kiểm tra: lệnh sau vào cùng phòng phải chờ lệnh trước commit, và khi đọc lại
+ * sẽ thấy hợp đồng DRAFT vừa tạo. Khóa theo phòng chứ không theo giường vì ở tòa
+ * hỗn hợp, xếp nam và nữ vào hai giường khác nhau của cùng một phòng trống cũng
+ * là tranh chấp. Lọt qua hết thì unique index của Contract chặn nốt.
+ *
+ * Thứ tự khóa luôn là đơn → phòng, nên hai lệnh duyệt không thể chờ nhau vòng tròn.
+ */
+export async function approve(user: AuthUser, id: string, input: ApproveRegistrationInput) {
+  const scope = await reviewerScope(user);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const registration = await tx.registration.findFirst({
+        where: { AND: [{ id }, scope] },
+        select: {
+          status: true,
+          buildingId: true,
+          studentId: true,
+          period: { select: { name: true, stayStartAt: true, stayEndAt: true } },
+          student: { select: { profile: { select: { gender: true } } } },
+        },
+      });
+      if (!registration) throw outOfScope(user, 'Không tìm thấy đơn đăng ký');
+
+      // Đổi trạng thái NGAY để giữ khóa dòng của đơn: hai người cùng duyệt một đơn
+      // thì người sau chờ ở đây, rồi nhận count = 0 vì đơn không còn PENDING.
+      // Các bước sau lỗi thì cả transaction rollback, đơn vẫn PENDING.
+      const { count } = await tx.registration.updateMany({
+        where: { id, status: 'PENDING' },
+        data: { status: 'APPROVED', reviewedById: user.id },
+      });
+      if (count === 0) throw notPendingError(registration.status, 'duyệt');
+
+      const bed = await tx.bed.findFirst({
+        where: { id: input.bedId, room: buildingScope(user) },
+        select: { id: true, code: true, roomId: true, room: { select: { buildingId: true } } },
+      });
+      if (!bed) {
+        throw ApiError.validation({ bedId: ['Giường không tồn tại hoặc không thuộc tòa bạn quản lý'] });
+      }
+
+      // Nguyện vọng tòa là bắt buộc; nguyện vọng loại phòng chỉ để tham khảo —
+      // loại SV chọn đã hết chỗ thì Manager được xếp loại khác.
+      if (registration.buildingId && registration.buildingId !== bed.room.buildingId) {
+        const wanted = await tx.building.findUnique({
+          where: { id: registration.buildingId },
+          select: { name: true },
+        });
+        throw ApiError.validation({
+          bedId: [`Sinh viên đăng ký ở tòa ${wanted?.name ?? 'khác'}, hãy chọn giường trong tòa đó`],
+        });
+      }
+
+      await tx.$executeRaw`SELECT 1 FROM "Room" WHERE id = ${bed.roomId} FOR UPDATE`;
+
+      // ── Từ đây mọi thứ được đọc lại SAU khi đã giữ khóa phòng. ──
+      const room = await tx.room.findUniqueOrThrow({
+        where: { id: bed.roomId },
+        select: {
+          code: true,
+          building: { select: { name: true, gender: true } },
+          roomType: { select: { price: true } },
+        },
+      });
+
+      const assignable = await tx.room.count({ where: { id: bed.roomId, ...ASSIGNABLE_ROOM } });
+      if (!assignable) {
+        throw ApiError.conflict(
+          'ROOM_UNAVAILABLE',
+          `Phòng ${room.code} tòa ${room.building.name} đang ngừng hoạt động hoặc thuộc loại phòng đã ngừng sử dụng.`,
+        );
+      }
+
+      const free = await tx.bed.count({ where: { id: bed.id, ...FREE_BED } });
+      if (!free) throw bedTakenError(`Giường ${bed.code} phòng ${room.code}`);
+
+      const gender = registration.student.profile?.gender;
+      if (!gender) {
+        throw ApiError.conflict('PROFILE_INCOMPLETE', 'Hồ sơ sinh viên chưa có giới tính nên chưa xếp được phòng.');
+      }
+      const fits = await tx.room.count({ where: { AND: [{ id: bed.roomId }, roomForGender(gender)] } });
+      if (!fits) {
+        throw ApiError.conflict(
+          'ROOM_GENDER_MISMATCH',
+          room.building.gender
+            ? `Tòa ${room.building.name} chỉ dành cho sinh viên ${GENDER_LABEL[room.building.gender]}.`
+            : `Phòng ${room.code} đã có sinh viên ${GENDER_LABEL[OTHER_GENDER[gender]]} ở hoặc được xếp vào.`,
+        );
+      }
+
+      // Lúc nộp đơn đã kiểm tra, nhưng từ đó tới nay SV có thể đã được duyệt ở đợt khác.
+      const { period } = registration;
+      const overlapping = await findOverlappingContract(tx, registration.studentId, period);
+      if (overlapping) {
+        throw ApiError.conflict(
+          'CONTRACT_OVERLAP',
+          `Sinh viên đã có hợp đồng ${overlapping.code} trùng thời gian ở của đợt "${period.name}".`,
+        );
+      }
+
+      return tx.contract.create({
+        data: {
+          code: await nextDocumentCode(tx, 'HD'),
+          registrationId: id,
+          bedId: bed.id,
+          // Kỳ hạn = thời gian Ở của đợt (không phải thời gian nhận đơn).
+          startDate: period.stayStartAt,
+          endDate: period.stayEndAt,
+          // Snapshot: Admin đổi giá loại phòng sau này không ảnh hưởng hợp đồng.
+          price: room.roomType.price,
+        },
+        select: CONTRACT_SELECT,
+      });
+    });
+  } catch (err) {
+    if (isUniqueViolation(err, BED_HOLDING_INDEX)) throw bedTakenError();
+    throw err;
+  }
+}
+
+/** Từ chối đơn PENDING, bắt buộc kèm lý do để sinh viên biết vì sao. */
+export async function reject(user: AuthUser, id: string, input: RejectRegistrationInput) {
+  const scope = await reviewerScope(user);
+
+  // Điều kiện PENDING nằm ngay trong lệnh ghi: không có khoảng hở giữa lúc kiểm
+  // tra và lúc ghi để một lệnh duyệt chen vào.
+  const { count } = await prisma.registration.updateMany({
+    where: { AND: [{ id, status: 'PENDING' }, scope] },
+    data: { status: 'REJECTED', reviewedById: user.id, reviewNote: input.reviewNote },
+  });
+  if (count === 0) {
+    const current = await prisma.registration.findFirst({
+      where: { AND: [{ id }, scope] },
+      select: { status: true },
+    });
+    if (!current) throw outOfScope(user, 'Không tìm thấy đơn đăng ký');
+    throw notPendingError(current.status, 'từ chối');
+  }
+
+  const row = await prisma.registration.findUniqueOrThrow({ where: { id }, include: LIST_INCLUDE });
+  return (await toDtos([row]))[0];
 }

@@ -26,5 +26,14 @@ export const updateBedSchema = z
   })
   .openapi('UpdateBedInput');
 
+export const availableBedQuerySchema = z.object({
+  gender: z
+    .enum(['MALE', 'FEMALE'], 'Thiếu giới tính sinh viên cần xếp')
+    .openapi({ description: 'Giới tính SV cần xếp — chỉ trả phòng SV đó được ở' }),
+  buildingId: z.uuid().optional().openapi({ description: 'Nguyện vọng tòa của đơn (Manager luôn bị giới hạn trong tòa mình)' }),
+  roomTypeId: z.uuid().optional(),
+});
+
 export type CreateBedInput = z.infer<typeof createBedSchema>;
+export type AvailableBedQuery = z.infer<typeof availableBedQuerySchema>;
 export type UpdateBedInput = z.infer<typeof updateBedSchema>;
