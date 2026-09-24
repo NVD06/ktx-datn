@@ -84,11 +84,7 @@ export function BuildingDetailPage() {
           <StatusBadge {...buildingGender(building.gender)} />
         </StatCard>
         <StatCard label="Quản lý">
-          <span className="text-sm">
-            {building.managers.length > 0
-              ? building.managers.map((m) => m.fullName).join(', ')
-              : 'Chưa gán'}
-          </span>
+          <span className="text-sm">{building.manager?.fullName ?? 'Chưa gán'}</span>
         </StatCard>
         <StatCard label="Trạng thái">
           <StatusBadge {...activeStatus(building.isActive)} />

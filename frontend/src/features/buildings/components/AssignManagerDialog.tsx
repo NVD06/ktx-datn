@@ -30,8 +30,9 @@ interface Props {
 /**
  * Gán / gỡ quản lý của một tòa (ADMIN).
  *
- * Mỗi Manager thuộc đúng một tòa (`User.buildingId`), nên gán một người đang
- * quản lý tòa khác sang đây nghĩa là chuyển họ khỏi tòa cũ.
+ * Quản lý ↔ tòa là quan hệ 1–1: tòa đã có quản lý thì phải gỡ người đó trước
+ * mới gán được người khác (backend trả 409 nếu không). Gán một người đang quản
+ * lý tòa khác sang đây nghĩa là chuyển họ khỏi tòa cũ.
  */
 export function AssignManagerDialog({ open, onOpenChange, building }: Props) {
   return (
@@ -54,10 +55,10 @@ function AssignManagerContent({
   const assign = useAssignManager()
   const [selectedId, setSelectedId] = useState('')
 
-  // Đọc từ danh sách người dùng (không từ `building.managers`) để thấy ngay
+  // Đọc từ danh sách người dùng (không từ `building.manager`) để thấy ngay
   // kết quả sau mỗi lần gán/gỡ — danh sách này được làm mới sau mutation.
   const all = managers.data?.data ?? []
-  const current = all.filter((m) => m.buildingId === building.id)
+  const current = all.find((m) => m.buildingId === building.id)
   // Tài khoản đã khóa không gán được (backend trả 409) — vẫn hiện ở "Đang quản lý" để gỡ ra.
   const candidates = all.filter((m) => m.buildingId !== building.id && m.isActive)
   const selected = candidates.find((m) => m.id === selectedId)
@@ -80,8 +81,8 @@ function AssignManagerContent({
       <DialogHeader>
         <DialogTitle>Quản lý tòa {building.name}</DialogTitle>
         <DialogDescription>
-          Mỗi quản lý phụ trách đúng một tòa. Quản lý chỉ xem và thao tác được dữ liệu của tòa được
-          gán.
+          Mỗi tòa có một quản lý, mỗi quản lý phụ trách đúng một tòa. Quản lý chỉ xem và thao tác
+          được dữ liệu của tòa được gán.
         </DialogDescription>
       </DialogHeader>
 
@@ -92,38 +93,40 @@ function AssignManagerContent({
         <div className="space-y-5">
           <section className="space-y-2">
             <h3 className="text-sm font-medium">Đang quản lý</h3>
-            {current.length === 0 ? (
-              <EmptyState title="Chưa có quản lý nào" />
+            {!current ? (
+              <EmptyState title="Chưa có quản lý" />
             ) : (
-              <ul className="divide-y rounded-lg border">
-                {current.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between gap-2 px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {m.fullName}
-                        {!m.isActive && (
-                          <span className="text-muted-foreground font-normal"> (đã khóa)</span>
-                        )}
-                      </p>
-                      <p className="text-muted-foreground truncate text-xs">{m.email}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={assign.isPending}
-                      onClick={() => change(m.id, null, `Đã gỡ ${m.fullName} khỏi tòa ${building.name}`)}
-                    >
-                      Gỡ
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {current.fullName}
+                    {!current.isActive && (
+                      <span className="text-muted-foreground font-normal"> (đã khóa)</span>
+                    )}
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs">{current.email}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={assign.isPending}
+                  onClick={() =>
+                    change(current.id, null, `Đã gỡ ${current.fullName} khỏi tòa ${building.name}`)
+                  }
+                >
+                  Gỡ
+                </Button>
+              </div>
             )}
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-sm font-medium">Gán thêm quản lý</h3>
-            {!building.isActive ? (
+            <h3 className="text-sm font-medium">Gán quản lý</h3>
+            {current ? (
+              <p className="text-muted-foreground text-sm">
+                Tòa đã có quản lý. Gỡ {current.fullName} trước nếu muốn giao tòa cho người khác.
+              </p>
+            ) : !building.isActive ? (
               <p className="text-muted-foreground text-sm">
                 Tòa đang ngừng hoạt động nên không thể gán quản lý.
               </p>

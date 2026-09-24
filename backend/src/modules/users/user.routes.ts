@@ -22,7 +22,10 @@ userRoutes.patch(
   '/:id',
   {
     summary: 'Gán quản lý vào tòa nhà (ADMIN)',
-    description: 'Người dùng không phải MANAGER, hoặc gán tài khoản đang bị khóa -> 409.',
+    description:
+      'Manager ↔ tòa là quan hệ 1–1: gán sang tòa khác là chuyển tòa; tòa đã có quản lý khác -> 409 ' +
+      '`BUILDING_HAS_MANAGER` (gỡ người cũ bằng `buildingId: null` trước). Người dùng không phải ' +
+      'MANAGER, hoặc gán tài khoản đang bị khóa -> 409.',
     body: updateUserSchema,
     data: userSchema,
     errors: [400, 401, 403, 404, 409],

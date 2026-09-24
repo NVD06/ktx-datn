@@ -1,8 +1,10 @@
 // Thiết kế CSDL — xem docs/database.md để biết lý do đằng sau từng quyết định.
 //
 // Điểm khác thiết kế thông thường:
-//   - Manager thuộc đúng 1 tòa (User.buildingId), không dùng bảng nối n-n.
-//     Mọi kiểm tra phạm vi quyền dựa vào cột này — xem src/utils/scope.ts.
+//   - Manager ↔ tòa là quan hệ 1–1 (User.buildingId @unique): mỗi Manager
+//     quản lý đúng 1 tòa, mỗi tòa có tối đa 1 Manager. Admin không gắn tòa nào
+//     và thao tác được mọi tòa. Mọi kiểm tra phạm vi quyền dựa vào cột này —
+//     xem src/utils/scope.ts.
 //
 // Nguyên tắc snapshot: dữ liệu đã chốt không đổi theo bảng danh mục.
 //   - Contract.price        copy từ RoomType.price lúc tạo hợp đồng
@@ -93,7 +95,8 @@ model User {
   isActive     Boolean @default(true)
 
   // Chỉ dùng cho MANAGER: tòa được gán. Mọi kiểm tra phạm vi quyền dựa vào cột này.
-  buildingId String?
+  // @unique: mỗi tòa tối đa 1 Manager (NULL không tính trùng — Admin, SV, Manager chưa gán).
+  buildingId String?   @unique
   building   Building? @relation(fields: [buildingId], references: [id])
 
   profile       StudentProfile?
@@ -125,8 +128,8 @@ model Building {
   description String?
   isActive    Boolean @default(true)
 
-  rooms    Room[]
-  managers User[]
+  rooms   Room[]
+  manager User? // quan hệ 1–1, phía giữ khóa là User.buildingId
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -17,7 +17,7 @@ import type {
 } from './building.schema.js';
 
 const INCLUDE = {
-  managers: { select: { id: true, fullName: true, email: true }, orderBy: { fullName: 'asc' } },
+  manager: { select: { id: true, fullName: true, email: true } },
   _count: { select: { rooms: true } },
 } as const satisfies Prisma.BuildingInclude;
 
@@ -158,7 +158,11 @@ export async function update(id: string, input: UpdateBuildingInput) {
 export async function remove(id: string) {
   const building = await prisma.building.findUnique({
     where: { id },
-    select: { name: true, _count: { select: { rooms: true, managers: true } } },
+    select: {
+      name: true,
+      manager: { select: { fullName: true } },
+      _count: { select: { rooms: true } },
+    },
   });
   if (!building) throw ApiError.notFound('Không tìm thấy tòa nhà');
 
@@ -169,10 +173,10 @@ export async function remove(id: string) {
         'Hãy chuyển tòa nhà sang trạng thái ngừng hoạt động.',
     );
   }
-  if (building._count.managers > 0) {
+  if (building.manager) {
     throw ApiError.conflict(
-      'BUILDING_HAS_MANAGERS',
-      `Tòa nhà ${building.name} đang được gán cho ${building._count.managers} quản lý. ` +
+      'BUILDING_HAS_MANAGER',
+      `Tòa nhà ${building.name} đang do ${building.manager.fullName} quản lý. ` +
         'Hãy gỡ quản lý khỏi tòa nhà trước khi xóa.',
     );
   }

@@ -90,13 +90,11 @@ export function BuildingListPage() {
       cell: ({ row }) => <StatusBadge {...buildingGender(row.original.gender)} />,
     },
     {
-      id: 'managers',
+      id: 'manager',
       header: 'Quản lý',
       cell: ({ row }) =>
-        row.original.managers.length > 0 ? (
-          <span className="whitespace-normal">
-            {row.original.managers.map((m) => m.fullName).join(', ')}
-          </span>
+        row.original.manager ? (
+          <span className="whitespace-normal">{row.original.manager.fullName}</span>
         ) : (
           <span className="text-muted-foreground">Chưa gán</span>
         ),

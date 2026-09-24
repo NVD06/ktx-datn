@@ -17,7 +17,8 @@ export interface Building {
   gender: Gender | null
   description: string | null
   isActive: boolean
-  managers: { id: string; fullName: string; email: string }[]
+  /** Mỗi tòa tối đa 1 quản lý, null = chưa gán. */
+  manager: { id: string; fullName: string; email: string } | null
   roomCount: number
   createdAt: string
   updatedAt: string

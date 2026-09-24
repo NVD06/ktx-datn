@@ -13,7 +13,7 @@ export function useManagers() {
 }
 
 export function useAssignManager() {
-  // Tòa nhà hiển thị danh sách quản lý của mình.
+  // Tòa nhà hiển thị quản lý của mình.
   const invalidate = useInvalidate(['users'], ['buildings'])
   return useMutation({
     mutationFn: ({ userId, buildingId }: { userId: string; buildingId: string | null }) =>

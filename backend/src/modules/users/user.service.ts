@@ -2,6 +2,7 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
+import { isUniqueViolation } from '../../utils/prisma-error.js';
 import type { UpdateUserInput, UserListQuery } from './user.schema.js';
 
 // Liệt kê tường minh từng cột: `passwordHash` không bao giờ được rời khỏi service.
@@ -43,9 +44,18 @@ export async function list(query: UserListQuery) {
   );
 }
 
+function buildingHasManagerError(buildingName: string, managerName: string) {
+  return ApiError.conflict(
+    'BUILDING_HAS_MANAGER',
+    `Tòa nhà ${buildingName} đang do ${managerName} quản lý. Hãy gỡ người này khỏi tòa trước khi gán người khác.`,
+  );
+}
+
 /**
- * Hiện chỉ dùng để gán Manager vào tòa (US-01). Mỗi Manager thuộc đúng một tòa
- * (`User.buildingId`) — đổi tòa là ghi đè, không cộng dồn.
+ * Hiện chỉ dùng để gán Manager vào tòa (US-01). Manager ↔ tòa là quan hệ 1–1:
+ * mỗi Manager thuộc đúng một tòa (gán sang tòa khác là chuyển, không cộng dồn),
+ * và mỗi tòa có tối đa một Manager — tòa đã có người thì phải gỡ người cũ trước,
+ * không tự thay thế sau lưng Admin.
  */
 export async function update(id: string, input: UpdateUserInput) {
   const user = await prisma.user.findUnique({
@@ -70,7 +80,7 @@ export async function update(id: string, input: UpdateUserInput) {
 
       const building = await prisma.building.findUnique({
         where: { id: input.buildingId },
-        select: { name: true, isActive: true },
+        select: { name: true, isActive: true, manager: { select: { id: true, fullName: true } } },
       });
       if (!building) {
         const message = 'Tòa nhà không tồn tại';
@@ -82,8 +92,24 @@ export async function update(id: string, input: UpdateUserInput) {
           `Tòa nhà ${building.name} đang ngừng hoạt động, không thể gán quản lý`,
         );
       }
+      // Gán lại đúng người đang quản lý thì không có gì thay đổi — cho qua.
+      if (building.manager && building.manager.id !== id) {
+        throw buildingHasManagerError(building.name, building.manager.fullName);
+      }
     }
   }
 
-  return prisma.user.update({ where: { id }, data: input, select: SELECT });
+  try {
+    return await prisma.user.update({ where: { id }, data: input, select: SELECT });
+  } catch (err) {
+    // Hai Admin cùng gán hai người vào một tòa đang trống: cả hai lọt qua kiểm
+    // tra ở trên, unique index của User.buildingId chặn người ghi sau.
+    if (isUniqueViolation(err, 'User_buildingId_key')) {
+      throw ApiError.conflict(
+        'BUILDING_HAS_MANAGER',
+        'Tòa nhà vừa được gán cho quản lý khác. Hãy tải lại để xem ai đang quản lý.',
+      );
+    }
+    throw err;
+  }
 }
