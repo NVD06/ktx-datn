@@ -3,6 +3,8 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPage'
 import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
+import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
+import { MyContractsPage } from '@/features/contracts/pages/MyContractsPage'
 import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
@@ -60,6 +62,8 @@ export const router = createBrowserRouter([
           { index: true, element: <StudentHomePage /> },
           { path: 'rooms', element: <AvailableRoomsPage /> },
           { path: 'registrations', element: <MyRegistrationsPage /> },
+          { path: 'contracts', element: <MyContractsPage /> },
+          { path: 'contracts/:id', element: <ContractDetailPage /> },
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

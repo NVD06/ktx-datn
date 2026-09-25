@@ -124,6 +124,17 @@ function RegistrationCard({
             </Button>
           </div>
         )}
+
+        {r.status === 'APPROVED' && (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-muted-foreground text-xs">
+              Ban quản lý đã xếp giường cho bạn — ký hợp đồng để nhận chỗ ở.
+            </p>
+            <Button asChild size="sm">
+              <Link to="/student/contracts">Xem hợp đồng</Link>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
