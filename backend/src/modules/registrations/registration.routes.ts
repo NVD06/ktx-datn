@@ -88,7 +88,8 @@ registrationRoutes.post(
       '`HD-YYYY-XXXX`, giá snapshot từ loại phòng, kỳ hạn = thời gian ở của đợt. 409 khi: đơn ' +
       'không còn PENDING (`REGISTRATION_NOT_PENDING`) · giường vừa bị lấy (`BED_TAKEN`) · phòng ' +
       'ngừng hoạt động (`ROOM_UNAVAILABLE`) · phòng không hợp giới tính (`ROOM_GENDER_MISMATCH`) · ' +
-      'SV đã có hợp đồng trùng thời gian ở (`CONTRACT_OVERLAP`).',
+      'SV đã có hợp đồng trùng thời gian ở (`CONTRACT_OVERLAP`) · thời gian ở của đợt đã kết thúc ' +
+      '(`PERIOD_STAY_ENDED`).',
     body: approveRegistrationSchema,
     data: approvedContractSchema,
     errors: [400, 401, 403, 404, 409],

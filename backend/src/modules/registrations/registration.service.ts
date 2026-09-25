@@ -366,6 +366,16 @@ export async function approve(user: AuthUser, id: string, input: ApproveRegistra
       });
       if (count === 0) throw notPendingError(registration.status, 'duyệt');
 
+      // Hợp đồng lấy kỳ hạn từ thời gian ở của đợt — đợt đã hết thì hợp đồng sinh ra
+      // đã hết hạn trước khi sinh viên kịp ký.
+      if (registration.period.stayEndAt < new Date()) {
+        throw ApiError.conflict(
+          'PERIOD_STAY_ENDED',
+          `Thời gian ở của đợt "${registration.period.name}" đã kết thúc nên không thể xếp giường. ` +
+            'Hãy từ chối đơn, hoặc nhờ quản trị viên sửa thời gian ở của đợt.',
+        );
+      }
+
       const bed = await tx.bed.findFirst({
         where: { id: input.bedId, room: buildingScope(user) },
         select: { id: true, code: true, roomId: true, room: { select: { buildingId: true } } },

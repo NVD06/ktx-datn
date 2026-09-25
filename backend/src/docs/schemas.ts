@@ -247,6 +247,66 @@ export const approvedContractSchema = z
   })
   .openapi('ApprovedContract');
 
+export const invoiceStatusSchema = z.enum(['UNPAID', 'PAID']).openapi('InvoiceStatus');
+export const invoiceTypeSchema = z.enum(['ROOM_FEE', 'UTILITY']).openapi('InvoiceType');
+
+export const contractSchema = z
+  .object({
+    id: z.uuid(),
+    code: z.string().openapi({ example: 'HD-2026-0001' }),
+    registrationId: z.uuid(),
+    bedId: z.uuid(),
+    status: contractStatusSchema.openapi({
+      description: 'EXPIRED tính khi đọc: DRAFT/ACTIVE đã qua ngày kết thúc',
+    }),
+    startDate: z.iso.datetime(),
+    endDate: z.iso.datetime(),
+    price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt, đồng / kỳ' }),
+    signedAt: z.iso.datetime().nullable(),
+    terminatedAt: z.iso.datetime().nullable(),
+    terminationReason: z.string().nullable(),
+    period: z.object({ id: z.uuid(), name: z.string(), term: z.string().openapi({ example: '2026-HK1' }) }),
+    student: z.object({
+      id: z.uuid(),
+      fullName: z.string(),
+      email: z.email(),
+      phone: z.string().nullable(),
+      profile: z
+        .object({
+          studentCode: z.string(),
+          gender: genderSchema,
+          className: z.string().nullable(),
+          faculty: z.string().nullable(),
+        })
+        .nullable(),
+    }),
+    bed: z.object({
+      id: z.uuid(),
+      code: z.string().openapi({ example: 'G2' }),
+      room: z.object({
+        id: z.uuid(),
+        code: z.string().openapi({ example: '301' }),
+        floor: z.int(),
+        building: buildingRefSchema,
+        roomType: roomTypeRefSchema,
+      }),
+    }),
+    invoices: z.array(
+      z.object({
+        id: z.uuid(),
+        code: z.string().openapi({ example: 'INV-2026-0001' }),
+        type: invoiceTypeSchema,
+        period: z.string().openapi({ example: '2026-HK1' }),
+        amount: moneySchema,
+        dueDate: z.iso.datetime(),
+        status: invoiceStatusSchema,
+      }),
+    ),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('Contract');
+
 export const userSchema = z
   .object({
     id: z.uuid(),
