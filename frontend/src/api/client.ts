@@ -14,33 +14,30 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+/** Phần `error` trong body lỗi `{ success: false, error }` của backend, nếu có. */
+function errorBody(error: unknown): ErrorResponse['error'] | undefined {
+  if (!(error instanceof AxiosError)) return undefined
+  const data = error.response?.data as ErrorResponse | undefined
+  return data?.success === false ? data.error : undefined
+}
+
 /** Lấy thông báo lỗi tiếng Việt do backend trả về, thay vì "Request failed with status code 409". */
 export function getErrorMessage(error: unknown, fallback = 'Đã có lỗi xảy ra'): string {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ErrorResponse | undefined
-    if (data && data.success === false) return data.error.message
-    if (!error.response) return 'Không kết nối được tới máy chủ'
-  }
+  const body = errorBody(error)
+  if (body) return body.message
+  if (error instanceof AxiosError && !error.response) return 'Không kết nối được tới máy chủ'
   if (error instanceof Error && error.message) return error.message
   return fallback
 }
 
 /** Mã lỗi nghiệp vụ của backend (`BED_TAKEN`, `REGISTRATION_NOT_PENDING`…) — để xử lý riêng từng loại. */
 export function getErrorCode(error: unknown): string | undefined {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ErrorResponse | undefined
-    if (data && data.success === false) return data.error.code
-  }
-  return undefined
+  return errorBody(error)?.code
 }
 
 /** Lỗi validate theo từng field (response 400) — để gắn vào react-hook-form. */
 export function getFieldErrors(error: unknown): Record<string, string[]> | undefined {
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ErrorResponse | undefined
-    if (data && data.success === false) return data.error.details
-  }
-  return undefined
+  return errorBody(error)?.details
 }
 
 /*

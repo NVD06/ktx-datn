@@ -75,6 +75,7 @@ function ContractCard({ contract: c }: { contract: Contract }) {
             ['Thời gian ở', formatDateRange(c.startDate, c.endDate)],
             ['Tiền phòng', `${formatMoney(c.price)} / kỳ`],
             ['Ngày ký', c.signedAt && formatDate(c.signedAt)],
+            ['Lý do hủy', c.status === 'CANCELLED' ? c.terminationReason : null, true],
           ]}
           hideEmpty
         />

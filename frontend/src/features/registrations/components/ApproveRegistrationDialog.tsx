@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useAvailableBeds } from '@/features/rooms/hooks/useRooms'
-import { formatDateRange, formatMoney } from '@/lib/format'
+import { bedPlace, formatDateRange, formatMoney } from '@/lib/format'
 import { GENDER } from '@/lib/labels'
 import type { AvailableRoom } from '@/types/facility'
 import type { RegistrationListItem } from '@/types/registration'
@@ -50,9 +50,10 @@ export function ApproveRegistrationDialog({ registration, onClose }: Props) {
   )
 }
 
+/** Giường đang chọn, kèm phòng của nó. */
 interface Selection {
-  bedId: string
-  bedCode: string
+  id: string
+  code: string
   room: AvailableRoom
 }
 
@@ -68,9 +69,7 @@ function ApproveContent({
   onDone: () => void
 }) {
   const gender = r.student.profile?.gender ?? null
-  const beds = useAvailableBeds(
-    gender ? { gender, ...(r.building ? { buildingId: r.building.id } : {}) } : null,
-  )
+  const beds = useAvailableBeds(gender && { gender, buildingId: r.building?.id })
   const approve = useApproveRegistration()
 
   const preferred = r.preferredRoomType
@@ -105,13 +104,12 @@ function ApproveContent({
   function submit() {
     if (!selected) return
     approve.mutate(
-      { id: r.id, bedId: selected.bedId },
+      { id: r.id, bedId: selected.id },
       {
         onSuccess(contract) {
-          const { bed } = contract
           toast.success(
-            `Đã duyệt đơn của ${r.student.fullName}: giường ${bed.code} phòng ${bed.room.code} ` +
-              `tòa ${bed.room.building.name}. Hợp đồng ${contract.code} chờ sinh viên ký.`,
+            `Đã duyệt đơn của ${r.student.fullName}: ${bedPlace(contract.bed)}. ` +
+              `Hợp đồng ${contract.code} chờ sinh viên ký.`,
           )
           onDone()
         },
@@ -222,7 +220,7 @@ function ApproveContent({
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {room.beds.map((bed) => {
-                      const isSelected = selected?.bedId === bed.id
+                      const isSelected = selected?.id === bed.id
                       return (
                         <Button
                           key={bed.id}
@@ -231,7 +229,7 @@ function ApproveContent({
                           variant={isSelected ? 'default' : 'outline'}
                           className="min-w-12"
                           aria-pressed={isSelected}
-                          onClick={() => setSelected({ bedId: bed.id, bedCode: bed.code, room })}
+                          onClick={() => setSelected({ ...bed, room })}
                         >
                           {bed.code}
                         </Button>
@@ -249,9 +247,7 @@ function ApproveContent({
         <div className="space-y-2 text-sm">
           <p>
             Xếp vào{' '}
-            <span className="font-medium">
-              giường {selected.bedCode} · phòng {selected.room.code} · tòa {selected.room.building.name}
-            </span>
+            <span className="font-medium">{bedPlace(selected)}</span>
             , giá hợp đồng {formatMoney(selected.room.roomType.price)} / kỳ.
           </p>
           {typeMismatch && (

@@ -3,27 +3,13 @@
  * Chép từ response của backend (backend/src/docs/schemas.ts) — sửa bên đó thì sửa cả ở đây.
  */
 
-import type { BuildingRef, Gender, RoomTypeRef } from './facility'
+import type { Role } from './auth'
+import type { RoomRef } from './facility'
+import type { StudentProfile } from './profile'
+import type { RegistrationPeriod } from './registration'
 
-export type ContractStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED'
-
-/** Hợp đồng DRAFT vừa sinh khi duyệt đơn (POST /registrations/:id/approve). */
-export interface ApprovedContract {
-  id: string
-  /** HD-2026-0001 */
-  code: string
-  registrationId: string
-  status: ContractStatus
-  startDate: string
-  endDate: string
-  /** Snapshot giá loại phòng lúc duyệt. */
-  price: string
-  bed: {
-    id: string
-    code: string
-    room: { id: string; code: string; floor: number; building: { id: string; name: string } }
-  }
-}
+/** TERMINATED: hợp đồng đang ở bị kết thúc sớm · CANCELLED: hợp đồng chờ ký bị hủy, chưa từng có hiệu lực. */
+export type ContractStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'CANCELLED'
 
 export type InvoiceStatus = 'UNPAID' | 'PAID'
 export type InvoiceType = 'ROOM_FEE' | 'UTILITY'
@@ -41,9 +27,10 @@ export interface ContractInvoice {
   status: InvoiceStatus
 }
 
-/** Hợp đồng đầy đủ (GET /contracts/me, GET /contracts/:id, POST /contracts/:id/sign). */
+/** Hợp đồng đầy đủ — mọi API hợp đồng, và cả API duyệt đơn, đều trả về dạng này. */
 export interface Contract {
   id: string
+  /** HD-2026-0001 */
   code: string
   registrationId: string
   bedId: string
@@ -51,28 +38,24 @@ export interface Contract {
   status: ContractStatus
   startDate: string
   endDate: string
+  /** Snapshot giá loại phòng lúc duyệt. */
   price: string
   signedAt: string | null
+  /** Lúc chấm dứt / hủy và lý do. */
   terminatedAt: string | null
   terminationReason: string | null
-  period: { id: string; name: string; term: string }
+  endedById: string | null
+  /** Người chấm dứt / hủy — SV tự từ chối ký hay Manager hủy. */
+  endedBy: { id: string; fullName: string; role: Role } | null
+  period: Pick<RegistrationPeriod, 'id' | 'name' | 'term'>
   student: {
     id: string
     fullName: string
     email: string
     phone: string | null
-    profile: {
-      studentCode: string
-      gender: Gender
-      className: string | null
-      faculty: string | null
-    } | null
+    profile: Pick<StudentProfile, 'studentCode' | 'gender' | 'className' | 'faculty'> | null
   }
-  bed: {
-    id: string
-    code: string
-    room: { id: string; code: string; floor: number; building: BuildingRef; roomType: RoomTypeRef }
-  }
+  bed: { id: string; code: string; room: RoomRef }
   invoices: ContractInvoice[]
   createdAt: string
   updatedAt: string

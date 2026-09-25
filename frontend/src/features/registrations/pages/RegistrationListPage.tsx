@@ -1,27 +1,25 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { BedDouble, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { ReasonDialog } from '@/components/shared/ReasonDialog'
 import { RowActions, type RowAction } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useRegistrationPeriods } from '@/features/registration-periods/hooks/useRegistrationPeriods'
+import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateTime, orDash } from '@/lib/format'
-import { GENDER, REGISTRATION_STATUS } from '@/lib/labels'
+import { GENDER, REGISTRATION_STATUS, toOptions } from '@/lib/labels'
 import type { RegistrationListItem } from '@/types/registration'
 import { ApproveRegistrationDialog } from '../components/ApproveRegistrationDialog'
 import { RegistrationDetailSheet } from '../components/RegistrationDetailSheet'
-import { RejectRegistrationDialog } from '../components/RejectRegistrationDialog'
-import { useRegistrations } from '../hooks/useRegistrations'
+import { useRegistrations, useRejectRegistration } from '../hooks/useRegistrations'
 
-const STATUS_OPTIONS = Object.entries(REGISTRATION_STATUS).map(([value, { label }]) => ({ value, label }))
-
-/** Đủ cho bộ lọc: mỗi học kỳ một đợt, 100 đợt là vài chục năm. */
-const PERIOD_OPTION_PARAMS = { limit: 100 }
+const STATUS_OPTIONS = toOptions(REGISTRATION_STATUS)
 
 /**
  * Đơn đăng ký ở KTX cho người duyệt: xem (US-02.4), duyệt + xếp giường, từ chối
@@ -34,8 +32,8 @@ export function RegistrationListPage() {
 
   const list = useListParams(['status', 'periodId'] as const)
   const query = useRegistrations(list.params)
-  const periods = useRegistrationPeriods(PERIOD_OPTION_PARAMS)
-  const periodOptions = (periods.data?.data ?? []).map((p) => ({ value: p.id, label: p.name }))
+  const periodOptions = usePeriodOptions()
+  const reject = useRejectRegistration()
 
   const [selected, setSelected] = useState<RegistrationListItem | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -185,7 +183,25 @@ export function RegistrationListPage() {
         onReject={openReject}
       />
       <ApproveRegistrationDialog registration={approving} onClose={() => setApproving(null)} />
-      <RejectRegistrationDialog registration={rejecting} onClose={() => setRejecting(null)} />
+      <ReasonDialog
+        target={rejecting}
+        onClose={() => setRejecting(null)}
+        title="Từ chối đơn đăng ký"
+        description={(r) =>
+          `Đơn của ${r.student.fullName}, đợt ${r.period.name}. ` +
+          'Sinh viên thấy lý do trong "Đơn của tôi" và vẫn nộp lại được trong đợt.'
+        }
+        label="Lý do từ chối"
+        placeholder="Ví dụ: tòa đã hết chỗ cho loại phòng bạn chọn…"
+        submitLabel="Từ chối đơn"
+        isPending={reject.isPending}
+        closeOnErrorCode="REGISTRATION_NOT_PENDING"
+        onSubmit={(r, reviewNote) =>
+          reject
+            .mutateAsync({ id: r.id, reviewNote })
+            .then(() => toast.success(`Đã từ chối đơn của ${r.student.fullName}`))
+        }
+      />
     </>
   )
 }

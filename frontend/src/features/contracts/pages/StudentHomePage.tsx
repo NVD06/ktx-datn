@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { bedPlace } from '@/lib/format'
 import { useMyContracts } from '../hooks/useContracts'
 
 /**
@@ -24,8 +25,7 @@ export function StudentHomePage() {
       {waiting && (
         <div className="tone-warning mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm">
           <span>
-            Đơn của bạn đã được duyệt: giường {waiting.bed.code} phòng {waiting.bed.room.code} tòa{' '}
-            {waiting.bed.room.building.name}. Hợp đồng {waiting.code} đang chờ bạn ký.
+            Đơn của bạn đã được duyệt: {bedPlace(waiting.bed)}. Hợp đồng {waiting.code} đang chờ bạn ký.
           </span>
           <Button asChild size="sm">
             <Link to={`/student/contracts/${waiting.id}`}>Xem và ký</Link>

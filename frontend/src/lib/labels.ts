@@ -114,6 +114,7 @@ export const CONTRACT_STATUS = def({
   ACTIVE: { label: 'Đang hiệu lực', tone: 'success' },
   EXPIRED: { label: 'Hết hạn', tone: 'neutral' },
   TERMINATED: { label: 'Đã chấm dứt', tone: 'danger' },
+  CANCELLED: { label: 'Đã hủy', tone: 'neutral' },
 })
 
 export const INVOICE_STATUS = def({
@@ -146,3 +147,14 @@ export const REQUEST_STATUS = def({
  * (dueDate < now && status = UNPAID) — xem docs/database.md §3.9.
  */
 export const OVERDUE: LabelDef = { label: 'Quá hạn', tone: 'danger' }
+
+/** Hóa đơn chưa thanh toán mà đã qua hạn là "Quá hạn" — tính khi đọc, không lưu DB (us-04.md, US-04.3). */
+export function invoiceStatus(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }): LabelDef {
+  const overdue = invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
+  return overdue ? OVERDUE : INVOICE_STATUS[invoice.status]
+}
+
+/** Bảng nhãn → lựa chọn của FilterSelect (lọc theo trạng thái). */
+export function toOptions(map: Record<string, LabelDef>) {
+  return Object.entries(map).map(([value, { label }]) => ({ value, label }))
+}

@@ -18,6 +18,12 @@ export function useRegistrationPeriods(params: ListParams) {
   })
 }
 
+/** Lựa chọn đợt cho bộ lọc — 100 đợt đủ dùng (mỗi học kỳ một đợt là vài chục năm). */
+export function usePeriodOptions() {
+  const periods = useRegistrationPeriods({ limit: 100 })
+  return (periods.data?.data ?? []).map((p) => ({ value: p.id, label: p.name }))
+}
+
 /** Đợt đang mở — sinh viên dùng để biết form đăng ký có mở không. */
 export function useCurrentRegistrationPeriod() {
   return useQuery({

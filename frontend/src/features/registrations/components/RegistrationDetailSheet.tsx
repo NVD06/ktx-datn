@@ -1,4 +1,4 @@
-import { DetailList, type DetailRow } from '@/components/shared/DetailList'
+import { DetailList, DetailSection, type DetailRow } from '@/components/shared/DetailList'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
@@ -95,18 +95,13 @@ function Content({ registration: r }: { registration: RegistrationListItem }) {
       </SheetHeader>
 
       <div className="space-y-6 px-4 pb-6">
-        <Section title="Đơn đăng ký" rows={application} hideEmpty />
-        <Section title="Hồ sơ sinh viên" rows={studentRows} />
+        <DetailSection title="Đơn đăng ký">
+          <DetailList rows={application} hideEmpty />
+        </DetailSection>
+        <DetailSection title="Hồ sơ sinh viên">
+          <DetailList rows={studentRows} />
+        </DetailSection>
       </div>
     </>
-  )
-}
-
-function Section({ title, rows, hideEmpty }: { title: string; rows: DetailRow[]; hideEmpty?: boolean }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-sm font-medium">{title}</h3>
-      <DetailList rows={rows} hideEmpty={hideEmpty} />
-    </section>
   )
 }

@@ -1,4 +1,15 @@
+import type { ReactNode } from 'react'
 import { orDash } from '@/lib/format'
+
+/** Nhóm "tiêu đề + nội dung" trong drawer chi tiết. */
+export function DetailSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-medium">{title}</h3>
+      {children}
+    </section>
+  )
+}
 
 /** [nhãn, giá trị, chiếm cả hàng?] */
 export type DetailRow = [label: string, value: string | null | undefined, wide?: boolean]

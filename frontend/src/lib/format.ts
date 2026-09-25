@@ -37,3 +37,8 @@ export function orDash(value: string | number | null | undefined): string {
   if (value === null || value === undefined || value === '') return '—'
   return String(value)
 }
+
+/** Chỗ ở trong câu thông báo: "giường G1 · phòng 101 · tòa B1". */
+export function bedPlace(bed: { code: string; room: { code: string; building: { name: string } } }): string {
+  return `giường ${bed.code} · phòng ${bed.room.code} · tòa ${bed.room.building.name}`
+}

@@ -6,22 +6,17 @@ import { BackLink } from '@/components/shared/BackLink'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DetailList } from '@/components/shared/DetailList'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { ReasonDialog } from '@/components/shared/ReasonDialog'
 import { ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
-import {
-  CONTRACT_STATUS,
-  GENDER,
-  INVOICE_STATUS,
-  INVOICE_TYPE,
-  OVERDUE,
-  buildingGender,
-} from '@/lib/labels'
-import type { Contract, ContractInvoice } from '@/types/contract'
+import { bedPlace, formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
+import { CONTRACT_STATUS, GENDER, buildingGender } from '@/lib/labels'
+import type { Contract } from '@/types/contract'
 import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS } from '../contract-terms'
-import { useContract, useSignContract } from '../hooks/useContracts'
+import { InvoiceList } from '../components/InvoiceList'
+import { useCancelContract, useContract, useSignContract } from '../hooks/useContracts'
 
 const BACK = <BackLink to="/student/contracts">Hợp đồng của tôi</BackLink>
 
@@ -33,7 +28,9 @@ export function ContractDetailPage() {
   const { id = '' } = useParams()
   const query = useContract(id)
   const sign = useSignContract()
+  const decline = useCancelContract('decline')
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [declining, setDeclining] = useState(false)
 
   if (query.isPending) return <LoadingState />
 
@@ -102,7 +99,6 @@ export function ContractDetailPage() {
                 ['Hạn đóng tiền phòng', `${ROOM_FEE_DUE_DAYS} ngày kể từ ngày ký`],
                 ['Ngày lập', formatDateTime(c.createdAt)],
                 ['Ngày ký', c.signedAt && formatDateTime(c.signedAt)],
-                ['Lý do chấm dứt', c.terminationReason, true],
               ]}
               hideEmpty
             />
@@ -132,16 +128,15 @@ export function ContractDetailPage() {
 
         {c.invoices.length > 0 && (
           <Section title="Hóa đơn">
-            <ul className="divide-y text-sm">
-              {c.invoices.map((invoice) => (
-                <InvoiceRow key={invoice.id} invoice={invoice} />
-              ))}
-            </ul>
+            <InvoiceList invoices={c.invoices} />
           </Section>
         )}
 
         {c.status === 'DRAFT' && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeclining(true)}>
+              Từ chối ký
+            </Button>
             <Button onClick={() => setConfirmOpen(true)}>Xác nhận ký</Button>
           </div>
         )}
@@ -153,15 +148,34 @@ export function ContractDetailPage() {
         title="Ký hợp đồng?"
         description={
           <>
-            Ký hợp đồng <strong>{c.code}</strong>: giường {c.bed.code} phòng {c.bed.room.code} tòa{' '}
-            {c.bed.room.building.name}, tiền phòng {formatMoney(c.price)} / kỳ. Sau khi ký, hệ thống lập
-            hóa đơn tiền phòng, hạn thanh toán {ROOM_FEE_DUE_DAYS} ngày.
+            Ký hợp đồng <strong>{c.code}</strong>: {bedPlace(c.bed)}, tiền phòng {formatMoney(c.price)} / kỳ.
+            Sau khi ký, hệ thống lập hóa đơn tiền phòng, hạn thanh toán {ROOM_FEE_DUE_DAYS} ngày.
           </>
         }
         confirmLabel="Ký hợp đồng"
         destructive={false}
         isPending={sign.isPending}
         onConfirm={confirmSign}
+      />
+
+      <ReasonDialog
+        target={declining ? c : null}
+        onClose={() => setDeclining(false)}
+        title="Từ chối ký hợp đồng?"
+        description={(contract) =>
+          `Từ chối hợp đồng ${contract.code} (${bedPlace(contract.bed)}). Giường được trả lại cho người khác, ` +
+          'đơn đăng ký chuyển sang "Đã hủy" — bạn vẫn nộp lại được nếu đợt còn mở.'
+        }
+        label="Lý do từ chối"
+        placeholder="Ví dụ: em đã tìm được chỗ ở gần trường hơn…"
+        submitLabel="Từ chối ký"
+        isPending={decline.isPending}
+        closeOnErrorCode="CONTRACT_NOT_DRAFT"
+        onSubmit={(contract, reason) =>
+          decline
+            .mutateAsync({ id: contract.id, reason })
+            .then(() => toast.success(`Đã từ chối hợp đồng ${contract.code}`))
+        }
       />
     </>
   )
@@ -173,7 +187,16 @@ function StatusNotice({ contract: c }: { contract: Contract }) {
     return (
       <p className="tone-warning rounded-md border p-3 text-sm">
         Hợp đồng đang chờ bạn ký. Đọc kỹ thông tin và điều khoản bên dưới, rồi bấm "Xác nhận ký" ở
-        cuối trang.
+        cuối trang. Nếu không muốn ở nữa, bấm "Từ chối ký" để giường được trả lại cho người khác.
+      </p>
+    )
+  }
+  if (c.status === 'CANCELLED') {
+    const byStudent = c.endedBy?.role === 'STUDENT'
+    return (
+      <p className="bg-muted/50 rounded-md border p-3 text-sm">
+        Hợp đồng đã hủy ngày {formatDate(c.terminatedAt)} —{' '}
+        {byStudent ? 'bạn đã từ chối ký' : 'ban quản lý đã hủy hợp đồng'}. Lý do: {c.terminationReason}
       </p>
     )
   }
@@ -186,25 +209,6 @@ function StatusNotice({ contract: c }: { contract: Contract }) {
     )
   }
   return null
-}
-
-function InvoiceRow({ invoice }: { invoice: ContractInvoice }) {
-  // Quá hạn tính khi đọc, không lưu trong DB (us-04.md, US-04.3).
-  const overdue = invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
-  return (
-    <li className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
-      <div>
-        <p className="font-medium">
-          {invoice.code} · {INVOICE_TYPE[invoice.type].label} {invoice.period}
-        </p>
-        <p className="text-muted-foreground text-xs">Hạn thanh toán {formatDate(invoice.dueDate)}</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="font-medium">{formatMoney(invoice.amount)}</span>
-        <StatusBadge {...(overdue ? OVERDUE : INVOICE_STATUS[invoice.status])} />
-      </div>
-    </li>
-  )
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

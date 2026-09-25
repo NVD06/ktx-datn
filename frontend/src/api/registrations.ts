@@ -1,6 +1,6 @@
 import { apiGet, apiPost, getPaged } from './client'
 import type { ListParams } from '@/types/api'
-import type { ApprovedContract } from '@/types/contract'
+import type { Contract } from '@/types/contract'
 import type { Registration, RegistrationInput, RegistrationListItem } from '@/types/registration'
 
 /** ADMIN/MANAGER — đơn trong phạm vi tòa được xem, backend tự lọc theo vai trò. */
@@ -23,7 +23,7 @@ export function cancelRegistration(id: string) {
 
 /** Duyệt đơn: xếp vào giường `bedId`, backend sinh hợp đồng DRAFT chờ sinh viên ký. */
 export function approveRegistration(id: string, bedId: string) {
-  return apiPost<ApprovedContract>(`/registrations/${id}/approve`, { bedId })
+  return apiPost<Contract>(`/registrations/${id}/approve`, { bedId })
 }
 
 export function rejectRegistration(id: string, reviewNote: string) {

@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarRange,
   ClipboardList,
+  FileSignature,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -28,6 +29,7 @@ const NAV: NavItem[] = [
   { to: '/admin/room-types', label: 'Loại phòng', icon: Layers },
   { to: '/admin/registration-periods', label: 'Đợt đăng ký', icon: CalendarRange },
   { to: '/admin/registrations', label: 'Đơn đăng ký', icon: ClipboardList },
+  { to: '/admin/contracts', label: 'Hợp đồng', icon: FileSignature },
 ]
 
 export function AdminLayout() {
