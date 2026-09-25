@@ -39,20 +39,10 @@ export async function cancel(req: Request, res: Response) {
 
 /** POST /api/v1/registrations/:id/approve */
 export async function approve(req: Request, res: Response) {
-  const contract = await registrationService.approve(
-    currentUser(req),
-    param(req),
-    req.body as ApproveRegistrationInput,
-  );
-  res.json(ok(contract));
+  res.json(ok(await registrationService.approve(currentUser(req), param(req), req.body as ApproveRegistrationInput)));
 }
 
 /** POST /api/v1/registrations/:id/reject */
 export async function reject(req: Request, res: Response) {
-  const registration = await registrationService.reject(
-    currentUser(req),
-    param(req),
-    req.body as RejectRegistrationInput,
-  );
-  res.json(ok(registration));
+  res.json(ok(await registrationService.reject(currentUser(req), param(req), req.body as RejectRegistrationInput)));
 }

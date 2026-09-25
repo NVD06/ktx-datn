@@ -5,12 +5,16 @@ import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { endOfDayVN } from '../../utils/date-vn.js';
 import { nextDocumentCode } from '../../utils/document-code.js';
+import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
-import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
+import { studentSearch } from '../profile/profile.service.js';
+import { ROOM_REF_SELECT } from '../rooms/room.service.js';
+import type { CancelContractInput, ContractListQuery } from './contract.schema.js';
 
 /*
- * Hợp đồng ở KTX (US-03.3). Hợp đồng DRAFT sinh ra khi duyệt đơn
+ * Hợp đồng ở KTX (US-03.3, US-03.4). Hợp đồng DRAFT sinh ra khi duyệt đơn
  * (registration.service.ts → approve); sinh viên ký thì hợp đồng có hiệu lực.
+ * Hợp đồng còn chờ ký có thể bị hủy: SV từ chối ký, hoặc Manager hủy để trả giường.
  *
  * Phạm vi: sinh viên chỉ thấy hợp đồng của mình; Manager thấy hợp đồng có
  * giường thuộc tòa mình (lồng scope qua bed → room); Admin thấy tất cả.
@@ -24,21 +28,7 @@ const ROOM_FEE_DUE_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const INCLUDE = {
-  bed: {
-    select: {
-      id: true,
-      code: true,
-      room: {
-        select: {
-          id: true,
-          code: true,
-          floor: true,
-          building: { select: BUILDING_REF_SELECT },
-          roomType: { select: ROOM_TYPE_SELECT },
-        },
-      },
-    },
-  },
+  bed: { select: { id: true, code: true, room: { select: ROOM_REF_SELECT } } },
   registration: {
     select: {
       period: { select: { id: true, name: true, term: true } },
@@ -53,6 +43,7 @@ const INCLUDE = {
       },
     },
   },
+  endedBy: { select: { id: true, fullName: true, role: true } },
   invoices: {
     select: { id: true, code: true, type: true, period: true, amount: true, dueDate: true, status: true },
     orderBy: { createdAt: 'asc' },
@@ -66,9 +57,8 @@ type ContractRow = Prisma.ContractGetPayload<{ include: typeof INCLUDE }>;
  * chấm dứt mà đã qua ngày kết thúc. Tính cả DRAFT — sinh viên không ký kịp thì
  * hợp đồng cũng hết hạn, không ký được nữa.
  */
-export function effectiveStatus(contract: { status: ContractStatus; endDate: Date }, now = new Date()) {
-  const running = contract.status === 'DRAFT' || contract.status === 'ACTIVE';
-  return running && contract.endDate < now ? 'EXPIRED' : contract.status;
+function effectiveStatus({ status, endDate }: { status: ContractStatus; endDate: Date }) {
+  return (status === 'DRAFT' || status === 'ACTIVE') && endDate < new Date() ? 'EXPIRED' : status;
 }
 
 function toDto({ registration, ...contract }: ContractRow) {
@@ -88,7 +78,7 @@ function contractScope(user: AuthUser): Prisma.ContractWhereInput {
 /** Hợp đồng của sinh viên đang đăng nhập, mới nhất trước — mỗi kỳ một hợp đồng nên không phân trang. */
 export async function listMine(user: AuthUser) {
   const rows = await prisma.contract.findMany({
-    where: { registration: { studentId: user.id } },
+    where: contractScope(user),
     orderBy: { createdAt: 'desc' },
     include: INCLUDE,
   });
@@ -100,20 +90,72 @@ export async function getById(user: AuthUser, id: string) {
     where: { AND: [{ id }, contractScope(user)] },
     include: INCLUDE,
   });
-  if (!row) {
-    // Sinh viên xem hợp đồng người khác cũng nhận 404 — không lộ việc id đó có tồn tại.
-    throw user.role === 'STUDENT'
-      ? ApiError.notFound('Không tìm thấy hợp đồng')
-      : outOfScope(user, 'Không tìm thấy hợp đồng');
-  }
+  if (!row) throw outOfScope(user, 'Không tìm thấy hợp đồng');
   return toDto(row);
 }
 
-const NOT_SIGNABLE: Record<Exclude<ContractStatus, 'DRAFT'>, string> = {
-  ACTIVE: 'Bạn đã ký hợp đồng này rồi.',
-  EXPIRED: 'Hợp đồng đã hết hạn nên không thể ký.',
-  TERMINATED: 'Hợp đồng đã bị hủy nên không thể ký.',
+/**
+ * Điều kiện `where` theo trạng thái THỰC TẾ. EXPIRED không lưu DB nên phải dịch
+ * ra ngày: lọc "Đang hiệu lực" không được lẫn hợp đồng ACTIVE đã quá ngày kết thúc.
+ */
+function statusWhere(status: ContractStatus, now: Date): Prisma.ContractWhereInput {
+  switch (status) {
+    case 'DRAFT':
+    case 'ACTIVE':
+      return { status, endDate: { gte: now } };
+    case 'EXPIRED':
+      return { status: { in: ['DRAFT', 'ACTIVE'] }, endDate: { lt: now } };
+    default:
+      return { status };
+  }
+}
+
+/** Bảng hợp đồng cho ADMIN/MANAGER (US-03.4) — Manager chỉ thấy hợp đồng có giường thuộc tòa mình. */
+export async function list(user: AuthUser, query: ContractListQuery) {
+  const where: Prisma.ContractWhereInput = {
+    AND: [
+      contractScope(user),
+      query.search
+        ? {
+            OR: [
+              { code: { contains: query.search, mode: 'insensitive' } },
+              { registration: { student: studentSearch(query.search) } },
+            ],
+          }
+        : {},
+      query.status ? statusWhere(query.status, new Date()) : {},
+      query.periodId ? { registration: { periodId: query.periodId } } : {},
+    ],
+  };
+
+  const result = await paginate(
+    query,
+    { sortable: ['createdAt', 'code', 'endDate'], defaultSort: { field: 'createdAt', order: 'desc' } },
+    (page) => prisma.contract.findMany({ where, ...page, include: INCLUDE }),
+    () => prisma.contract.count({ where }),
+  );
+  return { data: result.data.map(toDto), meta: result.meta };
+}
+
+const STATUS_TEXT: Record<Exclude<ContractStatus, 'DRAFT'>, string> = {
+  ACTIVE: 'đang có hiệu lực',
+  EXPIRED: 'đã hết hạn',
+  TERMINATED: 'đã bị chấm dứt',
+  CANCELLED: 'đã bị hủy',
 };
+
+/**
+ * Hợp đồng không còn chờ ký. Vừa đọc thấy DRAFT mà ghi không được nghĩa là bên
+ * kia (SV ký / Manager hủy) vừa xử lý xong trong lúc mình đang thao tác.
+ */
+function notDraftError(status: ContractStatus, action: 'ký' | 'hủy') {
+  return ApiError.conflict(
+    'CONTRACT_NOT_DRAFT',
+    status === 'DRAFT'
+      ? 'Hợp đồng vừa được ký hoặc hủy ở nơi khác. Hãy tải lại trang.'
+      : `Hợp đồng ${STATUS_TEXT[status]} nên không thể ${action}.`,
+  );
+}
 
 /**
  * Sinh viên ký hợp đồng — một transaction: hợp đồng DRAFT → ACTIVE, giường →
@@ -123,7 +165,7 @@ const NOT_SIGNABLE: Record<Exclude<ContractStatus, 'DRAFT'>, string> = {
 export async function sign(user: AuthUser, id: string) {
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
-      where: { id, registration: { studentId: user.id } },
+      where: { AND: [{ id }, contractScope(user)] },
       select: {
         status: true,
         endDate: true,
@@ -133,10 +175,8 @@ export async function sign(user: AuthUser, id: string) {
         registration: { select: { period: { select: { term: true } } } },
       },
     });
-    if (!contract) throw ApiError.notFound('Không tìm thấy hợp đồng');
-    if (contract.status !== 'DRAFT') {
-      throw ApiError.conflict('CONTRACT_NOT_DRAFT', NOT_SIGNABLE[contract.status]);
-    }
+    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
+    if (contract.status !== 'DRAFT') throw notDraftError(contract.status, 'ký');
 
     const now = new Date();
     if (contract.endDate < now) {
@@ -152,7 +192,7 @@ export async function sign(user: AuthUser, id: string) {
       where: { id, status: 'DRAFT' },
       data: { status: 'ACTIVE', signedAt: now },
     });
-    if (claimed.count === 0) throw ApiError.conflict('CONTRACT_NOT_DRAFT', NOT_SIGNABLE.ACTIVE);
+    if (claimed.count === 0) throw notDraftError('DRAFT', 'ký');
 
     // Suốt thời gian chờ ký giường vẫn AVAILABLE (hợp đồng DRAFT chỉ giữ chỗ), nên
     // Manager có thể đã chuyển nó sang bảo trì. Đổi trạng thái có điều kiện để
@@ -186,4 +226,50 @@ export async function sign(user: AuthUser, id: string) {
   });
 
   return getById(user, id);
+}
+
+/**
+ * Hủy hợp đồng còn chờ ký — kể cả đã quá ngày kết thúc mà chưa ký, đó chính là
+ * hợp đồng đang giữ giường vô ích. Giường không phải đổi trạng thái (suốt lúc
+ * chờ ký nó vẫn AVAILABLE): hợp đồng thôi là DRAFT thì FREE_BED tính giường là
+ * trống lại. Đơn đăng ký chuyển CANCELLED để sinh viên nộp lại được trong đợt
+ * nếu đổi ý (đơn APPROVED sẽ chặn nộp lại).
+ */
+async function cancelDraft(user: AuthUser, id: string, reason: string, registrationNote?: string) {
+  await prisma.$transaction(async (tx) => {
+    const contract = await tx.contract.findFirst({
+      where: { AND: [{ id }, contractScope(user)] },
+      select: { status: true, registrationId: true },
+    });
+    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
+    if (contract.status !== 'DRAFT') throw notDraftError(contract.status, 'hủy');
+
+    // Điều kiện DRAFT nằm ngay trong lệnh ghi: SV bấm ký đúng lúc Manager bấm hủy
+    // thì chỉ một bên thắng, bên kia nhận count = 0.
+    const { count } = await tx.contract.updateMany({
+      where: { id, status: 'DRAFT' },
+      data: { status: 'CANCELLED', terminatedAt: new Date(), terminationReason: reason, endedById: user.id },
+    });
+    if (count === 0) throw notDraftError('DRAFT', 'hủy');
+
+    await tx.registration.update({
+      where: { id: contract.registrationId },
+      data: { status: 'CANCELLED', ...(registrationNote ? { reviewNote: registrationNote } : {}) },
+    });
+  });
+
+  return getById(user, id);
+}
+
+/** Sinh viên từ chối ký — tự báo đổi ý để giường được trả lại ngay cho người khác. */
+export function decline(user: AuthUser, id: string, { reason }: CancelContractInput) {
+  return cancelDraft(user, id, reason);
+}
+
+/**
+ * Manager hủy hợp đồng chờ ký (SV không ký, không liên lạc được…). Lý do ghi cả
+ * vào đơn đăng ký để SV đọc được ở "Đơn của tôi".
+ */
+export function cancel(user: AuthUser, id: string, { reason }: CancelContractInput) {
+  return cancelDraft(user, id, reason, reason);
 }

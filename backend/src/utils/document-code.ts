@@ -1,4 +1,5 @@
 import { Prisma } from '../generated/prisma/client.js';
+import { currentYearVN } from './date-vn.js';
 
 /**
  * Mã chứng từ tăng dần theo năm: HD-2026-0001 (hợp đồng), INV-2026-0001 (hóa đơn).
@@ -12,15 +13,8 @@ import { Prisma } from '../generated/prisma/client.js';
 // Tên bảng không truyền được bằng tham số của câu SQL, nên chỉ nhận đúng các bảng này.
 const TABLES = { HD: 'Contract', INV: 'Invoice' } as const;
 
-export type DocumentPrefix = keyof typeof TABLES;
-
-/** Năm theo giờ Việt Nam — hợp đồng tạo lúc 00:30 ngày 01/01 thuộc năm mới. */
-function currentYear() {
-  return new Intl.DateTimeFormat('en', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' }).format(new Date());
-}
-
-export async function nextDocumentCode(tx: Prisma.TransactionClient, prefix: DocumentPrefix) {
-  const head = `${prefix}-${currentYear()}-`;
+export async function nextDocumentCode(tx: Prisma.TransactionClient, prefix: keyof typeof TABLES) {
+  const head = `${prefix}-${currentYearVN()}-`;
 
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${head}))`;
 

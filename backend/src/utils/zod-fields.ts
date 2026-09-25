@@ -12,3 +12,9 @@ export const phoneSchema = z
 /** Chữ tự do không bắt buộc: cắt khoảng trắng, chuỗi rỗng lưu thành `null`. */
 export const optionalText = (label: string, max: number) =>
   z.string().trim().max(max, `${label} tối đa ${max} ký tự`).transform((v) => v || null).nullable();
+
+/** Chữ tự do bắt buộc: "Vui lòng nhập lý do", "Lý do tối đa 500 ký tự". */
+export const requiredText = (label: string, max: number) => {
+  const required = `Vui lòng nhập ${label.toLowerCase()}`;
+  return z.string(required).trim().min(1, required).max(max, `${label} tối đa ${max} ký tự`);
+};

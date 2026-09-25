@@ -33,6 +33,12 @@ export const STUDENT_SELECT = {
   profile: { omit: { id: true, userId: true } },
 } as const satisfies Prisma.UserSelect;
 
+/** Tìm sinh viên theo tên, email hoặc mã SV — dùng chung cho bảng đơn và bảng hợp đồng. */
+export function studentSearch(q: string): Prisma.UserWhereInput {
+  const contains = { contains: q, mode: 'insensitive' } as const;
+  return { OR: [{ fullName: contains }, { email: contains }, { profile: { studentCode: contains } }] };
+}
+
 type UserRow = Prisma.UserGetPayload<{ select: typeof STUDENT_SELECT }>;
 
 function toDto({ profile, ...user }: UserRow) {

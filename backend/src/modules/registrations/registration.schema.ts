@@ -1,7 +1,7 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
 import { listQuerySchema } from '../../utils/query-schema.js';
-import { optionalText } from '../../utils/zod-fields.js';
+import { optionalText, requiredText } from '../../utils/zod-fields.js';
 
 export const createRegistrationSchema = z
   .object({
@@ -34,12 +34,9 @@ export const approveRegistrationSchema = z
 
 export const rejectRegistrationSchema = z
   .object({
-    reviewNote: z
-      .string('Vui lòng nhập lý do từ chối')
-      .trim()
-      .min(1, 'Vui lòng nhập lý do từ chối')
-      .max(500, 'Lý do từ chối tối đa 500 ký tự')
-      .openapi({ example: 'Hồ sơ không thuộc diện ưu tiên của đợt này' }),
+    reviewNote: requiredText('Lý do từ chối', 500).openapi({
+      example: 'Hồ sơ không thuộc diện ưu tiên của đợt này',
+    }),
   })
   .openapi('RejectRegistrationInput');
 

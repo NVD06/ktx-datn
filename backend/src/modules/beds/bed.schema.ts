@@ -31,7 +31,6 @@ export const availableBedQuerySchema = z.object({
     .enum(['MALE', 'FEMALE'], 'Thiếu giới tính sinh viên cần xếp')
     .openapi({ description: 'Giới tính SV cần xếp — chỉ trả phòng SV đó được ở' }),
   buildingId: z.uuid().optional().openapi({ description: 'Nguyện vọng tòa của đơn (Manager luôn bị giới hạn trong tòa mình)' }),
-  roomTypeId: z.uuid().optional(),
 });
 
 export type CreateBedInput = z.infer<typeof createBedSchema>;

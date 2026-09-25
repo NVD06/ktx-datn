@@ -4,7 +4,7 @@ import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { ASSIGNABLE_ROOM, FREE_BED, roomForGender } from '../rooms/room-eligibility.js';
-import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
+import { ROOM_REF_SELECT } from '../rooms/room.service.js';
 import { compareBedCode, nextBedCode } from './bed-code.js';
 import type { AvailableBedQuery, CreateBedInput, UpdateBedInput } from './bed.schema.js';
 
@@ -39,18 +39,10 @@ export async function listAvailable(user: AuthUser, query: AvailableBedQuery) {
         roomForGender(query.gender),
         { beds: { some: FREE_BED } },
         query.buildingId ? { buildingId: query.buildingId } : {},
-        query.roomTypeId ? { roomTypeId: query.roomTypeId } : {},
       ],
     },
     orderBy: [{ building: { name: 'asc' } }, { floor: 'asc' }, { code: 'asc' }],
-    select: {
-      id: true,
-      code: true,
-      floor: true,
-      building: { select: BUILDING_REF_SELECT },
-      roomType: { select: ROOM_TYPE_SELECT },
-      beds: { where: FREE_BED, select: { id: true, code: true } },
-    },
+    select: { ...ROOM_REF_SELECT, beds: { where: FREE_BED, select: { id: true, code: true } } },
   });
   return rooms.map((room) => ({ ...room, beds: room.beds.sort(compareBedCode) }));
 }

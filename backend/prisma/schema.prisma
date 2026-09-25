@@ -50,7 +50,8 @@ enum ContractStatus {
   DRAFT
   ACTIVE
   EXPIRED
-  TERMINATED
+  TERMINATED // hợp đồng ĐANG Ở bị kết thúc trước hạn
+  CANCELLED // hợp đồng CHỜ KÝ bị hủy (SV từ chối ký / Manager hủy) — chưa từng có hiệu lực
 }
 
 // OVERDUE không có ở đây — tính khi đọc: dueDate < now && status = UNPAID
@@ -99,9 +100,10 @@ model User {
   buildingId String?   @unique
   building   Building? @relation(fields: [buildingId], references: [id])
 
-  profile       StudentProfile?
-  registrations Registration[]
-  requests      MaintenanceRequest[]
+  profile        StudentProfile?
+  registrations  Registration[]
+  requests       MaintenanceRequest[]
+  endedContracts Contract[]         @relation("ContractEndedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -245,8 +247,12 @@ model Contract {
   status    ContractStatus @default(DRAFT)
 
   signedAt          DateTime?
+  // Kết thúc sớm — chấm dứt (TERMINATED) hoặc hủy khi còn chờ ký (CANCELLED).
+  // Lý do bắt buộc (kiểm tra ở service); endedBy cho biết SV tự từ chối hay Manager hủy.
   terminatedAt      DateTime?
-  terminationReason String? // bắt buộc khi Manager chấm dứt — kiểm tra ở service
+  terminationReason String?
+  endedById         String?
+  endedBy           User?     @relation("ContractEndedBy", fields: [endedById], references: [id])
 
   invoices Invoice[]
 

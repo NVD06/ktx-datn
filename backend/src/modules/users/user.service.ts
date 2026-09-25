@@ -2,7 +2,6 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
-import { isUniqueViolation } from '../../utils/prisma-error.js';
 import type { UpdateUserInput, UserListQuery } from './user.schema.js';
 
 // Liệt kê tường minh từng cột: `passwordHash` không bao giờ được rời khỏi service.
@@ -41,13 +40,6 @@ export async function list(query: UserListQuery) {
     { sortable: ['fullName', 'email', 'createdAt'] },
     (page) => prisma.user.findMany({ where, ...page, select: SELECT }),
     () => prisma.user.count({ where }),
-  );
-}
-
-function buildingHasManagerError(buildingName: string, managerName: string) {
-  return ApiError.conflict(
-    'BUILDING_HAS_MANAGER',
-    `Tòa nhà ${buildingName} đang do ${managerName} quản lý. Hãy gỡ người này khỏi tòa trước khi gán người khác.`,
   );
 }
 
@@ -94,22 +86,15 @@ export async function update(id: string, input: UpdateUserInput) {
       }
       // Gán lại đúng người đang quản lý thì không có gì thay đổi — cho qua.
       if (building.manager && building.manager.id !== id) {
-        throw buildingHasManagerError(building.name, building.manager.fullName);
+        throw ApiError.conflict(
+          'BUILDING_HAS_MANAGER',
+          `Tòa nhà ${building.name} đang do ${building.manager.fullName} quản lý. Hãy gỡ người này khỏi tòa trước khi gán người khác.`,
+        );
       }
     }
   }
 
-  try {
-    return await prisma.user.update({ where: { id }, data: input, select: SELECT });
-  } catch (err) {
-    // Hai Admin cùng gán hai người vào một tòa đang trống: cả hai lọt qua kiểm
-    // tra ở trên, unique index của User.buildingId chặn người ghi sau.
-    if (isUniqueViolation(err, 'User_buildingId_key')) {
-      throw ApiError.conflict(
-        'BUILDING_HAS_MANAGER',
-        'Tòa nhà vừa được gán cho quản lý khác. Hãy tải lại để xem ai đang quản lý.',
-      );
-    }
-    throw err;
-  }
+  // Hai Admin cùng gán hai người vào một tòa đang trống thì cả hai lọt qua kiểm tra
+  // trên; unique index User.buildingId chặn người ghi sau (error-handler trả 409).
+  return prisma.user.update({ where: { id }, data: input, select: SELECT });
 }

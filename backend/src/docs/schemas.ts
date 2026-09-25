@@ -142,13 +142,16 @@ export const availableSummarySchema = z
   })
   .openapi('AvailableSummary');
 
-export const availableRoomSchema = z
-  .object({
-    id: z.uuid(),
-    code: z.string().openapi({ example: '301' }),
-    floor: z.int(),
-    building: buildingRefSchema,
-    roomType: roomTypeRefSchema,
+const roomRefSchema = z.object({
+  id: z.uuid(),
+  code: z.string().openapi({ example: '301' }),
+  floor: z.int(),
+  building: buildingRefSchema,
+  roomType: roomTypeRefSchema,
+});
+
+export const availableRoomSchema = roomRefSchema
+  .extend({
     beds: z
       .array(z.object({ id: z.uuid(), code: z.string().openapi({ example: 'G2' }) }))
       .openapi({ description: 'Chỉ giường còn xếp được, sắp theo mã' }),
@@ -222,30 +225,8 @@ export const registrationListItemSchema = registrationSchema
   .openapi('RegistrationListItem');
 
 export const contractStatusSchema = z
-  .enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED'])
+  .enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED', 'CANCELLED'])
   .openapi('ContractStatus');
-
-export const approvedContractSchema = z
-  .object({
-    id: z.uuid(),
-    code: z.string().openapi({ example: 'HD-2026-0001' }),
-    registrationId: z.uuid(),
-    status: contractStatusSchema.openapi({ description: 'Luôn DRAFT — chờ sinh viên ký' }),
-    startDate: z.iso.datetime().openapi({ description: 'Bắt đầu ở của đợt' }),
-    endDate: z.iso.datetime().openapi({ description: 'Kết thúc ở của đợt' }),
-    price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt' }),
-    bed: z.object({
-      id: z.uuid(),
-      code: z.string().openapi({ example: 'G2' }),
-      room: z.object({
-        id: z.uuid(),
-        code: z.string().openapi({ example: '301' }),
-        floor: z.int(),
-        building: z.object({ id: z.uuid(), name: z.string() }),
-      }),
-    }),
-  })
-  .openapi('ApprovedContract');
 
 export const invoiceStatusSchema = z.enum(['UNPAID', 'PAID']).openapi('InvoiceStatus');
 export const invoiceTypeSchema = z.enum(['ROOM_FEE', 'UTILITY']).openapi('InvoiceType');
@@ -264,32 +245,24 @@ export const contractSchema = z
     price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt, đồng / kỳ' }),
     signedAt: z.iso.datetime().nullable(),
     terminatedAt: z.iso.datetime().nullable(),
-    terminationReason: z.string().nullable(),
-    period: z.object({ id: z.uuid(), name: z.string(), term: z.string().openapi({ example: '2026-HK1' }) }),
+    terminationReason: z.string().nullable().openapi({ description: 'Lý do chấm dứt / hủy' }),
+    endedById: z.uuid().nullable(),
+    endedBy: z
+      .object({ id: z.uuid(), fullName: z.string(), role: roleSchema })
+      .nullable()
+      .openapi({ description: 'Người chấm dứt / hủy — SV tự từ chối hay Manager hủy' }),
+    period: registrationPeriodSchema.pick({ id: true, name: true, term: true }),
     student: z.object({
       id: z.uuid(),
       fullName: z.string(),
       email: z.email(),
       phone: z.string().nullable(),
-      profile: z
-        .object({
-          studentCode: z.string(),
-          gender: genderSchema,
-          className: z.string().nullable(),
-          faculty: z.string().nullable(),
-        })
-        .nullable(),
+      profile: studentProfileSchema.pick({ studentCode: true, gender: true, className: true, faculty: true }).nullable(),
     }),
     bed: z.object({
       id: z.uuid(),
       code: z.string().openapi({ example: 'G2' }),
-      room: z.object({
-        id: z.uuid(),
-        code: z.string().openapi({ example: '301' }),
-        floor: z.int(),
-        building: buildingRefSchema,
-        roomType: roomTypeRefSchema,
-      }),
+      room: roomRefSchema,
     }),
     invoices: z.array(
       z.object({

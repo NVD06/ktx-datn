@@ -2,10 +2,11 @@ import { prisma } from '../../config/prisma.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
+import { formatDateVN } from '../../utils/date-vn.js';
 import { nextDocumentCode } from '../../utils/document-code.js';
 import { paginate } from '../../utils/paginate.js';
-import { isUniqueViolation } from '../../utils/prisma-error.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
+import * as contractService from '../contracts/contract.service.js';
 import * as profileService from '../profile/profile.service.js';
 import {
   ASSIGNABLE_ROOM,
@@ -62,16 +63,6 @@ async function toDtos<R extends { buildingId: string | null }>(rows: R[]) {
   return rows.map((r) => toDto(r, (r.buildingId && byId.get(r.buildingId)) || null));
 }
 
-/** Ngày trong thông báo lỗi, theo giờ Việt Nam: "31/01/2027". */
-function formatDateVN(date: Date) {
-  return date.toLocaleDateString('vi-VN', {
-    timeZone: 'Asia/Ho_Chi_Minh',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
 /**
  * Hợp đồng đang giữ chỗ (DRAFT đã duyệt chờ ký, hoặc ACTIVE đang ở) của sinh viên
  * trùng thời gian ở của đợt. Sinh viên đang ở vẫn được đăng ký kỳ sau, miễn hợp
@@ -118,19 +109,10 @@ async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereIn
 }
 
 export async function list(user: AuthUser, query: RegistrationListQuery) {
-  const search: Prisma.RegistrationWhereInput = query.search
-    ? {
-        OR: [
-          { student: { fullName: { contains: query.search, mode: 'insensitive' } } },
-          { student: { email: { contains: query.search, mode: 'insensitive' } } },
-          { student: { profile: { studentCode: { contains: query.search, mode: 'insensitive' } } } },
-        ],
-      }
-    : {};
   const where: Prisma.RegistrationWhereInput = {
     AND: [
       await reviewerScope(user),
-      search,
+      query.search ? { student: profileService.studentSearch(query.search) } : {},
       query.status ? { status: query.status } : {},
       query.periodId ? { periodId: query.periodId } : {},
     ],
@@ -297,36 +279,6 @@ function notPendingError(status: keyof typeof STATUS_LABEL, action: string) {
   );
 }
 
-/** Hợp đồng DRAFT sinh ra khi duyệt, kèm chỗ ở để FE báo lại cho người duyệt. */
-const CONTRACT_SELECT = {
-  id: true,
-  code: true,
-  registrationId: true,
-  status: true,
-  startDate: true,
-  endDate: true,
-  price: true,
-  bed: {
-    select: {
-      id: true,
-      code: true,
-      room: {
-        select: { id: true, code: true, floor: true, building: { select: { id: true, name: true } } },
-      },
-    },
-  },
-} as const satisfies Prisma.ContractSelect;
-
-/** Unique index một phần trên Contract(bedId) — schema.prisma, model Contract. */
-const BED_HOLDING_INDEX = 'Contract_bedId_holding_key';
-
-function bedTakenError(label = 'Giường này') {
-  return ApiError.conflict(
-    'BED_TAKEN',
-    `${label} vừa được xếp cho sinh viên khác hoặc không còn trống. Hãy chọn giường khác.`,
-  );
-}
-
 /**
  * Duyệt đơn: xếp giường và sinh hợp đồng DRAFT chờ sinh viên ký.
  *
@@ -343,124 +295,127 @@ function bedTakenError(label = 'Giường này') {
 export async function approve(user: AuthUser, id: string, input: ApproveRegistrationInput) {
   const scope = await reviewerScope(user);
 
-  try {
-    return await prisma.$transaction(async (tx) => {
-      const registration = await tx.registration.findFirst({
-        where: { AND: [{ id }, scope] },
-        select: {
-          status: true,
-          buildingId: true,
-          studentId: true,
-          period: { select: { name: true, stayStartAt: true, stayEndAt: true } },
-          student: { select: { profile: { select: { gender: true } } } },
-        },
-      });
-      if (!registration) throw outOfScope(user, 'Không tìm thấy đơn đăng ký');
-
-      // Đổi trạng thái NGAY để giữ khóa dòng của đơn: hai người cùng duyệt một đơn
-      // thì người sau chờ ở đây, rồi nhận count = 0 vì đơn không còn PENDING.
-      // Các bước sau lỗi thì cả transaction rollback, đơn vẫn PENDING.
-      const { count } = await tx.registration.updateMany({
-        where: { id, status: 'PENDING' },
-        data: { status: 'APPROVED', reviewedById: user.id },
-      });
-      if (count === 0) throw notPendingError(registration.status, 'duyệt');
-
-      // Hợp đồng lấy kỳ hạn từ thời gian ở của đợt — đợt đã hết thì hợp đồng sinh ra
-      // đã hết hạn trước khi sinh viên kịp ký.
-      if (registration.period.stayEndAt < new Date()) {
-        throw ApiError.conflict(
-          'PERIOD_STAY_ENDED',
-          `Thời gian ở của đợt "${registration.period.name}" đã kết thúc nên không thể xếp giường. ` +
-            'Hãy từ chối đơn, hoặc nhờ quản trị viên sửa thời gian ở của đợt.',
-        );
-      }
-
-      const bed = await tx.bed.findFirst({
-        where: { id: input.bedId, room: buildingScope(user) },
-        select: { id: true, code: true, roomId: true, room: { select: { buildingId: true } } },
-      });
-      if (!bed) {
-        throw ApiError.validation({ bedId: ['Giường không tồn tại hoặc không thuộc tòa bạn quản lý'] });
-      }
-
-      // Nguyện vọng tòa là bắt buộc; nguyện vọng loại phòng chỉ để tham khảo —
-      // loại SV chọn đã hết chỗ thì Manager được xếp loại khác.
-      if (registration.buildingId && registration.buildingId !== bed.room.buildingId) {
-        const wanted = await tx.building.findUnique({
-          where: { id: registration.buildingId },
-          select: { name: true },
-        });
-        throw ApiError.validation({
-          bedId: [`Sinh viên đăng ký ở tòa ${wanted?.name ?? 'khác'}, hãy chọn giường trong tòa đó`],
-        });
-      }
-
-      await tx.$executeRaw`SELECT 1 FROM "Room" WHERE id = ${bed.roomId} FOR UPDATE`;
-
-      // ── Từ đây mọi thứ được đọc lại SAU khi đã giữ khóa phòng. ──
-      const room = await tx.room.findUniqueOrThrow({
-        where: { id: bed.roomId },
-        select: {
-          code: true,
-          building: { select: { name: true, gender: true } },
-          roomType: { select: { price: true } },
-        },
-      });
-
-      const assignable = await tx.room.count({ where: { id: bed.roomId, ...ASSIGNABLE_ROOM } });
-      if (!assignable) {
-        throw ApiError.conflict(
-          'ROOM_UNAVAILABLE',
-          `Phòng ${room.code} tòa ${room.building.name} đang ngừng hoạt động hoặc thuộc loại phòng đã ngừng sử dụng.`,
-        );
-      }
-
-      const free = await tx.bed.count({ where: { id: bed.id, ...FREE_BED } });
-      if (!free) throw bedTakenError(`Giường ${bed.code} phòng ${room.code}`);
-
-      const gender = registration.student.profile?.gender;
-      if (!gender) {
-        throw ApiError.conflict('PROFILE_INCOMPLETE', 'Hồ sơ sinh viên chưa có giới tính nên chưa xếp được phòng.');
-      }
-      const fits = await tx.room.count({ where: { AND: [{ id: bed.roomId }, roomForGender(gender)] } });
-      if (!fits) {
-        throw ApiError.conflict(
-          'ROOM_GENDER_MISMATCH',
-          room.building.gender
-            ? `Tòa ${room.building.name} chỉ dành cho sinh viên ${GENDER_LABEL[room.building.gender]}.`
-            : `Phòng ${room.code} đã có sinh viên ${GENDER_LABEL[OTHER_GENDER[gender]]} ở hoặc được xếp vào.`,
-        );
-      }
-
-      // Lúc nộp đơn đã kiểm tra, nhưng từ đó tới nay SV có thể đã được duyệt ở đợt khác.
-      const { period } = registration;
-      const overlapping = await findOverlappingContract(tx, registration.studentId, period);
-      if (overlapping) {
-        throw ApiError.conflict(
-          'CONTRACT_OVERLAP',
-          `Sinh viên đã có hợp đồng ${overlapping.code} trùng thời gian ở của đợt "${period.name}".`,
-        );
-      }
-
-      return tx.contract.create({
-        data: {
-          code: await nextDocumentCode(tx, 'HD'),
-          registrationId: id,
-          bedId: bed.id,
-          // Kỳ hạn = thời gian Ở của đợt (không phải thời gian nhận đơn).
-          startDate: period.stayStartAt,
-          endDate: period.stayEndAt,
-          // Snapshot: Admin đổi giá loại phòng sau này không ảnh hưởng hợp đồng.
-          price: room.roomType.price,
-        },
-        select: CONTRACT_SELECT,
-      });
+  const contractId = await prisma.$transaction(async (tx) => {
+    const registration = await tx.registration.findFirst({
+      where: { AND: [{ id }, scope] },
+      select: {
+        status: true,
+        buildingId: true,
+        studentId: true,
+        period: { select: { name: true, stayStartAt: true, stayEndAt: true } },
+        student: { select: { profile: { select: { gender: true } } } },
+      },
     });
-  } catch (err) {
-    if (isUniqueViolation(err, BED_HOLDING_INDEX)) throw bedTakenError();
-    throw err;
-  }
+    if (!registration) throw outOfScope(user, 'Không tìm thấy đơn đăng ký');
+
+    // Đổi trạng thái NGAY để giữ khóa dòng của đơn: hai người cùng duyệt một đơn
+    // thì người sau chờ ở đây, rồi nhận count = 0 vì đơn không còn PENDING.
+    // Các bước sau lỗi thì cả transaction rollback, đơn vẫn PENDING.
+    const { count } = await tx.registration.updateMany({
+      where: { id, status: 'PENDING' },
+      data: { status: 'APPROVED', reviewedById: user.id },
+    });
+    if (count === 0) throw notPendingError(registration.status, 'duyệt');
+
+    // Hợp đồng lấy kỳ hạn từ thời gian ở của đợt — đợt đã hết thì hợp đồng sinh ra
+    // đã hết hạn trước khi sinh viên kịp ký.
+    if (registration.period.stayEndAt < new Date()) {
+      throw ApiError.conflict(
+        'PERIOD_STAY_ENDED',
+        `Thời gian ở của đợt "${registration.period.name}" đã kết thúc nên không thể xếp giường. ` +
+          'Hãy từ chối đơn, hoặc nhờ quản trị viên sửa thời gian ở của đợt.',
+      );
+    }
+
+    const bed = await tx.bed.findFirst({
+      where: { id: input.bedId, room: buildingScope(user) },
+      select: { id: true, code: true, roomId: true, room: { select: { buildingId: true } } },
+    });
+    if (!bed) {
+      throw ApiError.validation({ bedId: ['Giường không tồn tại hoặc không thuộc tòa bạn quản lý'] });
+    }
+
+    // Nguyện vọng tòa là bắt buộc; nguyện vọng loại phòng chỉ để tham khảo —
+    // loại SV chọn đã hết chỗ thì Manager được xếp loại khác.
+    if (registration.buildingId && registration.buildingId !== bed.room.buildingId) {
+      const wanted = await tx.building.findUnique({
+        where: { id: registration.buildingId },
+        select: { name: true },
+      });
+      throw ApiError.validation({
+        bedId: [`Sinh viên đăng ký ở tòa ${wanted?.name ?? 'khác'}, hãy chọn giường trong tòa đó`],
+      });
+    }
+
+    await tx.$executeRaw`SELECT 1 FROM "Room" WHERE id = ${bed.roomId} FOR UPDATE`;
+
+    // ── Từ đây mọi thứ được đọc lại SAU khi đã giữ khóa phòng. ──
+    const room = await tx.room.findUniqueOrThrow({
+      where: { id: bed.roomId },
+      select: {
+        code: true,
+        building: { select: { name: true, gender: true } },
+        roomType: { select: { price: true } },
+      },
+    });
+
+    const assignable = await tx.room.count({ where: { id: bed.roomId, ...ASSIGNABLE_ROOM } });
+    if (!assignable) {
+      throw ApiError.conflict(
+        'ROOM_UNAVAILABLE',
+        `Phòng ${room.code} tòa ${room.building.name} đang ngừng hoạt động hoặc thuộc loại phòng đã ngừng sử dụng.`,
+      );
+    }
+
+    const free = await tx.bed.count({ where: { id: bed.id, ...FREE_BED } });
+    if (!free) {
+      throw ApiError.conflict(
+        'BED_TAKEN',
+        `Giường ${bed.code} phòng ${room.code} vừa được xếp cho sinh viên khác hoặc không còn trống. Hãy chọn giường khác.`,
+      );
+    }
+
+    const gender = registration.student.profile?.gender;
+    if (!gender) {
+      throw ApiError.conflict('PROFILE_INCOMPLETE', 'Hồ sơ sinh viên chưa có giới tính nên chưa xếp được phòng.');
+    }
+    const fits = await tx.room.count({ where: { AND: [{ id: bed.roomId }, roomForGender(gender)] } });
+    if (!fits) {
+      throw ApiError.conflict(
+        'ROOM_GENDER_MISMATCH',
+        room.building.gender
+          ? `Tòa ${room.building.name} chỉ dành cho sinh viên ${GENDER_LABEL[room.building.gender]}.`
+          : `Phòng ${room.code} đã có sinh viên ${GENDER_LABEL[OTHER_GENDER[gender]]} ở hoặc được xếp vào.`,
+      );
+    }
+
+    // Lúc nộp đơn đã kiểm tra, nhưng từ đó tới nay SV có thể đã được duyệt ở đợt khác.
+    const { period } = registration;
+    const overlapping = await findOverlappingContract(tx, registration.studentId, period);
+    if (overlapping) {
+      throw ApiError.conflict(
+        'CONTRACT_OVERLAP',
+        `Sinh viên đã có hợp đồng ${overlapping.code} trùng thời gian ở của đợt "${period.name}".`,
+      );
+    }
+
+    const contract = await tx.contract.create({
+      data: {
+        code: await nextDocumentCode(tx, 'HD'),
+        registrationId: id,
+        bedId: bed.id,
+        // Kỳ hạn = thời gian Ở của đợt (không phải thời gian nhận đơn).
+        startDate: period.stayStartAt,
+        endDate: period.stayEndAt,
+        // Snapshot: Admin đổi giá loại phòng sau này không ảnh hưởng hợp đồng.
+        price: room.roomType.price,
+      },
+      select: { id: true },
+    });
+    return contract.id;
+  });
+
+  return contractService.getById(user, contractId);
 }
 
 /** Từ chối đơn PENDING, bắt buộc kèm lý do để sinh viên biết vì sao. */

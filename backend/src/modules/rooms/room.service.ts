@@ -21,6 +21,14 @@ const SORT: SortOptions = {
 
 export const ROOM_TYPE_SELECT = { id: true, name: true, capacity: true, price: true } as const;
 export const BUILDING_REF_SELECT = { id: true, name: true, gender: true } as const;
+/** Phòng rút gọn đi kèm dữ liệu khác (giường trống khi duyệt, hợp đồng). */
+export const ROOM_REF_SELECT = {
+  id: true,
+  code: true,
+  floor: true,
+  building: { select: BUILDING_REF_SELECT },
+  roomType: { select: ROOM_TYPE_SELECT },
+} as const;
 
 const LIST_INCLUDE = {
   building: { select: { id: true, name: true } },

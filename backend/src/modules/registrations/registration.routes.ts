@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  approvedContractSchema,
+  contractSchema,
   registrationListItemSchema,
   registrationSchema,
 } from '../../docs/schemas.js';
@@ -91,7 +91,7 @@ registrationRoutes.post(
       'SV đã có hợp đồng trùng thời gian ở (`CONTRACT_OVERLAP`) · thời gian ở của đợt đã kết thúc ' +
       '(`PERIOD_STAY_ENDED`).',
     body: approveRegistrationSchema,
-    data: approvedContractSchema,
+    data: contractSchema,
     errors: [400, 401, 403, 404, 409],
   },
   staff,

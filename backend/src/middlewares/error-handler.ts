@@ -33,6 +33,29 @@ const PRISMA_ERRORS: Record<string, { status: number; code: string; message: str
 };
 
 /**
+ * Unique index mang luật nghiệp vụ — vi phạm thì trả thông báo cụ thể thay vì
+ * "Dữ liệu bị trùng" chung chung của P2002.
+ */
+const UNIQUE_INDEX_ERRORS: Record<string, { code: string; message: string }> = {
+  Contract_bedId_holding_key: {
+    code: 'BED_TAKEN',
+    message: 'Giường này vừa được xếp cho sinh viên khác hoặc không còn trống. Hãy chọn giường khác.',
+  },
+  User_buildingId_key: {
+    code: 'BUILDING_HAS_MANAGER',
+    message: 'Tòa nhà vừa được gán cho quản lý khác. Hãy tải lại để xem ai đang quản lý.',
+  },
+};
+
+/** Tên unique index gây lỗi P2002 — qua driver adapter `pg` (Prisma 7) nằm ở đây. */
+function violatedIndex(err: Prisma.PrismaClientKnownRequestError): string | undefined {
+  const adapterError = err.meta?.driverAdapterError as
+    | { cause?: { constraint?: { index?: string } } }
+    | undefined;
+  return adapterError?.cause?.constraint?.index;
+}
+
+/**
  * Lỗi của express.json()/urlencoded() — body hỏng là lỗi của client, không phải 500.
  * body-parser gắn sẵn `status` (4xx) và `type` cho từng loại lỗi.
  */
@@ -92,7 +115,8 @@ export function errorHandler(
   }
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    const mapped = PRISMA_ERRORS[err.code];
+    const unique = err.code === 'P2002' ? UNIQUE_INDEX_ERRORS[violatedIndex(err) ?? ''] : undefined;
+    const mapped = unique ? { status: 409, ...unique } : PRISMA_ERRORS[err.code];
     if (mapped) {
       res.status(mapped.status).json({
         success: false,
