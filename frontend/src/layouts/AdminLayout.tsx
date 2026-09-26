@@ -7,6 +7,7 @@ import {
   Layers,
   LayoutDashboard,
   LogOut,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
@@ -22,7 +23,7 @@ interface NavItem {
 }
 
 // Phòng và giường không có mục riêng: vào qua Tòa nhà → chi tiết tòa → chi tiết phòng.
-// Sẽ bổ sung dần: Hợp đồng, Hóa đơn, Sửa chữa, Vệ sinh, Báo cáo.
+// Sẽ bổ sung dần: Hóa đơn, Sửa chữa, Vệ sinh, Báo cáo.
 const NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/admin/buildings', label: 'Tòa nhà', icon: Building2 },
@@ -30,6 +31,7 @@ const NAV: NavItem[] = [
   { to: '/admin/registration-periods', label: 'Đợt đăng ký', icon: CalendarRange },
   { to: '/admin/registrations', label: 'Đơn đăng ký', icon: ClipboardList },
   { to: '/admin/contracts', label: 'Hợp đồng', icon: FileSignature },
+  { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]
 
 export function AdminLayout() {

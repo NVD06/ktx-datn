@@ -81,6 +81,22 @@ export const ACTIVE_OPTIONS = [
   { value: 'false', label: 'Ngừng hoạt động' },
 ]
 
+/** Cờ `isActive` của tài khoản — khóa thì không đăng nhập được, phiên đang mở bị 401. */
+export const ACCOUNT_STATUS = def({
+  ACTIVE: { label: 'Hoạt động', tone: 'success' },
+  LOCKED: { label: 'Đã khóa', tone: 'danger' },
+})
+
+export function accountStatus(isActive: boolean): LabelDef {
+  return ACCOUNT_STATUS[isActive ? 'ACTIVE' : 'LOCKED']
+}
+
+/** Bộ lọc `?isActive=` của tài khoản. */
+export const ACCOUNT_OPTIONS = [
+  { value: 'true', label: ACCOUNT_STATUS.ACTIVE.label },
+  { value: 'false', label: ACCOUNT_STATUS.LOCKED.label },
+]
+
 /** Cờ `isOpen` của đợt đăng ký. */
 export const PERIOD_STATUS = def({
   OPEN: { label: 'Đang mở', tone: 'success' },

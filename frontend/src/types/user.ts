@@ -13,3 +13,18 @@ export interface UserSummary {
   createdAt: string
   updatedAt: string
 }
+
+/** POST /users — không có `role`: backend luôn tạo MANAGER. */
+export interface CreateManagerInput {
+  email: string
+  fullName: string
+  phone?: string
+  password: string
+  /** Bỏ trống = chưa gán tòa. */
+  buildingId?: string | null
+}
+
+export interface UserUpdateInput {
+  buildingId?: string | null
+  isActive?: boolean
+}
