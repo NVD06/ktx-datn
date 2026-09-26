@@ -1,6 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
-import { phoneSchema } from '../../utils/zod-fields.js';
+import { emailSchema, fullNameSchema, passwordSchema, phoneSchema } from '../../utils/zod-fields.js';
 
 /**
  * Chuẩn hóa TRƯỚC, kiểm tra SAU.
@@ -15,18 +15,12 @@ import { phoneSchema } from '../../utils/zod-fields.js';
  * `z.email()` là schema định dạng chứ không phải `z.string()`, nên phải nối
  * bằng `.pipe()` mới đặt được `.trim()` lên trước.
  */
-const email = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email('Email không hợp lệ'))
-  .openapi({ type: 'string', format: 'email', example: 'sv001@example.com' });
 
 export const registerSchema = z
   .object({
-    email,
-    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự').max(72).openapi({ example: 'matkhau123' }),
-    fullName: z.string().trim().min(2, 'Họ tên quá ngắn').max(100).openapi({ example: 'Nguyễn Văn A' }),
+    email: emailSchema,
+    password: passwordSchema,
+    fullName: fullNameSchema,
     phone: phoneSchema.optional(),
     studentCode: z.string().trim().min(3, 'Mã sinh viên quá ngắn').max(20).openapi({ example: 'SV001' }),
     gender: z.enum(['MALE', 'FEMALE']),

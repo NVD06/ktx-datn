@@ -9,6 +9,31 @@ export const phoneSchema = z
   .regex(/^0\d{9}$/, 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0')
   .openapi({ example: '0912345678' });
 
+/**
+ * Email: chuẩn hóa (cắt khoảng trắng, chữ thường) TRƯỚC rồi mới kiểm tra định dạng —
+ * `z.email()` là schema định dạng nên phải nối bằng `.pipe()`. Xem auth.schema.ts.
+ */
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email('Email không hợp lệ'))
+  .openapi({ type: 'string', format: 'email', example: 'sv001@example.com' });
+
+/** Tối đa 72 ký tự: bcrypt bỏ qua phần sau byte thứ 72. */
+export const passwordSchema = z
+  .string()
+  .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
+  .max(72, 'Mật khẩu tối đa 72 ký tự')
+  .openapi({ example: 'matkhau123' });
+
+export const fullNameSchema = z
+  .string()
+  .trim()
+  .min(2, 'Họ tên quá ngắn')
+  .max(100, 'Họ tên tối đa 100 ký tự')
+  .openapi({ example: 'Nguyễn Văn A' });
+
 /** Chữ tự do không bắt buộc: cắt khoảng trắng, chuỗi rỗng lưu thành `null`. */
 export const optionalText = (label: string, max: number) =>
   z.string().trim().max(max, `${label} tối đa ${max} ký tự`).transform((v) => v || null).nullable();

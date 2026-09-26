@@ -5,6 +5,11 @@ import type { RegisterInput } from './auth.schema.js';
 
 const BCRYPT_ROUNDS = 10;
 
+/** Băm mật khẩu trước khi lưu — dùng chung cho SV tự đăng ký và Admin tạo Manager. */
+export function hashPassword(password: string) {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
+}
+
 /**
  * Đăng ký tài khoản sinh viên.
  *
@@ -24,7 +29,7 @@ export async function register(input: RegisterInput) {
   if (emailTaken) throw ApiError.conflict('EMAIL_TAKEN', 'Email này đã được đăng ký');
   if (codeTaken) throw ApiError.conflict('STUDENT_CODE_TAKEN', 'Mã sinh viên này đã tồn tại');
 
-  const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+  const passwordHash = await hashPassword(input.password);
 
   const user = await prisma.user.create({
     data: {
