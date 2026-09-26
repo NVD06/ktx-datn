@@ -11,6 +11,7 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
+import { useDetailSheet } from '@/hooks/useDetailSheet'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateTime, orDash } from '@/lib/format'
 import { GENDER, REGISTRATION_STATUS, toOptions } from '@/lib/labels'
@@ -35,24 +36,18 @@ export function RegistrationListPage() {
   const periodOptions = usePeriodOptions()
   const reject = useRejectRegistration()
 
-  const [selected, setSelected] = useState<RegistrationListItem | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
+  const detail = useDetailSheet<RegistrationListItem>()
   const [approving, setApproving] = useState<RegistrationListItem | null>(null)
   const [rejecting, setRejecting] = useState<RegistrationListItem | null>(null)
 
-  function openDetail(registration: RegistrationListItem) {
-    setSelected(registration)
-    setDetailOpen(true)
-  }
-
   // Bấm duyệt/từ chối từ drawer: đóng drawer để dialog không chồng lên nó.
   function openApprove(registration: RegistrationListItem) {
-    setDetailOpen(false)
+    detail.setOpen(false)
     setApproving(registration)
   }
 
   function openReject(registration: RegistrationListItem) {
-    setDetailOpen(false)
+    detail.setOpen(false)
     setRejecting(registration)
   }
 
@@ -120,7 +115,7 @@ export function RegistrationListPage() {
       cell: ({ row }) => {
         const registration = row.original
         const actions: RowAction[] = [
-          { label: 'Xem chi tiết', icon: Eye, onSelect: () => openDetail(registration) },
+          { label: 'Xem chi tiết', icon: Eye, onSelect: () => detail.show(registration) },
         ]
         if (registration.status === 'PENDING') {
           actions.push(
@@ -176,9 +171,9 @@ export function RegistrationListPage() {
       />
 
       <RegistrationDetailSheet
-        registration={selected}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
+        registration={detail.item}
+        open={detail.open}
+        onOpenChange={detail.setOpen}
         onApprove={openApprove}
         onReject={openReject}
       />

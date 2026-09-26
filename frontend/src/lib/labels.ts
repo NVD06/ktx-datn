@@ -143,6 +143,12 @@ export const INVOICE_TYPE = def({
   UTILITY: { label: 'Điện nước', tone: 'neutral' },
 })
 
+export const INVOICE_ITEM_TYPE = def({
+  ROOM_FEE: { label: 'Tiền phòng', tone: 'neutral' },
+  ELECTRIC: { label: 'Tiền điện', tone: 'neutral' },
+  WATER: { label: 'Tiền nước', tone: 'neutral' },
+})
+
 export const PAYMENT_STATUS = def({
   PENDING: { label: 'Đang xử lý', tone: 'warning' },
   SUCCESS: { label: 'Thành công', tone: 'success' },
@@ -165,10 +171,16 @@ export const REQUEST_STATUS = def({
 export const OVERDUE: LabelDef = { label: 'Quá hạn', tone: 'danger' }
 
 /** Hóa đơn chưa thanh toán mà đã qua hạn là "Quá hạn" — tính khi đọc, không lưu DB (us-04.md, US-04.3). */
-export function invoiceStatus(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }): LabelDef {
-  const overdue = invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
-  return overdue ? OVERDUE : INVOICE_STATUS[invoice.status]
+export function isOverdue(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }) {
+  return invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
 }
+
+export function invoiceStatus(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }): LabelDef {
+  return isOverdue(invoice) ? OVERDUE : INVOICE_STATUS[invoice.status]
+}
+
+/** Bộ lọc `?status=` của bảng hóa đơn — "Quá hạn" do backend tính theo hạn thanh toán. */
+export const INVOICE_FILTER_OPTIONS = toOptions({ UNPAID: INVOICE_STATUS.UNPAID, OVERDUE, PAID: INVOICE_STATUS.PAID })
 
 /** Bảng nhãn → lựa chọn của FilterSelect (lọc theo trạng thái). */
 export function toOptions(map: Record<string, LabelDef>) {

@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
-// US-04 trở đi sẽ bổ sung: Hóa đơn, Sửa chữa.
+// US-05 sẽ bổ sung: Sửa chữa.
 const NAV = [
   { to: '/student', label: 'Trang cá nhân' },
   { to: '/student/rooms', label: 'Chỗ trống' },
   { to: '/student/registrations', label: 'Đơn của tôi' },
   { to: '/student/contracts', label: 'Hợp đồng' },
+  { to: '/student/invoices', label: 'Hóa đơn' },
   { to: '/student/profile', label: 'Hồ sơ' },
 ]
 

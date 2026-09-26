@@ -13,7 +13,7 @@ import {
 import { formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, GENDER, ROLE } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
-import { InvoiceList } from './InvoiceList'
+import { InvoiceList } from '@/features/invoices/components/InvoiceList'
 
 /**
  * Chi tiết hợp đồng cho người quản lý (US-03.4). Dữ liệu lấy sẵn từ dòng của

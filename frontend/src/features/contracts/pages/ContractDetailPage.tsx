@@ -15,7 +15,7 @@ import { bedPlace, formatDate, formatDateRange, formatDateTime, formatMoney } fr
 import { CONTRACT_STATUS, GENDER, buildingGender } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS } from '../contract-terms'
-import { InvoiceList } from '../components/InvoiceList'
+import { InvoiceList } from '@/features/invoices/components/InvoiceList'
 import { useContract, useEndContract, useSignContract } from '../hooks/useContracts'
 
 const BACK = <BackLink to="/student/contracts">Hợp đồng của tôi</BackLink>

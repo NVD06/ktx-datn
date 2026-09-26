@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as contractsApi from '@/api/contracts'
 import type { ContractEndAction } from '@/api/contracts'
+import { invoiceKeys } from '@/features/invoices/hooks/useInvoices'
 import { registrationKeys } from '@/features/registrations/hooks/useRegistrations'
 import { roomKeys } from '@/features/rooms/hooks/useRooms'
 import { useInvalidate } from '@/hooks/useInvalidate'
@@ -41,7 +42,7 @@ export function useContract(id: string) {
 
 /** Làm mới cả khi lỗi: 409 nghĩa là trạng thái trên màn hình đã cũ (đã ký ở tab khác, đã hết hạn…). */
 export function useSignContract() {
-  const invalidate = useInvalidate(contractKeys.all)
+  const invalidate = useInvalidate(contractKeys.all, invoiceKeys.all)
   return useMutation({ mutationFn: contractsApi.signContract, onSettled: invalidate })
 }
 
@@ -58,7 +59,7 @@ export function useEndContract(action: ContractEndAction) {
 }
 
 export function useExtendContract() {
-  const invalidate = useInvalidate(contractKeys.all)
+  const invalidate = useInvalidate(contractKeys.all, invoiceKeys.all)
   return useMutation({
     mutationFn: ({ id, endDate }: { id: string; endDate: string }) => contractsApi.extendContract(id, endDate),
     onSettled: invalidate,

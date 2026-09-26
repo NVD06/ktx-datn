@@ -11,6 +11,7 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
+import { useDetailSheet } from '@/hooks/useDetailSheet'
 import { useListParams } from '@/hooks/useListParams'
 import { bedPlace, formatDateRange, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, toOptions } from '@/lib/labels'
@@ -45,22 +46,16 @@ export function ContractListPage() {
   const cancel = useEndContract('cancel')
   const terminate = useEndContract('terminate')
 
-  const [selected, setSelected] = useState<Contract | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
+  const detail = useDetailSheet<Contract>()
   const [cancelling, setCancelling] = useState<Contract | null>(null)
   const [extending, setExtending] = useState<Contract | null>(null)
   const [terminating, setTerminating] = useState<Contract | null>(null)
-
-  function openDetail(contract: Contract) {
-    setSelected(contract)
-    setDetailOpen(true)
-  }
 
   /** Thao tác theo trạng thái — dùng chung cho menu "…" của dòng và chân drawer chi tiết. */
   function actionsFor(contract: Contract): RowAction[] {
     // Mở dialog từ drawer thì đóng drawer, để dialog không chồng lên nó.
     const open = (set: (c: Contract) => void) => () => {
-      setDetailOpen(false)
+      detail.setOpen(false)
       set(contract)
     }
     if (canCancel(contract)) {
@@ -141,7 +136,7 @@ export function ContractListPage() {
         return (
           <RowActions
             actions={[
-              { label: 'Xem chi tiết', icon: Eye, onSelect: () => openDetail(contract) },
+              { label: 'Xem chi tiết', icon: Eye, onSelect: () => detail.show(contract) },
               ...actionsFor(contract),
             ]}
           />
@@ -193,10 +188,10 @@ export function ContractListPage() {
       />
 
       <ContractDetailSheet
-        contract={selected}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-        actions={selected ? actionsFor(selected) : []}
+        contract={detail.item}
+        open={detail.open}
+        onOpenChange={detail.setOpen}
+        actions={detail.item ? actionsFor(detail.item) : []}
       />
       <ReasonDialog
         target={cancelling}

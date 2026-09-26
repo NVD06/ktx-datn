@@ -1,6 +1,6 @@
 /**
  * Hạn thanh toán hóa đơn tiền phòng, tính từ lúc ký.
- * Giữ khớp với ROOM_FEE_DUE_DAYS trong backend/src/modules/contracts/contract.service.ts.
+ * Giữ khớp với INVOICE_DUE_DAYS trong backend/src/config/constants.ts.
  */
 export const ROOM_FEE_DUE_DAYS = 14
 
