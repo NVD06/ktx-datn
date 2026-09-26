@@ -1,7 +1,11 @@
 import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
-import { contractListQuerySchema, type CancelContractInput } from './contract.schema.js';
+import {
+  contractListQuerySchema,
+  type ContractReasonInput,
+  type ExtendContractInput,
+} from './contract.schema.js';
 import * as contractService from './contract.service.js';
 
 /** GET /api/v1/contracts */
@@ -13,6 +17,11 @@ export async function list(req: Request, res: Response) {
 /** GET /api/v1/contracts/me */
 export async function listMine(req: Request, res: Response) {
   res.json(ok(await contractService.listMine(currentUser(req))));
+}
+
+/** GET /api/v1/contracts/me/current */
+export async function currentStay(req: Request, res: Response) {
+  res.json(ok(await contractService.currentStay(currentUser(req))));
 }
 
 /** GET /api/v1/contracts/:id */
@@ -27,10 +36,20 @@ export async function sign(req: Request, res: Response) {
 
 /** POST /api/v1/contracts/:id/decline */
 export async function decline(req: Request, res: Response) {
-  res.json(ok(await contractService.decline(currentUser(req), param(req), req.body as CancelContractInput)));
+  res.json(ok(await contractService.decline(currentUser(req), param(req), req.body as ContractReasonInput)));
 }
 
 /** POST /api/v1/contracts/:id/cancel */
 export async function cancel(req: Request, res: Response) {
-  res.json(ok(await contractService.cancel(currentUser(req), param(req), req.body as CancelContractInput)));
+  res.json(ok(await contractService.cancel(currentUser(req), param(req), req.body as ContractReasonInput)));
+}
+
+/** POST /api/v1/contracts/:id/extend */
+export async function extend(req: Request, res: Response) {
+  res.json(ok(await contractService.extend(currentUser(req), param(req), req.body as ExtendContractInput)));
+}
+
+/** POST /api/v1/contracts/:id/terminate */
+export async function terminate(req: Request, res: Response) {
+  res.json(ok(await contractService.terminate(currentUser(req), param(req), req.body as ContractReasonInput)));
 }

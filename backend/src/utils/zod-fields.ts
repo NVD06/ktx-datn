@@ -18,3 +18,10 @@ export const requiredText = (label: string, max: number) => {
   const required = `Vui lòng nhập ${label.toLowerCase()}`;
   return z.string(required).trim().min(1, required).max(max, `${label} tối đa ${max} ký tự`);
 };
+
+/**
+ * Ngày gửi lên dạng chuỗi — nhận cả "2026-09-01" (từ <input type="date">) lẫn ISO đầy đủ.
+ * Bắt buộc là chuỗi: `z.coerce.date()` đứng một mình biến `null`/`0`/`true` thành 01/01/1970.
+ */
+export const dateField = (label: string) =>
+  z.string(`${label} không hợp lệ`).pipe(z.coerce.date(`${label} không hợp lệ`));

@@ -1,6 +1,7 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
 import { booleanQuery, listQuerySchema } from '../../utils/query-schema.js';
+import { dateField } from '../../utils/zod-fields.js';
 
 const name = z
   .string()
@@ -14,10 +15,6 @@ const term = z
   .trim()
   .toUpperCase()
   .regex(/^\d{4}-(HK1|HK2|HE)$/, 'Mã học kỳ có dạng 2026-HK1, 2026-HK2 hoặc 2026-HE (học kỳ hè)');
-// Nhận cả "2026-09-01" lẫn ISO đầy đủ — FE gửi từ <input type="date">.
-// Bắt buộc là chuỗi: `z.coerce.date()` đứng một mình biến `null`/`0`/`true` thành ngày 01/01/1970.
-const date = (label: string) =>
-  z.string(`${label} không hợp lệ`).pipe(z.coerce.date(`${label} không hợp lệ`));
 
 type PeriodDates = { startAt?: Date; endAt?: Date; stayStartAt?: Date; stayEndAt?: Date };
 
@@ -60,16 +57,16 @@ export const createRegistrationPeriodSchema = z
       example: '2026-HK1',
       description: 'Mã học kỳ — kỳ của hóa đơn tiền phòng lập từ hợp đồng của đợt',
     }),
-    startAt: date('Ngày bắt đầu nhận đơn').openapi({
+    startAt: dateField('Ngày bắt đầu nhận đơn').openapi({
       example: '2026-08-01T00:00:00.000Z',
       description: 'Thời gian nhận đơn — để thông báo, mở/đóng thật do Admin bấm',
     }),
-    endAt: date('Ngày hết hạn nhận đơn').openapi({ example: '2026-08-31T00:00:00.000Z' }),
-    stayStartAt: date('Ngày bắt đầu ở').openapi({
+    endAt: dateField('Ngày hết hạn nhận đơn').openapi({ example: '2026-08-31T00:00:00.000Z' }),
+    stayStartAt: dateField('Ngày bắt đầu ở').openapi({
       example: '2026-09-05T00:00:00.000Z',
       description: 'Thời gian ở — kỳ hạn của hợp đồng sinh ra từ đợt này',
     }),
-    stayEndAt: date('Ngày kết thúc ở').openapi({ example: '2027-01-15T00:00:00.000Z' }),
+    stayEndAt: dateField('Ngày kết thúc ở').openapi({ example: '2027-01-15T00:00:00.000Z' }),
   })
   .superRefine(refineDates)
   .openapi('CreateRegistrationPeriodInput');
@@ -78,10 +75,10 @@ export const updateRegistrationPeriodSchema = z
   .object({
     name: name.exactOptional(),
     term: term.exactOptional(),
-    startAt: date('Ngày bắt đầu nhận đơn').exactOptional(),
-    endAt: date('Ngày hết hạn nhận đơn').exactOptional(),
-    stayStartAt: date('Ngày bắt đầu ở').exactOptional(),
-    stayEndAt: date('Ngày kết thúc ở').exactOptional(),
+    startAt: dateField('Ngày bắt đầu nhận đơn').exactOptional(),
+    endAt: dateField('Ngày hết hạn nhận đơn').exactOptional(),
+    stayStartAt: dateField('Ngày bắt đầu ở').exactOptional(),
+    stayEndAt: dateField('Ngày kết thúc ở').exactOptional(),
   })
   .superRefine(refineDates)
   .openapi('UpdateRegistrationPeriodInput');

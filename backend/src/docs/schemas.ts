@@ -251,7 +251,7 @@ export const contractSchema = z
       .object({ id: z.uuid(), fullName: z.string(), role: roleSchema })
       .nullable()
       .openapi({ description: 'Người chấm dứt / hủy — SV tự từ chối hay Manager hủy' }),
-    period: registrationPeriodSchema.pick({ id: true, name: true, term: true }),
+    period: registrationPeriodSchema.pick({ id: true, name: true, term: true, stayStartAt: true, stayEndAt: true }),
     student: z.object({
       id: z.uuid(),
       fullName: z.string(),
@@ -279,6 +279,20 @@ export const contractSchema = z
     updatedAt: z.iso.datetime(),
   })
   .openapi('Contract');
+
+export const currentStaySchema = z
+  .object({
+    contract: contractSchema,
+    roommates: z.array(
+      z.object({
+        fullName: z.string(),
+        className: z.string().nullable(),
+        bedCode: z.string().openapi({ example: 'G2' }),
+      }),
+    ),
+  })
+  .nullable()
+  .openapi('CurrentStay', { description: 'null = chưa có chỗ ở' });
 
 export const userSchema = z
   .object({

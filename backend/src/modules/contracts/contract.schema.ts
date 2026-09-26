@@ -1,12 +1,21 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
 import { listQuerySchema } from '../../utils/query-schema.js';
-import { requiredText } from '../../utils/zod-fields.js';
+import { dateField, requiredText } from '../../utils/zod-fields.js';
 
-/** Lý do hủy — dùng chung cho SV từ chối ký và Manager hủy hợp đồng chờ ký. */
-export const cancelContractSchema = z
-  .object({ reason: requiredText('Lý do', 500).openapi({ example: 'Em đã tìm được chỗ ở gần trường hơn' }) })
-  .openapi('CancelContractInput');
+/** Lý do bắt buộc — dùng chung cho SV từ chối ký, Manager hủy hợp đồng chờ ký, và chấm dứt hợp đồng. */
+export const contractReasonSchema = z
+  .object({ reason: requiredText('Lý do', 500).openapi({ example: 'Sinh viên xin chuyển ra ở ngoài' }) })
+  .openapi('ContractReasonInput');
+
+export const extendContractSchema = z
+  .object({
+    endDate: dateField('Ngày kết thúc mới').openapi({
+      example: '2027-02-28',
+      description: 'Tính hết ngày đó (23:59 giờ VN). Phải sau ngày kết thúc hiện tại và không trước hôm nay',
+    }),
+  })
+  .openapi('ExtendContractInput');
 
 export const contractListQuerySchema = listQuerySchema.extend({
   // Trạng thái THỰC TẾ (EXPIRED tính theo ngày kết thúc), khớp với cột trạng thái trên bảng.
@@ -14,5 +23,6 @@ export const contractListQuerySchema = listQuerySchema.extend({
   periodId: z.uuid().optional(),
 });
 
-export type CancelContractInput = z.infer<typeof cancelContractSchema>;
+export type ContractReasonInput = z.infer<typeof contractReasonSchema>;
+export type ExtendContractInput = z.infer<typeof extendContractSchema>;
 export type ContractListQuery = z.infer<typeof contractListQuerySchema>;
