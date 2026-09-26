@@ -47,7 +47,8 @@ export interface Contract {
   endedById: string | null
   /** Người chấm dứt / hủy — SV tự từ chối ký hay Manager hủy. */
   endedBy: { id: string; fullName: string; role: Role } | null
-  period: Pick<RegistrationPeriod, 'id' | 'name' | 'term'>
+  /** Thời gian ở của đợt dùng để tính đơn giá ngày khi gia hạn. */
+  period: Pick<RegistrationPeriod, 'id' | 'name' | 'term' | 'stayStartAt' | 'stayEndAt'>
   student: {
     id: string
     fullName: string
@@ -59,4 +60,11 @@ export interface Contract {
   invoices: ContractInvoice[]
   createdAt: string
   updatedAt: string
+}
+
+/** Chỗ ở hiện tại của sinh viên (GET /contracts/me/current); null = chưa có chỗ ở. */
+export interface CurrentStay {
+  contract: Contract
+  /** Chỉ tên, lớp, giường — không có thông tin liên lạc. */
+  roommates: { fullName: string; className: string | null; bedCode: string }[]
 }

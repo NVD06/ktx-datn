@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as contractsApi from '@/api/contracts'
+import type { ContractEndAction } from '@/api/contracts'
 import { registrationKeys } from '@/features/registrations/hooks/useRegistrations'
 import { roomKeys } from '@/features/rooms/hooks/useRooms'
 import { useInvalidate } from '@/hooks/useInvalidate'
@@ -9,6 +10,7 @@ export const contractKeys = {
   all: ['contracts'] as const,
   list: (params: ListParams) => ['contracts', 'list', params] as const,
   mine: ['contracts', 'mine'] as const,
+  current: ['contracts', 'mine', 'current'] as const,
   detail: (id: string) => ['contracts', 'detail', id] as const,
 }
 
@@ -23,6 +25,10 @@ export function useContracts(params: ListParams) {
 
 export function useMyContracts() {
   return useQuery({ queryKey: contractKeys.mine, queryFn: contractsApi.listMyContracts })
+}
+
+export function useCurrentStay() {
+  return useQuery({ queryKey: contractKeys.current, queryFn: contractsApi.getCurrentStay })
 }
 
 export function useContract(id: string) {
@@ -40,14 +46,21 @@ export function useSignContract() {
 }
 
 /**
- * Hủy hợp đồng chờ ký — SV từ chối (`decline`) hoặc Manager hủy (`cancel`).
- * Đơn đăng ký chuyển "Đã hủy" và giường trống lại, nên làm mới cả đơn và chỗ trống.
+ * Kết thúc hợp đồng kèm lý do — từ chối ký, hủy hợp đồng chờ ký, chấm dứt. Giường
+ * trống lại và đơn đăng ký có thể đổi trạng thái, nên làm mới cả đơn và chỗ trống.
  */
-export function useCancelContract(mode: 'decline' | 'cancel') {
+export function useEndContract(action: ContractEndAction) {
   const invalidate = useInvalidate(contractKeys.all, registrationKeys.all, roomKeys.all)
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      contractsApi.cancelContract(id, mode, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => contractsApi.endContract(id, action, reason),
+    onSettled: invalidate,
+  })
+}
+
+export function useExtendContract() {
+  const invalidate = useInvalidate(contractKeys.all)
+  return useMutation({
+    mutationFn: ({ id, endDate }: { id: string; endDate: string }) => contractsApi.extendContract(id, endDate),
     onSettled: invalidate,
   })
 }

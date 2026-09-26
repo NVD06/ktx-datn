@@ -1,4 +1,5 @@
 import { DetailList, DetailSection, type DetailRow } from '@/components/shared/DetailList'
+import type { RowAction } from '@/components/shared/RowActions'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,34 +13,41 @@ import {
 import { formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, GENDER, ROLE } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
-import { canCancel } from '../contract-actions'
 import { InvoiceList } from './InvoiceList'
 
 /**
  * Chi tiết hợp đồng cho người quản lý (US-03.4). Dữ liệu lấy sẵn từ dòng của
  * bảng, không gọi API riêng. `contract` tách khỏi `open` để nội dung còn nguyên
- * trong lúc drawer trượt ra.
+ * trong lúc drawer trượt ra. `actions` là cùng các thao tác của menu "…" trên dòng.
  */
 export function ContractDetailSheet({
   contract: c,
   open,
   onOpenChange,
-  onCancel,
+  actions,
 }: {
   contract: Contract | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCancel: (contract: Contract) => void
+  actions: RowAction[]
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto data-[side=right]:sm:max-w-md">
         {c && <Content contract={c} />}
-        {c && canCancel(c) && (
+        {c && actions.length > 0 && (
           <SheetFooter className="border-t sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => onCancel(c)}>
-              Hủy hợp đồng chờ ký
-            </Button>
+            {actions.map(({ label, icon: Icon, onSelect, destructive }) => (
+              <Button
+                key={label}
+                variant="outline"
+                className={destructive ? 'text-destructive' : undefined}
+                onClick={onSelect}
+              >
+                {Icon && <Icon />}
+                {label}
+              </Button>
+            ))}
           </SheetFooter>
         )}
       </SheetContent>

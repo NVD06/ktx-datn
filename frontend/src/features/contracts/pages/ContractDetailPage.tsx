@@ -16,7 +16,7 @@ import { CONTRACT_STATUS, GENDER, buildingGender } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS } from '../contract-terms'
 import { InvoiceList } from '../components/InvoiceList'
-import { useCancelContract, useContract, useSignContract } from '../hooks/useContracts'
+import { useContract, useEndContract, useSignContract } from '../hooks/useContracts'
 
 const BACK = <BackLink to="/student/contracts">Hợp đồng của tôi</BackLink>
 
@@ -28,7 +28,7 @@ export function ContractDetailPage() {
   const { id = '' } = useParams()
   const query = useContract(id)
   const sign = useSignContract()
-  const decline = useCancelContract('decline')
+  const decline = useEndContract('decline')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [declining, setDeclining] = useState(false)
 

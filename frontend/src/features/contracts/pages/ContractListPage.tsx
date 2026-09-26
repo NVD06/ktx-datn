@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Ban, Eye } from 'lucide-react'
+import { Ban, CalendarPlus, Eye, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/shared/DataTable'
@@ -16,15 +16,24 @@ import { bedPlace, formatDateRange, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, toOptions } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { ContractDetailSheet } from '../components/ContractDetailSheet'
-import { canCancel } from '../contract-actions'
-import { useCancelContract, useContracts } from '../hooks/useContracts'
+import { ExtendContractDialog } from '../components/ExtendContractDialog'
+import { canCancel, isRunning } from '../contract-actions'
+import { useContracts, useEndContract } from '../hooks/useContracts'
 
 const STATUS_OPTIONS = toOptions(CONTRACT_STATUS)
 
+/** Còn hóa đơn chưa thanh toán thì cảnh báo — vẫn cho chấm dứt, hóa đơn giữ lại để thu sau. */
+function unpaidNote(contract: Contract) {
+  const unpaid = contract.invoices.filter((i) => i.status === 'UNPAID')
+  if (unpaid.length === 0) return ''
+  const total = unpaid.reduce((sum, i) => sum + Number(i.amount), 0)
+  return ` Lưu ý: còn ${unpaid.length} hóa đơn chưa thanh toán (${formatMoney(total)}), hóa đơn giữ nguyên để thu sau.`
+}
+
 /**
  * Hợp đồng cho người quản lý (US-03.4). Backend tự giới hạn phạm vi: MANAGER chỉ
- * thấy hợp đồng có giường thuộc tòa mình. Hiện có thao tác hủy hợp đồng chờ ký;
- * gia hạn và chấm dứt hợp đồng đang ở bổ sung vào cùng bảng này.
+ * thấy hợp đồng có giường thuộc tòa mình. Hợp đồng chờ ký thì hủy được; hợp đồng
+ * đang ở (kể cả đã quá hạn mà chưa trả phòng) thì gia hạn hoặc chấm dứt.
  */
 export function ContractListPage() {
   const { user } = useAuth()
@@ -33,21 +42,37 @@ export function ContractListPage() {
   const list = useListParams(['status', 'periodId'] as const)
   const query = useContracts(list.params)
   const periodOptions = usePeriodOptions()
-  const cancel = useCancelContract('cancel')
+  const cancel = useEndContract('cancel')
+  const terminate = useEndContract('terminate')
 
   const [selected, setSelected] = useState<Contract | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [cancelling, setCancelling] = useState<Contract | null>(null)
+  const [extending, setExtending] = useState<Contract | null>(null)
+  const [terminating, setTerminating] = useState<Contract | null>(null)
 
   function openDetail(contract: Contract) {
     setSelected(contract)
     setDetailOpen(true)
   }
 
-  // Bấm hủy từ drawer: đóng drawer để dialog không chồng lên nó.
-  function openCancel(contract: Contract) {
-    setDetailOpen(false)
-    setCancelling(contract)
+  /** Thao tác theo trạng thái — dùng chung cho menu "…" của dòng và chân drawer chi tiết. */
+  function actionsFor(contract: Contract): RowAction[] {
+    // Mở dialog từ drawer thì đóng drawer, để dialog không chồng lên nó.
+    const open = (set: (c: Contract) => void) => () => {
+      setDetailOpen(false)
+      set(contract)
+    }
+    if (canCancel(contract)) {
+      return [{ label: 'Hủy hợp đồng chờ ký', icon: Ban, destructive: true, onSelect: open(setCancelling) }]
+    }
+    if (isRunning(contract)) {
+      return [
+        { label: 'Gia hạn', icon: CalendarPlus, onSelect: open(setExtending) },
+        { label: 'Chấm dứt', icon: LogOut, destructive: true, onSelect: open(setTerminating) },
+      ]
+    }
+    return []
   }
 
   const columns: ColumnDef<Contract>[] = [
@@ -113,18 +138,14 @@ export function ContractListPage() {
       meta: { className: 'w-12 text-right' },
       cell: ({ row }) => {
         const contract = row.original
-        const actions: RowAction[] = [
-          { label: 'Xem chi tiết', icon: Eye, onSelect: () => openDetail(contract) },
-        ]
-        if (canCancel(contract)) {
-          actions.push({
-            label: 'Hủy hợp đồng chờ ký',
-            icon: Ban,
-            destructive: true,
-            onSelect: () => openCancel(contract),
-          })
-        }
-        return <RowActions actions={actions} />
+        return (
+          <RowActions
+            actions={[
+              { label: 'Xem chi tiết', icon: Eye, onSelect: () => openDetail(contract) },
+              ...actionsFor(contract),
+            ]}
+          />
+        )
       },
     },
   ]
@@ -175,7 +196,7 @@ export function ContractListPage() {
         contract={selected}
         open={detailOpen}
         onOpenChange={setDetailOpen}
-        onCancel={openCancel}
+        actions={selected ? actionsFor(selected) : []}
       />
       <ReasonDialog
         target={cancelling}
@@ -196,6 +217,27 @@ export function ContractListPage() {
             .then(() => toast.success(`Đã hủy hợp đồng ${c.code}, ${bedPlace(c.bed)} đã trống`))
         }
       />
+      <ReasonDialog
+        target={terminating}
+        onClose={() => setTerminating(null)}
+        title="Chấm dứt hợp đồng?"
+        description={(c) =>
+          `Chấm dứt hợp đồng ${c.code} của ${c.student.fullName} (${bedPlace(c.bed)}). Giường trống lại ngay, ` +
+          'không hoàn tiền tự động.' +
+          unpaidNote(c)
+        }
+        label="Lý do chấm dứt"
+        placeholder="Ví dụ: sinh viên trả phòng khi hết kỳ, vi phạm nội quy…"
+        submitLabel="Chấm dứt"
+        isPending={terminate.isPending}
+        closeOnErrorCode="CONTRACT_NOT_ACTIVE"
+        onSubmit={(c, reason) =>
+          terminate
+            .mutateAsync({ id: c.id, reason })
+            .then(() => toast.success(`Đã chấm dứt hợp đồng ${c.code}, ${bedPlace(c.bed)} đã trống`))
+        }
+      />
+      <ExtendContractDialog contract={extending} onClose={() => setExtending(null)} />
     </>
   )
 }
