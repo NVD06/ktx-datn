@@ -4,6 +4,7 @@ import { authRoutes } from '../modules/auth/auth.routes.js';
 import { bedRoutes } from '../modules/beds/bed.routes.js';
 import { buildingRoutes } from '../modules/buildings/building.routes.js';
 import { contractRoutes } from '../modules/contracts/contract.routes.js';
+import { invoiceRoutes } from '../modules/invoices/invoice.routes.js';
 import { profileRoutes } from '../modules/profile/profile.routes.js';
 import { registrationPeriodRoutes } from '../modules/registration-periods/registration-period.routes.js';
 import { registrationRoutes } from '../modules/registrations/registration.routes.js';
@@ -41,6 +42,7 @@ for (const routes of [
   registrationPeriodRoutes,
   registrationRoutes,
   contractRoutes,
+  invoiceRoutes,
   profileRoutes,
 ]) {
   apiRouter.use(routes.prefix, routes.router);

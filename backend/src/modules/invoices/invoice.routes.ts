@@ -1,0 +1,66 @@
+import { z } from 'zod';
+import { invoiceDetailSchema, invoiceSchema, invoiceSummarySchema } from '../../docs/schemas.js';
+import { requireAuth, requireRole } from '../../middlewares/auth.js';
+import { defineRoutes } from '../../utils/define-routes.js';
+import * as ctrl from './invoice.controller.js';
+import { invoiceListQuerySchema } from './invoice.schema.js';
+
+// Không chặn vai trò chung: sinh viên xem hóa đơn của mình, ADMIN/MANAGER xem theo phạm vi tòa.
+export const invoiceRoutes = defineRoutes('/invoices', 'Invoices', requireAuth);
+const student = requireRole('STUDENT');
+const staff = requireRole('ADMIN', 'MANAGER');
+
+invoiceRoutes.get(
+  '/',
+  {
+    summary: 'Danh sách hóa đơn (ADMIN, MANAGER)',
+    description:
+      'MANAGER chỉ thấy hóa đơn có giường thuộc tòa mình. `status=OVERDUE`: chưa thanh toán và đã qua hạn ' +
+      '(tính khi đọc, không lưu DB). `search` tìm theo mã hóa đơn, kỳ (`2026-09`), tên / email / mã SV. ' +
+      'Sắp xếp: createdAt, dueDate, amount, code. Mặc định createdAt giảm dần.',
+    query: invoiceListQuerySchema,
+    paged: invoiceSchema,
+    errors: [400, 401, 403],
+  },
+  staff,
+  ctrl.list,
+);
+
+// Các đường dẫn cố định khai báo TRƯỚC '/:id', nếu không Express hiểu "summary"/"me" là một id.
+invoiceRoutes.get(
+  '/summary',
+  {
+    summary: 'Tổng tiền theo bộ lọc (ADMIN, MANAGER)',
+    description: 'Cùng tham số lọc với GET /invoices. Trả số hóa đơn và tổng tiền: tất cả / chưa thanh toán / quá hạn.',
+    query: invoiceListQuerySchema,
+    data: invoiceSummarySchema,
+    errors: [400, 401, 403],
+  },
+  staff,
+  ctrl.summary,
+);
+
+invoiceRoutes.get(
+  '/me',
+  {
+    summary: 'Hóa đơn của tôi (STUDENT)',
+    description: 'Chưa thanh toán lên đầu (hạn gần nhất trước), rồi đến đã thanh toán. Không phân trang.',
+    data: z.array(invoiceSchema),
+    errors: [401, 403],
+  },
+  student,
+  ctrl.listMine,
+);
+
+invoiceRoutes.get(
+  '/:id',
+  {
+    summary: 'Chi tiết hóa đơn',
+    description:
+      'Các dòng (chỉ số cũ/mới, số lượng, đơn giá, thành tiền) và lịch sử thanh toán. STUDENT chỉ xem hóa đơn ' +
+      'của mình (khác -> 404), MANAGER theo tòa (khác -> 403).',
+    data: invoiceDetailSchema,
+    errors: [401, 403, 404],
+  },
+  ctrl.getById,
+);

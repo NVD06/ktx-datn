@@ -10,6 +10,7 @@ import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { compareBedCode } from '../beds/bed-code.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
+import { invoiceDueDate } from '../invoices/invoice-rules.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
 import type { ContractListQuery, ContractReasonInput, ExtendContractInput } from './contract.schema.js';
 
@@ -23,16 +24,7 @@ import type { ContractListQuery, ContractReasonInput, ExtendContractInput } from
  * giường thuộc tòa mình (lồng scope qua bed → room); Admin thấy tất cả.
  */
 
-/**
- * Hạn thanh toán hóa đơn tiền phòng: hết ngày thứ 14 (giờ VN) kể từ ngày ký
- * (us-04.md, US-04.1). Ký 25/09 lúc 10:23 thì hạn là 23:59 ngày 09/10.
- */
-const ROOM_FEE_DUE_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function roomFeeDueDate(from: Date) {
-  return endOfDayVN(new Date(from.getTime() + ROOM_FEE_DUE_DAYS * DAY_MS));
-}
 
 /**
  * Tiền gia hạn (chốt 25/09, phương án B): tính theo số ngày ở thêm, đơn giá ngày
@@ -47,20 +39,22 @@ function extensionFee(price: number, term: { stayStartAt: Date; stayEndAt: Date 
   return { days, dailyRate, amount: days * dailyRate };
 }
 
+/** Giường và sinh viên của hợp đồng — hóa đơn (invoice.service.ts) trả kèm đúng dạng này. */
+export const CONTRACT_BED_SELECT = { id: true, code: true, room: { select: ROOM_REF_SELECT } } as const;
+export const CONTRACT_STUDENT_SELECT = {
+  id: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  profile: { select: { studentCode: true, gender: true, className: true, faculty: true } },
+} as const;
+
 const INCLUDE = {
-  bed: { select: { id: true, code: true, room: { select: ROOM_REF_SELECT } } },
+  bed: { select: CONTRACT_BED_SELECT },
   registration: {
     select: {
       period: { select: { id: true, name: true, term: true, stayStartAt: true, stayEndAt: true } },
-      student: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          profile: { select: { studentCode: true, gender: true, className: true, faculty: true } },
-        },
-      },
+      student: { select: CONTRACT_STUDENT_SELECT },
     },
   },
   endedBy: { select: { id: true, fullName: true, role: true } },
@@ -90,7 +84,7 @@ function toDto({ registration, ...contract }: ContractRow) {
   };
 }
 
-function contractScope(user: AuthUser): Prisma.ContractWhereInput {
+export function contractScope(user: AuthUser): Prisma.ContractWhereInput {
   if (user.role === 'STUDENT') return { registration: { studentId: user.id } };
   return { bed: { room: buildingScope(user) } };
 }
@@ -288,7 +282,7 @@ export async function sign(user: AuthUser, id: string) {
         // Bắt buộc có giá trị: @@unique([contractId, type, period]) chặn sinh trùng hóa đơn.
         period: contract.registration.period.term,
         amount: contract.price,
-        dueDate: roomFeeDueDate(now),
+        dueDate: invoiceDueDate(now),
         items: {
           create: { type: 'ROOM_FEE', quantity: 1, unitPrice: contract.price, amount: contract.price },
         },
@@ -414,7 +408,7 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
         // "2026-HK1-GH-20270228" — năm/tháng/ngày của ngày kết thúc mới (giờ VN).
         period: `${period.term}-GH-${formatDateVN(endDate).split('/').reverse().join('')}`,
         amount: fee.amount,
-        dueDate: roomFeeDueDate(now),
+        dueDate: invoiceDueDate(now),
         items: {
           create: { type: 'ROOM_FEE', quantity: fee.days, unitPrice: fee.dailyRate, amount: fee.amount },
         },

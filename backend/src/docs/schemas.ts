@@ -231,6 +231,20 @@ export const contractStatusSchema = z
 export const invoiceStatusSchema = z.enum(['UNPAID', 'PAID']).openapi('InvoiceStatus');
 export const invoiceTypeSchema = z.enum(['ROOM_FEE', 'UTILITY']).openapi('InvoiceType');
 
+/** Phần chung của hóa đơn — dạng rút gọn đi kèm hợp đồng (Contract.invoices). */
+const invoiceRefSchema = z.object({
+  id: z.uuid(),
+  code: z.string().openapi({ example: 'INV-2026-0001' }),
+  type: invoiceTypeSchema,
+  period: z.string().openapi({
+    example: '2026-HK1',
+    description: '"2026-HK1" tiền phòng · "2026-HK1-GH-20270228" gia hạn · "2026-09" điện nước',
+  }),
+  amount: moneySchema,
+  dueDate: z.iso.datetime(),
+  status: invoiceStatusSchema.openapi({ description: 'Quá hạn không lưu DB — FE tính: UNPAID và dueDate < hiện tại' }),
+});
+
 export const contractSchema = z
   .object({
     id: z.uuid(),
@@ -264,17 +278,7 @@ export const contractSchema = z
       code: z.string().openapi({ example: 'G2' }),
       room: roomRefSchema,
     }),
-    invoices: z.array(
-      z.object({
-        id: z.uuid(),
-        code: z.string().openapi({ example: 'INV-2026-0001' }),
-        type: invoiceTypeSchema,
-        period: z.string().openapi({ example: '2026-HK1' }),
-        amount: moneySchema,
-        dueDate: z.iso.datetime(),
-        status: invoiceStatusSchema,
-      }),
-    ),
+    invoices: z.array(invoiceRefSchema),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -308,3 +312,47 @@ export const userSchema = z
     updatedAt: z.iso.datetime(),
   })
   .openapi('User');
+
+export const invoiceItemTypeSchema = z.enum(['ROOM_FEE', 'ELECTRIC', 'WATER']).openapi('InvoiceItemType');
+export const paymentStatusSchema = z.enum(['PENDING', 'SUCCESS', 'FAILED']).openapi('PaymentStatus');
+
+export const invoiceSchema = invoiceRefSchema
+  .extend({
+    contractId: z.uuid(),
+    splitCount: z.int().nullable().openapi({ description: 'Số SV chia hóa đơn điện nước lúc chốt' }),
+    contract: contractSchema.pick({ id: true, code: true, bed: true, student: true }),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('Invoice');
+
+export const invoiceDetailSchema = invoiceSchema
+  .extend({
+    items: z.array(
+      z.object({
+        id: z.uuid(),
+        type: invoiceItemTypeSchema,
+        oldIndex: z.int().nullable().openapi({ description: 'Chỉ số cũ — chỉ điện/nước' }),
+        newIndex: z.int().nullable(),
+        quantity: z.string().openapi({ description: 'kWh / m³ của cả phòng, số ngày (gia hạn), 1 (tiền phòng cả kỳ)' }),
+        unitPrice: moneySchema,
+        amount: moneySchema.openapi({ description: 'Phần của SV này' }),
+      }),
+    ),
+    payments: z.array(
+      z.object({
+        id: z.uuid(),
+        amount: moneySchema,
+        status: paymentStatusSchema,
+        vnpTransactionNo: z.string().nullable(),
+        paidAt: z.iso.datetime().nullable(),
+        createdAt: z.iso.datetime(),
+      }),
+    ),
+  })
+  .openapi('InvoiceDetail');
+
+const moneyTotal = z.object({ count: z.int(), amount: moneySchema });
+export const invoiceSummarySchema = z
+  .object({ all: moneyTotal, unpaid: moneyTotal, overdue: moneyTotal })
+  .openapi('InvoiceSummary');
