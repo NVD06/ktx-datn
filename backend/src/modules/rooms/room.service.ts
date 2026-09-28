@@ -59,7 +59,7 @@ function toDetail(room: RoomDetailRow) {
 
 // ── Kiểm tra dùng chung ─────────────────────────────────────────────────────
 
-async function findBuildingInScope(user: AuthUser, buildingId: string) {
+export async function findBuildingInScope(user: AuthUser, buildingId: string) {
   const building = await prisma.building.findFirst({
     where: { AND: [{ id: buildingId }, ownBuildingScope(user)] },
     select: { id: true, name: true, floors: true, isActive: true },

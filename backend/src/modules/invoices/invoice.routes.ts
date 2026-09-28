@@ -1,9 +1,16 @@
 import { z } from 'zod';
-import { invoiceDetailSchema, invoiceSchema, invoiceSummarySchema } from '../../docs/schemas.js';
+import {
+  billUtilitiesResultSchema,
+  invoiceDetailSchema,
+  invoiceSchema,
+  invoiceSummarySchema,
+  utilitySheetSchema,
+} from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './invoice.controller.js';
 import { invoiceListQuerySchema } from './invoice.schema.js';
+import { billUtilitiesSchema, utilitySheetQuerySchema } from './utility.schema.js';
 
 // Không chặn vai trò chung: sinh viên xem hóa đơn của mình, ADMIN/MANAGER xem theo phạm vi tòa.
 export const invoiceRoutes = defineRoutes('/invoices', 'Invoices', requireAuth);
@@ -38,6 +45,35 @@ invoiceRoutes.get(
   },
   staff,
   ctrl.summary,
+);
+
+invoiceRoutes.get(
+  '/utility-sheet',
+  {
+    summary: 'Bảng chốt điện nước của một tòa trong một tháng (ADMIN, MANAGER)',
+    description: 'Mỗi phòng kèm số SV chia tiền, đã chốt kỳ này chưa, và chỉ số cũ gợi ý từ lần chốt trước.',
+    query: utilitySheetQuerySchema,
+    data: utilitySheetSchema,
+    errors: [400, 401, 403, 404],
+  },
+  staff,
+  ctrl.utilitySheet,
+);
+
+invoiceRoutes.post(
+  '/utility',
+  {
+    summary: 'Chốt chỉ số và lập hóa đơn điện nước (ADMIN, MANAGER)',
+    description:
+      'Mỗi SV đang ở một hóa đơn UTILITY (2 dòng ELECTRIC + WATER, chia đều). Phòng đã chốt (BILLED), ' +
+      'trống (EMPTY) hoặc không dùng gì (NO_USAGE) thì bỏ qua, trả về trong `skipped`.',
+    body: billUtilitiesSchema,
+    status: 201,
+    data: billUtilitiesResultSchema,
+    errors: [400, 401, 403, 404, 409],
+  },
+  staff,
+  ctrl.billUtilities,
 );
 
 invoiceRoutes.get(

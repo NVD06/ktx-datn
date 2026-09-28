@@ -355,6 +355,35 @@ export const invoiceDetailSchema = invoiceSchema
   })
   .openapi('InvoiceDetail');
 
+export const utilitySheetSchema = z
+  .object({
+    building: z.object({ id: z.uuid(), name: z.string() }),
+    period: z.string().openapi({ example: '2026-09' }),
+    prices: z.object({ electric: z.int(), water: z.int() }).openapi({ description: 'Đơn giá hiện hành, đ/kWh và đ/m³' }),
+    rooms: z.array(
+      z.object({
+        id: z.uuid(),
+        code: z.string().openapi({ example: '101' }),
+        floor: z.int(),
+        residents: z.int().openapi({ description: 'Số SV chia tiền — 0 thì phòng bị bỏ qua' }),
+        billed: z.boolean().openapi({ description: 'Kỳ này đã lập hóa đơn' }),
+        prefill: z
+          .object({ electricOld: z.int().optional(), waterOld: z.int().optional() })
+          .nullable()
+          .openapi({ description: 'Chỉ số mới của lần chốt trước — điền sẵn làm chỉ số cũ' }),
+      }),
+    ),
+  })
+  .openapi('UtilitySheet');
+
+export const billUtilitiesResultSchema = z
+  .object({
+    invoiceCount: z.int(),
+    roomCount: z.int().openapi({ description: 'Số phòng đã lập hóa đơn' }),
+    skipped: z.array(z.object({ code: z.string(), reason: z.enum(['BILLED', 'EMPTY', 'NO_USAGE']) })),
+  })
+  .openapi('BillUtilitiesResult');
+
 const moneyTotal = z.object({ count: z.int(), amount: moneySchema });
 export const invoiceSummarySchema = z
   .object({ all: moneyTotal, unpaid: moneyTotal, overdue: moneyTotal })

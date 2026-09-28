@@ -41,6 +41,10 @@ const UNIQUE_INDEX_ERRORS: Record<string, { code: string; message: string }> = {
     code: 'BED_TAKEN',
     message: 'Giường này vừa được xếp cho sinh viên khác hoặc không còn trống. Hãy chọn giường khác.',
   },
+  Invoice_contractId_type_period_key: {
+    code: 'INVOICE_EXISTS',
+    message: 'Hóa đơn kỳ này vừa được lập ở nơi khác. Hãy tải lại trang để xem.',
+  },
   User_buildingId_key: {
     code: 'BUILDING_HAS_MANAGER',
     message: 'Tòa nhà vừa được gán cho quản lý khác. Hãy tải lại để xem ai đang quản lý.',

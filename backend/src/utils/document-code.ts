@@ -14,6 +14,12 @@ import { currentYearVN } from './date-vn.js';
 const TABLES = { HD: 'Contract', INV: 'Invoice' } as const;
 
 export async function nextDocumentCode(tx: Prisma.TransactionClient, prefix: keyof typeof TABLES) {
+  const [code] = await nextDocumentCodes(tx, prefix, 1);
+  return code!;
+}
+
+/** `count` mã liên tiếp một lần — lập hóa đơn điện nước cho cả tòa chỉ khóa và đọc một lần. */
+export async function nextDocumentCodes(tx: Prisma.TransactionClient, prefix: keyof typeof TABLES, count: number) {
   const head = `${prefix}-${currentYearVN()}-`;
 
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${head}))`;
@@ -26,5 +32,5 @@ export async function nextDocumentCode(tx: Prisma.TransactionClient, prefix: key
     LIMIT 1`;
 
   const next = last ? Number(last.code.slice(head.length)) + 1 : 1;
-  return `${head}${String(next).padStart(4, '0')}`;
+  return Array.from({ length: count }, (_, i) => `${head}${String(next + i).padStart(4, '0')}`);
 }

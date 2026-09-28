@@ -24,6 +24,18 @@ export function currentYearVN(): number {
   return toVN(new Date()).getUTCFullYear();
 }
 
+/** Tháng hiện tại ở Việt Nam: "2026-09" — kỳ của hóa đơn điện nước. */
+export function currentMonthVN(): string {
+  return toVN(new Date()).toISOString().slice(0, 7);
+}
+
+/** 00:00 giờ Việt Nam ngày đầu của tháng SAU kỳ "2026-09" — mốc "trước khi hết tháng". */
+export function nextMonthStartVN(period: string): Date {
+  const [year, month] = period.split('-').map(Number) as [number, number];
+  // Date.UTC nhận tháng tính từ 0, nên `month` (tính từ 1) chính là tháng kế tiếp.
+  return new Date(Date.UTC(year, month, 1) - VN_OFFSET_MS);
+}
+
 /** Ngày trong thông báo lỗi: "31/01/2027". */
 export function formatDateVN(date: Date): string {
   const local = toVN(date);
