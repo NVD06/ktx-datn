@@ -5,12 +5,15 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
-    "build": "tsc",
-    "start": "node --env-file=.env dist/server.js",
+    "build": "prisma generate && tsc",
+    "start": "prisma migrate deploy && node --env-file-if-exists=.env dist/server.js",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@auth/express": "^0.12.3",
