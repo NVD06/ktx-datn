@@ -1,16 +1,17 @@
 import type { PaginationMeta } from '../types/response.js';
 
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
-
-export interface ListQuery {
-  page?: unknown;
-  limit?: unknown;
-  sortBy?: unknown;
-  order?: unknown;
-}
-
 export type SortOrder = 'asc' | 'desc';
+
+/**
+ * Query đã qua `listQuerySchema` (query-schema.ts): zod đã ép kiểu, đặt mặc định
+ * và chặn giới hạn cho page/limit/order — ở đây chỉ còn phải kiểm tra `sortBy`.
+ */
+interface ListQuery {
+  page?: number | undefined;
+  limit?: number | undefined;
+  sortBy?: string | undefined;
+  order?: SortOrder | undefined;
+}
 
 /**
  * Cấu hình sắp xếp của từng bảng.
@@ -25,32 +26,10 @@ export interface SortOptions {
   defaultSort?: { field: string; order: SortOrder };
 }
 
-export interface PageArgs {
+interface PageArgs {
   skip: number;
   take: number;
   orderBy: Record<string, SortOrder>[];
-}
-
-export function parseQuery(q: ListQuery, sort: SortOptions) {
-  const rawPage = Number(q.page ?? 1);
-  const rawLimit = Number(q.limit ?? DEFAULT_LIMIT);
-
-  const page = Number.isFinite(rawPage) ? Math.max(1, Math.trunc(rawPage)) : 1;
-  const limit = Number.isFinite(rawLimit)
-    ? Math.min(MAX_LIMIT, Math.max(1, Math.trunc(rawLimit)))
-    : DEFAULT_LIMIT;
-
-  const fallback = sort.defaultSort ?? { field: 'createdAt', order: 'desc' };
-  const requested = typeof q.sortBy === 'string' && sort.sortable.includes(q.sortBy);
-
-  const sortBy = requested ? (q.sortBy as string) : fallback.field;
-  const order: SortOrder = q.order === 'asc' || q.order === 'desc' ? q.order : fallback.order;
-
-  // `id` làm khóa phụ: sắp theo cột có giá trị trùng (tầng, trạng thái…) thì Postgres
-  // không đảm bảo thứ tự giữa các dòng bằng nhau, một dòng có thể lặp/sót giữa hai trang.
-  const orderBy = [{ [sortBy]: order }, { id: 'asc' as const }];
-
-  return { skip: (page - 1) * limit, take: limit, orderBy, page, limit };
 }
 
 /**
@@ -72,7 +51,13 @@ export async function paginate<T>(
   findPage: (args: PageArgs) => Promise<T[]>,
   count: () => Promise<number>,
 ): Promise<{ data: T[]; meta: PaginationMeta }> {
-  const { page, limit, ...args } = parseQuery(query, sort);
-  const [data, total] = await Promise.all([findPage(args), count()]);
+  const { page = 1, limit = 20, sortBy, order } = query;
+  const fallback = sort.defaultSort ?? { field: 'createdAt', order: 'desc' };
+  const field = sortBy && sort.sortable.includes(sortBy) ? sortBy : fallback.field;
+  // `id` làm khóa phụ: sắp theo cột có giá trị trùng (tầng, trạng thái…) thì Postgres
+  // không đảm bảo thứ tự giữa các dòng bằng nhau, một dòng có thể lặp/sót giữa hai trang.
+  const orderBy = [{ [field]: order ?? fallback.order }, { id: 'asc' as const }];
+
+  const [data, total] = await Promise.all([findPage({ skip: (page - 1) * limit, take: limit, orderBy }), count()]);
   return { data, meta: { page, limit, total } };
 }

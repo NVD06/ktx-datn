@@ -1,6 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
-import { optionalText, phoneSchema } from '../../utils/zod-fields.js';
+import { dateField, optionalText, phoneSchema } from '../../utils/zod-fields.js';
 
 /*
  * Sinh viên tự sửa thông tin liên hệ/cá nhân. `studentCode` và `gender` KHÔNG
@@ -11,8 +11,7 @@ import { optionalText, phoneSchema } from '../../utils/zod-fields.js';
 export const updateProfileSchema = z
   .object({
     phone: phoneSchema.nullable().exactOptional(),
-    dob: z.coerce
-      .date('Ngày sinh không hợp lệ')
+    dob: dateField('Ngày sinh')
       // refine thay vì .max(new Date()): .max chốt "hôm nay" lúc server khởi động.
       .refine((d) => d <= new Date(), 'Ngày sinh không được ở tương lai')
       .nullable()

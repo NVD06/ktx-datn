@@ -22,8 +22,6 @@ export interface ErrorResponse {
   };
 }
 
-export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
-
 export function ok<T>(data: T, meta?: PaginationMeta): SuccessResponse<T> {
   return meta ? { success: true, data, meta } : { success: true, data };
 }

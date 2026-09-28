@@ -1,5 +1,5 @@
 import { prisma } from '../../config/prisma.js';
-import { Prisma } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { formatDateVN } from '../../utils/date-vn.js';
@@ -241,31 +241,6 @@ const STATUS_LABEL = {
   CANCELLED: 'đã hủy',
 } as const;
 
-/** Sinh viên hủy đơn của mình khi còn PENDING. */
-export async function cancel(user: AuthUser, id: string) {
-  try {
-    const row = await prisma.registration.update({
-      where: { id, studentId: user.id, status: 'PENDING' },
-      data: { status: 'CANCELLED' },
-      include: INCLUDE,
-    });
-    return (await toDtos([row]))[0];
-  } catch (err) {
-    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025')) throw err;
-  }
-
-  // Không cập nhật được: hoặc không phải đơn của mình, hoặc đơn không còn PENDING.
-  const own = await prisma.registration.findFirst({
-    where: { id, studentId: user.id },
-    select: { status: true },
-  });
-  // Đơn của người khác cũng trả 404 — không lộ việc id đó có tồn tại.
-  if (!own) throw ApiError.notFound('Không tìm thấy đơn đăng ký');
-  throw ApiError.conflict('REGISTRATION_NOT_PENDING', `Đơn ${STATUS_LABEL[own.status]} nên không thể hủy.`);
-}
-
-// ── Duyệt / từ chối (US-03.1, US-03.2) ──────────────────────────────────────
-
 /**
  * Đơn không còn PENDING. Vừa đọc thấy PENDING mà ghi không được nghĩa là người
  * khác vừa xử lý xong trong lúc mình đang thao tác.
@@ -278,6 +253,26 @@ function notPendingError(status: keyof typeof STATUS_LABEL, action: string) {
       : `Đơn ${STATUS_LABEL[status]} nên không thể ${action}.`,
   );
 }
+
+/** Sinh viên hủy đơn của mình khi còn PENDING. */
+export async function cancel(user: AuthUser, id: string) {
+  const { count } = await prisma.registration.updateMany({
+    where: { id, studentId: user.id, status: 'PENDING' },
+    data: { status: 'CANCELLED' },
+  });
+  if (count === 0) {
+    // Không cập nhật được: hoặc không phải đơn của mình, hoặc đơn không còn PENDING.
+    const own = await prisma.registration.findFirst({ where: { id, studentId: user.id }, select: { status: true } });
+    // Đơn của người khác cũng trả 404 — không lộ việc id đó có tồn tại.
+    if (!own) throw ApiError.notFound('Không tìm thấy đơn đăng ký');
+    throw notPendingError(own.status, 'hủy');
+  }
+
+  const row = await prisma.registration.findUniqueOrThrow({ where: { id }, include: INCLUDE });
+  return (await toDtos([row]))[0];
+}
+
+// ── Duyệt / từ chối (US-03.1, US-03.2) ──────────────────────────────────────
 
 /**
  * Duyệt đơn: xếp giường và sinh hợp đồng DRAFT chờ sinh viên ký.

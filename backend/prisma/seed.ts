@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import bcrypt from 'bcrypt';
 import { prisma } from '../src/config/prisma.js';
+import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
 
 /**
@@ -41,7 +41,7 @@ async function main() {
   console.log('Xóa dữ liệu cũ...');
   await clearAll();
 
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  const passwordHash = await hashPassword(PASSWORD);
 
   // ── Tòa nhà ───────────────────────────────────────────────────────────────
   // Cần 2 tòa để kiểm chứng phân quyền theo phạm vi: Manager của tòa này

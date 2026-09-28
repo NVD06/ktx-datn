@@ -29,7 +29,8 @@ registry.registerComponent('securitySchemes', 'cookieAuth', {
   name: SESSION_COOKIE,
   description:
     'Cookie phiên do Auth.js cấp sau khi đăng nhập qua POST /auth/callback/credentials. ' +
-    'Trình duyệt tự gửi kèm nếu đã đăng nhập trên cùng origin.',
+    'Trình duyệt tự gửi kèm nếu đã đăng nhập trên cùng origin. Qua HTTPS (bản deploy) tên cookie ' +
+    'có thêm tiền tố: __Secure-authjs.session-token.',
 });
 
 /** `security` của mọi endpoint cần đăng nhập — defineRoutes() tự gắn, trừ route `public`. */
@@ -118,6 +119,8 @@ export function buildOpenApiDoc() {
       { name: 'Users', description: 'Tài khoản người dùng (ADMIN)' },
       { name: 'Registration periods', description: 'Đợt đăng ký ở KTX — tối đa 1 đợt mở' },
       { name: 'Registrations', description: 'Đơn đăng ký ở KTX' },
+      { name: 'Contracts', description: 'Hợp đồng ở KTX: ký, hủy chờ ký, gia hạn, chấm dứt' },
+      { name: 'Invoices', description: 'Hóa đơn tiền phòng và điện nước' },
       { name: 'Profile', description: 'Hồ sơ của sinh viên đang đăng nhập' },
     ],
   });

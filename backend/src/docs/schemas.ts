@@ -101,7 +101,8 @@ export const bedSchema = z
 
 const bedSummary = {
   bedCount: z.int(),
-  availableBeds: z.int(),
+  availableBeds: z.int().openapi({ description: 'Giường trống thật sự — không tính giường đang giữ chỗ' }),
+  heldBeds: z.int().openapi({ description: 'Giường còn trống nhưng đã có hợp đồng chờ ký giữ chỗ' }),
   occupiedBeds: z.int(),
   maintenanceBeds: z.int(),
   status: roomStatusSchema,
@@ -126,7 +127,9 @@ export const roomSchema = z
 export const roomDetailSchema = roomSchema
   .extend({
     building: z.object({ id: z.uuid(), name: z.string(), floors: z.int() }),
-    beds: z.array(bedSchema),
+    beds: z.array(
+      bedSchema.extend({ held: z.boolean().openapi({ description: 'Đang giữ chỗ cho hợp đồng chờ ký' }) }),
+    ),
   })
   .openapi('RoomDetail');
 

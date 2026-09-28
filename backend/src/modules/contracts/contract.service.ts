@@ -89,6 +89,11 @@ export function contractScope(user: AuthUser): Prisma.ContractWhereInput {
   return { bed: { room: buildingScope(user) } };
 }
 
+/** Hợp đồng `id`, chỉ khi nằm trong phạm vi của người gọi. */
+function inScope(user: AuthUser, id: string): Prisma.ContractWhereInput {
+  return { AND: [{ id }, contractScope(user)] };
+}
+
 /** Hợp đồng của sinh viên đang đăng nhập, mới nhất trước — mỗi kỳ một hợp đồng nên không phân trang. */
 export async function listMine(user: AuthUser) {
   const rows = await prisma.contract.findMany({
@@ -150,7 +155,7 @@ export async function currentStay(user: AuthUser) {
 
 export async function getById(user: AuthUser, id: string) {
   const row = await prisma.contract.findFirst({
-    where: { AND: [{ id }, contractScope(user)] },
+    where: inScope(user, id),
     include: INCLUDE,
   });
   if (!row) throw outOfScope(user, 'Không tìm thấy hợp đồng');
@@ -213,13 +218,36 @@ const STATUS_TEXT: Record<ContractStatus, string> = {
  * dứt. `status = null`: vừa đọc thấy đúng trạng thái mà ghi không được — người khác
  * vừa xử lý xong trong lúc mình đang thao tác.
  */
-function wrongStatusError(expected: 'DRAFT' | 'ACTIVE', status: ContractStatus | null, action: string) {
+type Actionable = 'DRAFT' | 'ACTIVE';
+
+function wrongStatusError(expected: Actionable, status: ContractStatus | null, action: string) {
   return ApiError.conflict(
     `CONTRACT_NOT_${expected}`,
     status
       ? `Hợp đồng ${STATUS_TEXT[status]} nên không thể ${action}.`
       : 'Hợp đồng vừa được thay đổi ở nơi khác. Hãy tải lại trang.',
   );
+}
+
+/** Hợp đồng đọc ra để thao tác phải tồn tại trong phạm vi và đang ở trạng thái `expected`. */
+function assertStatus(user: AuthUser, c: { status: ContractStatus } | null, expected: Actionable, action: string): asserts c {
+  if (!c) throw outOfScope(user, 'Không tìm thấy hợp đồng');
+  if (c.status !== expected) throw wrongStatusError(expected, c.status, action);
+}
+
+/**
+ * Ghi có điều kiện: trạng thái cũ nằm ngay trong lệnh ghi. Hai người thao tác cùng
+ * lúc (SV bấm ký đúng lúc Manager bấm hủy, bấm ký ở hai tab…) thì người sau chờ
+ * khóa dòng rồi nhận count = 0 → 409, không ghi hai lần, không sinh hai hóa đơn.
+ */
+async function transition(
+  tx: Prisma.TransactionClient,
+  where: { id: string; status: Actionable } & Prisma.ContractWhereInput,
+  data: Prisma.ContractUncheckedUpdateManyInput,
+  action: string,
+) {
+  const { count } = await tx.contract.updateMany({ where, data });
+  if (count === 0) throw wrongStatusError(where.status, null, action);
 }
 
 /**
@@ -230,7 +258,7 @@ function wrongStatusError(expected: 'DRAFT' | 'ACTIVE', status: ContractStatus |
 export async function sign(user: AuthUser, id: string) {
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
-      where: { AND: [{ id }, contractScope(user)] },
+      where: inScope(user, id),
       select: {
         status: true,
         endDate: true,
@@ -240,8 +268,7 @@ export async function sign(user: AuthUser, id: string) {
         registration: { select: { period: { select: { term: true } } } },
       },
     });
-    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
-    if (contract.status !== 'DRAFT') throw wrongStatusError('DRAFT', contract.status, 'ký');
+    assertStatus(user, contract, 'DRAFT', 'ký');
 
     const now = new Date();
     if (contract.endDate < now) {
@@ -251,13 +278,7 @@ export async function sign(user: AuthUser, id: string) {
       );
     }
 
-    // Điều kiện DRAFT nằm ngay trong lệnh ghi: bấm "Ký" ở hai tab thì lệnh sau
-    // chờ khóa dòng rồi nhận count = 0, không ký hai lần, không sinh hai hóa đơn.
-    const claimed = await tx.contract.updateMany({
-      where: { id, status: 'DRAFT' },
-      data: { status: 'ACTIVE', signedAt: now },
-    });
-    if (claimed.count === 0) throw wrongStatusError('DRAFT', null, 'ký');
+    await transition(tx, { id, status: 'DRAFT' }, { status: 'ACTIVE', signedAt: now }, 'ký');
 
     // Suốt thời gian chờ ký giường vẫn AVAILABLE (hợp đồng DRAFT chỉ giữ chỗ), nên
     // Manager có thể đã chuyển nó sang bảo trì. Đổi trạng thái có điều kiện để
@@ -303,19 +324,12 @@ export async function sign(user: AuthUser, id: string) {
 async function cancelDraft(user: AuthUser, id: string, reason: string, registrationNote?: string) {
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
-      where: { AND: [{ id }, contractScope(user)] },
+      where: inScope(user, id),
       select: { status: true, registrationId: true },
     });
-    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
-    if (contract.status !== 'DRAFT') throw wrongStatusError('DRAFT', contract.status, 'hủy');
-
-    // Điều kiện DRAFT nằm ngay trong lệnh ghi: SV bấm ký đúng lúc Manager bấm hủy
-    // thì chỉ một bên thắng, bên kia nhận count = 0.
-    const { count } = await tx.contract.updateMany({
-      where: { id, status: 'DRAFT' },
-      data: { status: 'CANCELLED', terminatedAt: new Date(), terminationReason: reason, endedById: user.id },
-    });
-    if (count === 0) throw wrongStatusError('DRAFT', null, 'hủy');
+    assertStatus(user, contract, 'DRAFT', 'hủy');
+    const ended = { terminatedAt: new Date(), terminationReason: reason, endedById: user.id };
+    await transition(tx, { id, status: 'DRAFT' }, { status: 'CANCELLED', ...ended }, 'hủy');
 
     await tx.registration.update({
       where: { id: contract.registrationId },
@@ -351,7 +365,7 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
 
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
-      where: { AND: [{ id }, contractScope(user)] },
+      where: inScope(user, id),
       select: {
         status: true,
         endDate: true,
@@ -361,8 +375,7 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
         },
       },
     });
-    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
-    if (contract.status !== 'ACTIVE') throw wrongStatusError('ACTIVE', contract.status, 'gia hạn');
+    assertStatus(user, contract, 'ACTIVE', 'gia hạn');
 
     const now = new Date();
     if (endDate <= contract.endDate) {
@@ -391,13 +404,9 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
       );
     }
 
-    // Ngày kết thúc cũ nằm trong điều kiện ghi: hai người cùng gia hạn một lúc thì
-    // người sau nhận count = 0 thay vì tính tiền chồng lên nhau.
-    const { count } = await tx.contract.updateMany({
-      where: { id, status: 'ACTIVE', endDate: contract.endDate },
-      data: { endDate },
-    });
-    if (count === 0) throw wrongStatusError('ACTIVE', null, 'gia hạn');
+    // Kèm cả ngày kết thúc cũ: hai người cùng gia hạn một lúc thì người sau nhận 409
+    // thay vì bị tính tiền chồng lên nhau.
+    await transition(tx, { id, status: 'ACTIVE', endDate: contract.endDate }, { endDate }, 'gia hạn');
 
     const fee = extensionFee(Number(contract.price), period, contract.endDate, endDate);
     await tx.invoice.create({
@@ -427,17 +436,12 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
 export async function terminate(user: AuthUser, id: string, { reason }: ContractReasonInput) {
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
-      where: { AND: [{ id }, contractScope(user)] },
+      where: inScope(user, id),
       select: { status: true, bedId: true },
     });
-    if (!contract) throw outOfScope(user, 'Không tìm thấy hợp đồng');
-    if (contract.status !== 'ACTIVE') throw wrongStatusError('ACTIVE', contract.status, 'chấm dứt');
-
-    const { count } = await tx.contract.updateMany({
-      where: { id, status: 'ACTIVE' },
-      data: { status: 'TERMINATED', terminatedAt: new Date(), terminationReason: reason, endedById: user.id },
-    });
-    if (count === 0) throw wrongStatusError('ACTIVE', null, 'chấm dứt');
+    assertStatus(user, contract, 'ACTIVE', 'chấm dứt');
+    const ended = { terminatedAt: new Date(), terminationReason: reason, endedById: user.id };
+    await transition(tx, { id, status: 'ACTIVE' }, { status: 'TERMINATED', ...ended }, 'chấm dứt');
 
     await tx.bed.update({ where: { id: contract.bedId }, data: { status: 'AVAILABLE' } });
   });

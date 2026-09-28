@@ -6,7 +6,7 @@ import { paginate, type SortOptions } from '../../utils/paginate.js';
 import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { bedCodes, compareBedCode } from '../beds/bed-code.js';
 import { ASSIGNABLE_ROOM, FREE_BED, roomForGender } from './room-eligibility.js';
-import { roomStatusWhere, summarizeBeds } from './room-status.js';
+import { BED_STATE_SELECT, isHeld, roomStatusWhere, summarizeBeds } from './room-status.js';
 import type {
   BuildingRoomListQuery,
   CreateRoomInput,
@@ -33,14 +33,14 @@ export const ROOM_REF_SELECT = {
 const LIST_INCLUDE = {
   building: { select: { id: true, name: true } },
   roomType: { select: ROOM_TYPE_SELECT },
-  beds: { select: { status: true } },
+  beds: { select: BED_STATE_SELECT },
 } as const satisfies Prisma.RoomInclude;
 
 const DETAIL_INCLUDE = {
   building: { select: { id: true, name: true, floors: true } },
   roomType: { select: ROOM_TYPE_SELECT },
   beds: {
-    select: { id: true, roomId: true, code: true, status: true, createdAt: true, updatedAt: true },
+    select: { id: true, roomId: true, code: true, createdAt: true, updatedAt: true, ...BED_STATE_SELECT },
   },
 } as const satisfies Prisma.RoomInclude;
 
@@ -51,8 +51,10 @@ function toListItem({ beds, ...room }: RoomListRow) {
   return { ...room, ...summarizeBeds(beds) };
 }
 
+/** Mỗi giường kèm cờ `held` (đang giữ chỗ cho hợp đồng chờ ký) thay cho số đếm thô. */
 function toDetail(room: RoomDetailRow) {
-  return { ...room, ...summarizeBeds(room.beds), beds: [...room.beds].sort(compareBedCode) };
+  const beds = room.beds.map(({ _count, ...bed }) => ({ ...bed, held: isHeld({ ...bed, _count }) }));
+  return { ...room, ...summarizeBeds(room.beds), beds: beds.sort(compareBedCode) };
 }
 
 // ── Kiểm tra dùng chung ─────────────────────────────────────────────────────
