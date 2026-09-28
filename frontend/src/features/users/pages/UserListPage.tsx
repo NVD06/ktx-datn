@@ -2,7 +2,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Lock, LockOpen, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
@@ -33,19 +32,6 @@ export function UserListPage() {
 
   const [createOpen, setCreateOpen] = useState(false)
   const [toggling, setToggling] = useState<UserSummary | null>(null)
-
-  function confirmToggle() {
-    if (!toggling) return
-    const { id, fullName, isActive } = toggling
-    setActive.mutate(
-      { id, isActive: !isActive },
-      {
-        onSuccess: () => toast.success(isActive ? `Đã khóa tài khoản ${fullName}` : `Đã mở khóa tài khoản ${fullName}`),
-        onError: (error) => toast.error(getErrorMessage(error)),
-        onSettled: () => setToggling(null),
-      },
-    )
-  }
 
   const columns: ColumnDef<UserSummary>[] = [
     {
@@ -146,28 +132,31 @@ export function UserListPage() {
       <CreateManagerDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <ConfirmDialog
-        open={!!toggling}
-        onOpenChange={(open) => !open && setToggling(null)}
+        target={toggling}
+        onClose={() => setToggling(null)}
         title={toggling?.isActive ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?'}
-        description={
-          toggling?.isActive ? (
+        description={(u) =>
+          u.isActive ? (
             <>
-              Khóa tài khoản <strong>{toggling.fullName}</strong> ({toggling.email}). Người này bị đăng xuất
-              ở thao tác kế tiếp và không đăng nhập lại được.
-              {toggling.building &&
-                ` Tòa ${toggling.building.name} vẫn gán cho người này — gỡ ở mục Tòa nhà nếu muốn giao cho người khác.`}
+              Khóa tài khoản <strong>{u.fullName}</strong> ({u.email}). Người này bị đăng xuất ở thao tác
+              kế tiếp và không đăng nhập lại được.
+              {u.building &&
+                ` Tòa ${u.building.name} vẫn gán cho người này — gỡ ở mục Tòa nhà nếu muốn giao cho người khác.`}
             </>
           ) : (
             <>
-              Mở khóa tài khoản <strong>{toggling?.fullName}</strong> ({toggling?.email}). Người này đăng nhập
-              lại được ngay.
+              Mở khóa tài khoản <strong>{u.fullName}</strong> ({u.email}). Người này đăng nhập lại được ngay.
             </>
           )
         }
         confirmLabel={toggling?.isActive ? 'Khóa' : 'Mở khóa'}
         destructive={!!toggling?.isActive}
         isPending={setActive.isPending}
-        onConfirm={confirmToggle}
+        onConfirm={(u) =>
+          setActive
+            .mutateAsync({ id: u.id, isActive: !u.isActive })
+            .then(() => toast.success(u.isActive ? `Đã khóa tài khoản ${u.fullName}` : `Đã mở khóa tài khoản ${u.fullName}`))
+        }
       />
     </>
   )

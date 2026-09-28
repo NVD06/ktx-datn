@@ -3,7 +3,6 @@ import { Eye, Pencil, Plus, Trash2, UserCog } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
@@ -13,6 +12,7 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { ACTIVE_OPTIONS, activeStatus, buildingGender } from '@/lib/labels'
 import type { Building } from '@/types/facility'
@@ -38,25 +38,9 @@ export function BuildingListPage() {
   const query = useBuildings(list.params)
   const remove = useDeleteBuilding()
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<Building | null>(null)
+  const form = useDialogState<Building>()
   const [assigning, setAssigning] = useState<Building | null>(null)
   const [deleting, setDeleting] = useState<Building | null>(null)
-
-  function openForm(building: Building | null) {
-    setEditing(building)
-    setFormOpen(true)
-  }
-
-  function confirmDelete() {
-    if (!deleting) return
-    const { id, name } = deleting
-    remove.mutate(id, {
-      onSuccess: () => toast.success(`Đã xóa tòa nhà ${name}`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setDeleting(null),
-    })
-  }
 
   const columns: ColumnDef<Building>[] = [
     {
@@ -125,7 +109,7 @@ export function BuildingListPage() {
         ]
         if (isAdmin) {
           actions.push(
-            { label: 'Sửa', icon: Pencil, onSelect: () => openForm(building) },
+            { label: 'Sửa', icon: Pencil, onSelect: () => form.show(building) },
             { label: 'Gán quản lý', icon: UserCog, onSelect: () => setAssigning(building) },
             { label: 'Xóa', icon: Trash2, destructive: true, onSelect: () => setDeleting(building) },
           )
@@ -144,7 +128,7 @@ export function BuildingListPage() {
         }
         actions={
           isAdmin && (
-            <Button onClick={() => openForm(null)}>
+            <Button onClick={() => form.show(null)}>
               <Plus />
               Thêm tòa nhà
             </Button>
@@ -176,7 +160,7 @@ export function BuildingListPage() {
         }
       />
 
-      <BuildingFormDialog open={formOpen} onOpenChange={setFormOpen} building={editing} />
+      <BuildingFormDialog open={form.open} onOpenChange={form.setOpen} building={form.item} />
 
       <AssignManagerDialog
         open={!!assigning}
@@ -185,17 +169,17 @@ export function BuildingListPage() {
       />
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        target={deleting}
+        onClose={() => setDeleting(null)}
         title="Xóa tòa nhà?"
-        description={
+        description={(b) => (
           <>
-            Xóa tòa nhà <strong>{deleting?.name}</strong>. Chỉ xóa được tòa chưa có phòng và chưa gán
-            quản lý — nếu không, hãy chuyển tòa sang ngừng hoạt động.
+            Xóa tòa nhà <strong>{b.name}</strong>. Chỉ xóa được tòa chưa có phòng và chưa gán quản lý —
+            nếu không, hãy chuyển tòa sang ngừng hoạt động.
           </>
-        }
+        )}
         isPending={remove.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(b) => remove.mutateAsync(b.id).then(() => toast.success(`Đã xóa tòa nhà ${b.name}`))}
       />
     </>
   )

@@ -30,6 +30,14 @@ function def<T extends string>(map: Record<T, LabelDef>) {
   return map
 }
 
+/** Bộ lọc cờ đúng/sai (`?isActive=`, `?isOpen=`) — chữ trùng với nhãn trạng thái trong bảng. */
+function flagOptions(yes: LabelDef, no: LabelDef) {
+  return [
+    { value: 'true', label: yes.label },
+    { value: 'false', label: no.label },
+  ]
+}
+
 export const ROLE = def({
   ADMIN: { label: 'Quản trị viên', tone: 'info' },
   MANAGER: { label: 'Quản lý tòa', tone: 'info' },
@@ -46,6 +54,9 @@ export const BED_STATUS = def({
   OCCUPIED: { label: 'Đang ở', tone: 'info' },
   MAINTENANCE: { label: 'Bảo trì', tone: 'warning' },
 })
+
+/** Giường còn trống nhưng đã có hợp đồng chờ ký giữ chỗ — không nhận thêm người. */
+export const BED_HELD: LabelDef = { label: 'Giữ chỗ', tone: 'warning' }
 
 /** Tòa không đặt giới tính (`gender = null`). */
 export const MIXED_GENDER: LabelDef = { label: 'Hỗn hợp', tone: 'neutral' }
@@ -75,11 +86,8 @@ export function activeStatus(isActive: boolean): LabelDef {
   return ACTIVE_STATUS[isActive ? 'ACTIVE' : 'INACTIVE']
 }
 
-/** Bộ lọc `?isActive=` của tòa nhà và phòng. */
-export const ACTIVE_OPTIONS = [
-  { value: 'true', label: 'Đang hoạt động' },
-  { value: 'false', label: 'Ngừng hoạt động' },
-]
+/** Bộ lọc `?isActive=` của tòa nhà, phòng, loại phòng. */
+export const ACTIVE_OPTIONS = flagOptions(ACTIVE_STATUS.ACTIVE, ACTIVE_STATUS.INACTIVE)
 
 /** Cờ `isActive` của tài khoản — khóa thì không đăng nhập được, phiên đang mở bị 401. */
 export const ACCOUNT_STATUS = def({
@@ -92,16 +100,15 @@ export function accountStatus(isActive: boolean): LabelDef {
 }
 
 /** Bộ lọc `?isActive=` của tài khoản. */
-export const ACCOUNT_OPTIONS = [
-  { value: 'true', label: ACCOUNT_STATUS.ACTIVE.label },
-  { value: 'false', label: ACCOUNT_STATUS.LOCKED.label },
-]
+export const ACCOUNT_OPTIONS = flagOptions(ACCOUNT_STATUS.ACTIVE, ACCOUNT_STATUS.LOCKED)
 
 /** Cờ `isOpen` của đợt đăng ký. */
 export const PERIOD_STATUS = def({
   OPEN: { label: 'Đang mở', tone: 'success' },
   CLOSED: { label: 'Đã đóng', tone: 'neutral' },
 })
+
+export const PERIOD_OPTIONS = flagOptions(PERIOD_STATUS.OPEN, PERIOD_STATUS.CLOSED)
 
 /** Trường hồ sơ sinh viên — dùng cho thông báo "còn thiếu" và nhãn form. */
 export const PROFILE_FIELD = {

@@ -26,8 +26,6 @@ export interface ErrorResponse {
   }
 }
 
-export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse
-
 export type SortOrder = 'asc' | 'desc'
 
 /** Query string của API danh sách — khớp listQuerySchema ở backend. */

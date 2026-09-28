@@ -11,7 +11,7 @@ import { StatCard } from '@/components/shared/StatCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { formatMoney } from '@/lib/format'
-import { ACTIVE_STATUS, BED_STATUS, ROOM_STATUS } from '@/lib/labels'
+import { ACTIVE_STATUS, BED_HELD, BED_STATUS, ROOM_STATUS } from '@/lib/labels'
 import { BedGrid } from '../components/BedGrid'
 import { RoomFormDialog } from '../components/RoomFormDialog'
 import { useCreateBed, useDeleteRoom, useRoom } from '../hooks/useRooms'
@@ -45,19 +45,6 @@ export function RoomDetailPage() {
     createBed.mutate(room.id, {
       onSuccess: (bed) => toast.success(`Đã thêm giường ${bed.code}`),
       onError: (error) => toast.error(getErrorMessage(error)),
-    })
-  }
-
-  function confirmDelete() {
-    removeRoom.mutate(room.id, {
-      onSuccess() {
-        toast.success(`Đã xóa phòng ${room.code}`)
-        void navigate(`/admin/buildings/${room.building.id}`, { replace: true })
-      },
-      onError(error) {
-        toast.error(getErrorMessage(error))
-        setDeleteOpen(false)
-      },
     })
   }
 
@@ -107,6 +94,7 @@ export function RoomDetailPage() {
           <span className="text-sm font-normal">
             {BED_STATUS.AVAILABLE.label} {room.availableBeds} · {BED_STATUS.OCCUPIED.label}{' '}
             {room.occupiedBeds} · {BED_STATUS.MAINTENANCE.label} {room.maintenanceBeds}
+            {room.heldBeds > 0 && ` · ${BED_HELD.label} ${room.heldBeds}`}
           </span>
         </StatCard>
         <StatCard label="Giá / kỳ / sinh viên">{formatMoney(room.roomType.price)}</StatCard>
@@ -123,17 +111,22 @@ export function RoomDetailPage() {
       />
 
       <ConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
+        target={deleteOpen ? room : null}
+        onClose={() => setDeleteOpen(false)}
         title="Xóa phòng?"
-        description={
+        description={(r) => (
           <>
-            Xóa phòng <strong>{room.code}</strong> cùng {room.bedCount} giường. Phòng đã có hợp đồng
-            hoặc lịch sử sửa chữa sẽ không xóa được — khi đó hãy chuyển sang ngừng hoạt động.
+            Xóa phòng <strong>{r.code}</strong> cùng {r.bedCount} giường. Phòng đã có hợp đồng hoặc lịch
+            sử sửa chữa sẽ không xóa được — khi đó hãy chuyển sang ngừng hoạt động.
           </>
-        }
+        )}
         isPending={removeRoom.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(r) =>
+          removeRoom.mutateAsync(r.id).then(() => {
+            toast.success(`Đã xóa phòng ${r.code}`)
+            void navigate(`/admin/buildings/${r.building.id}`, { replace: true })
+          })
+        }
       />
     </>
   )

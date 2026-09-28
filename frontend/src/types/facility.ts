@@ -86,7 +86,10 @@ export interface Room {
   building: { id: string; name: string }
   roomType: RoomTypeRef
   bedCount: number
+  /** Giường trống thật sự — không tính giường đang giữ chỗ. */
   availableBeds: number
+  /** Giường còn trống nhưng đã có hợp đồng chờ ký giữ chỗ. */
+  heldBeds: number
   occupiedBeds: number
   maintenanceBeds: number
   status: RoomStatus
@@ -96,7 +99,8 @@ export interface Room {
 
 export interface RoomDetail extends Omit<Room, 'building'> {
   building: { id: string; name: string; floors: number }
-  beds: Bed[]
+  /** `held`: đang giữ chỗ cho hợp đồng chờ ký. */
+  beds: (Bed & { held: boolean })[]
 }
 
 export interface RoomInput {

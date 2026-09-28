@@ -3,7 +3,6 @@ import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
@@ -11,6 +10,7 @@ import { RowActions } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useRoomTypeOptions } from '@/features/room-types/hooks/useRoomTypes'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatMoney } from '@/lib/format'
 import { ACTIVE_OPTIONS, ACTIVE_STATUS, ROOM_STATUS } from '@/lib/labels'
@@ -28,7 +28,7 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
   const roomTypes = useRoomTypeOptions()
   const remove = useDeleteRoom()
 
-  const [editing, setEditing] = useState<Room | null>(null)
+  const edit = useDialogState<Room>()
   const [deleting, setDeleting] = useState<Room | null>(null)
 
   const floorOptions = Array.from({ length: building.floors }, (_, i) => ({
@@ -37,16 +37,6 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
   }))
   const roomTypeOptions = (roomTypes.data?.data ?? []).map((t) => ({ value: t.id, label: t.name }))
   const hasFilter = Object.values(list.filters).some(Boolean) || !!list.search
-
-  function confirmDelete() {
-    if (!deleting) return
-    const { id, code } = deleting
-    remove.mutate(id, {
-      onSuccess: () => toast.success(`Đã xóa phòng ${code}`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setDeleting(null),
-    })
-  }
 
   const columns: ColumnDef<Room>[] = [
     {
@@ -112,7 +102,7 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
               icon: Eye,
               onSelect: () => void navigate(`/admin/rooms/${row.original.id}`),
             },
-            { label: 'Sửa', icon: Pencil, onSelect: () => setEditing(row.original) },
+            { label: 'Sửa', icon: Pencil, onSelect: () => edit.show(row.original) },
             {
               label: 'Xóa',
               icon: Trash2,
@@ -165,24 +155,24 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
       />
 
       <RoomFormDialog
-        open={!!editing}
-        onOpenChange={(open) => !open && setEditing(null)}
+        open={edit.open}
+        onOpenChange={edit.setOpen}
         building={building}
-        room={editing}
+        room={edit.item}
       />
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        target={deleting}
+        onClose={() => setDeleting(null)}
         title="Xóa phòng?"
-        description={
+        description={(r) => (
           <>
-            Xóa phòng <strong>{deleting?.code}</strong> cùng toàn bộ giường. Phòng đã có hợp đồng
-            hoặc lịch sử sửa chữa sẽ không xóa được — khi đó hãy chuyển sang ngừng hoạt động.
+            Xóa phòng <strong>{r.code}</strong> cùng toàn bộ giường. Phòng đã có hợp đồng hoặc lịch sử
+            sửa chữa sẽ không xóa được — khi đó hãy chuyển sang ngừng hoạt động.
           </>
-        }
+        )}
         isPending={remove.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(r) => remove.mutateAsync(r.id).then(() => toast.success(`Đã xóa phòng ${r.code}`))}
       />
     </>
   )

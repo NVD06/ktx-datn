@@ -20,12 +20,13 @@ export function StudentLayout() {
   return (
     <div className="min-h-svh">
       <header className="border-primary bg-card/90 sticky top-0 z-10 border-b-2 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
-          <Link to="/student" className="text-foreground font-semibold">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:gap-6">
+          <Link to="/student" className="text-foreground shrink-0 font-semibold">
             Ký túc xá
           </Link>
 
-          <nav className="flex flex-1 items-center gap-1">
+          {/* Điện thoại không đủ chỗ cho 6 mục: cuộn ngang thay vì tràn cả trang. */}
+          <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none]">
             {NAV.map(({ to, label }) => (
               <NavLink
                 key={to}
@@ -34,7 +35,7 @@ export function StudentLayout() {
                 end={to === '/student'}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    'shrink-0 rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors',
                     isActive
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'text-muted-foreground hover:text-foreground',
@@ -46,7 +47,7 @@ export function StudentLayout() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <span className="text-muted-foreground hidden text-sm sm:inline">
               {user?.fullName}
             </span>

@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { BackLink } from '@/components/shared/BackLink'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DetailList } from '@/components/shared/DetailList'
@@ -29,7 +28,7 @@ export function ContractDetailPage() {
   const query = useContract(id)
   const sign = useSignContract()
   const decline = useEndContract('decline')
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [signing, setSigning] = useState(false)
   const [declining, setDeclining] = useState(false)
 
   if (query.isPending) return <LoadingState />
@@ -45,20 +44,15 @@ export function ContractDetailPage() {
 
   const c = query.data
 
-  function confirmSign() {
-    sign.mutate(c.id, {
-      onSuccess(signed) {
-        const invoice = signed.invoices[0]
-        toast.success(
-          `Đã ký hợp đồng ${signed.code}.` +
-            (invoice
-              ? ` Hóa đơn tiền phòng ${invoice.code}: ${formatMoney(invoice.amount)}, hạn ${formatDate(invoice.dueDate)}.`
-              : ''),
-        )
-      },
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setConfirmOpen(false),
-    })
+  async function confirmSign(contract: Contract) {
+    const signed = await sign.mutateAsync(contract.id)
+    const invoice = signed.invoices[0]
+    toast.success(
+      `Đã ký hợp đồng ${signed.code}.` +
+        (invoice
+          ? ` Hóa đơn tiền phòng ${invoice.code}: ${formatMoney(invoice.amount)}, hạn ${formatDate(invoice.dueDate)}.`
+          : ''),
+    )
   }
 
   return (
@@ -137,21 +131,21 @@ export function ContractDetailPage() {
             <Button variant="outline" onClick={() => setDeclining(true)}>
               Từ chối ký
             </Button>
-            <Button onClick={() => setConfirmOpen(true)}>Xác nhận ký</Button>
+            <Button onClick={() => setSigning(true)}>Xác nhận ký</Button>
           </div>
         )}
       </div>
 
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        target={signing ? c : null}
+        onClose={() => setSigning(false)}
         title="Ký hợp đồng?"
-        description={
+        description={(k) => (
           <>
-            Ký hợp đồng <strong>{c.code}</strong>: {bedPlace(c.bed)}, tiền phòng {formatMoney(c.price)} / kỳ.
+            Ký hợp đồng <strong>{k.code}</strong>: {bedPlace(k.bed)}, tiền phòng {formatMoney(k.price)} / kỳ.
             Sau khi ký, hệ thống lập hóa đơn tiền phòng, hạn thanh toán {ROOM_FEE_DUE_DAYS} ngày.
           </>
-        }
+        )}
         confirmLabel="Ký hợp đồng"
         destructive={false}
         isPending={sign.isPending}

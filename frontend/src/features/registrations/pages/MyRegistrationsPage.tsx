@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DetailList, type DetailRow } from '@/components/shared/DetailList'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -30,15 +29,6 @@ export function MyRegistrationsPage() {
   const cancel = useCancelRegistration()
   const [cancelling, setCancelling] = useState<Registration | null>(null)
 
-  function confirmCancel() {
-    if (!cancelling) return
-    cancel.mutate(cancelling.id, {
-      onSuccess: () => toast.success(`Đã hủy đơn đợt "${cancelling.period.name}"`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setCancelling(null),
-    })
-  }
-
   return (
     <>
       <PageHeader title="Đơn đăng ký của tôi" description="Theo dõi kết quả xét duyệt đơn đăng ký ở KTX." />
@@ -66,18 +56,18 @@ export function MyRegistrationsPage() {
       )}
 
       <ConfirmDialog
-        open={!!cancelling}
-        onOpenChange={(open) => !open && setCancelling(null)}
+        target={cancelling}
+        onClose={() => setCancelling(null)}
         title="Hủy đơn đăng ký?"
-        description={
+        description={(r) => (
           <>
-            Hủy đơn đợt <strong>{cancelling?.period.name}</strong>. Sau khi hủy, bạn có thể nộp lại đơn
-            mới nếu đợt vẫn còn mở.
+            Hủy đơn đợt <strong>{r.period.name}</strong>. Sau khi hủy, bạn có thể nộp lại đơn mới nếu đợt
+            vẫn còn mở.
           </>
-        }
+        )}
         confirmLabel="Hủy đơn"
         isPending={cancel.isPending}
-        onConfirm={confirmCancel}
+        onConfirm={(r) => cancel.mutateAsync(r.id).then(() => toast.success(`Đã hủy đơn đợt "${r.period.name}"`))}
       />
     </>
   )

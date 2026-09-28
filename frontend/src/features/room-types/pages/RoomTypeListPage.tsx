@@ -2,7 +2,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
@@ -12,17 +11,13 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatMoney } from '@/lib/format'
-import { activeStatus } from '@/lib/labels'
+import { ACTIVE_OPTIONS, activeStatus } from '@/lib/labels'
 import type { RoomType } from '@/types/facility'
 import { RoomTypeFormDialog } from '../components/RoomTypeFormDialog'
 import { useDeleteRoomType, useRoomTypes } from '../hooks/useRoomTypes'
-
-const ACTIVE_OPTIONS = [
-  { value: 'true', label: 'Đang sử dụng' },
-  { value: 'false', label: 'Ngừng sử dụng' },
-]
 
 /** Danh mục loại phòng — ADMIN thêm/sửa/xóa, MANAGER chỉ xem. */
 export function RoomTypeListPage() {
@@ -33,24 +28,8 @@ export function RoomTypeListPage() {
   const query = useRoomTypes(list.params)
   const remove = useDeleteRoomType()
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<RoomType | null>(null)
+  const form = useDialogState<RoomType>()
   const [deleting, setDeleting] = useState<RoomType | null>(null)
-
-  function openForm(roomType: RoomType | null) {
-    setEditing(roomType)
-    setFormOpen(true)
-  }
-
-  function confirmDelete() {
-    if (!deleting) return
-    const { id, name } = deleting
-    remove.mutate(id, {
-      onSuccess: () => toast.success(`Đã xóa loại phòng "${name}"`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setDeleting(null),
-    })
-  }
 
   const columns: ColumnDef<RoomType>[] = [
     {
@@ -100,7 +79,7 @@ export function RoomTypeListPage() {
             cell: ({ row }) => (
               <RowActions
                 actions={[
-                  { label: 'Sửa', icon: Pencil, onSelect: () => openForm(row.original) },
+                  { label: 'Sửa', icon: Pencil, onSelect: () => form.show(row.original) },
                   {
                     label: 'Xóa',
                     icon: Trash2,
@@ -126,7 +105,7 @@ export function RoomTypeListPage() {
         }
         actions={
           isAdmin && (
-            <Button onClick={() => openForm(null)}>
+            <Button onClick={() => form.show(null)}>
               <Plus />
               Thêm loại phòng
             </Button>
@@ -157,20 +136,20 @@ export function RoomTypeListPage() {
         }
       />
 
-      <RoomTypeFormDialog open={formOpen} onOpenChange={setFormOpen} roomType={editing} />
+      <RoomTypeFormDialog open={form.open} onOpenChange={form.setOpen} roomType={form.item} />
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        target={deleting}
+        onClose={() => setDeleting(null)}
         title="Xóa loại phòng?"
-        description={
+        description={(t) => (
           <>
-            Xóa loại phòng <strong>{deleting?.name}</strong>. Loại phòng đang có phòng sử dụng sẽ
-            không xóa được — khi đó hãy chuyển sang ngừng sử dụng.
+            Xóa loại phòng <strong>{t.name}</strong>. Loại phòng đang có phòng sử dụng sẽ không xóa
+            được — khi đó hãy chuyển sang ngừng hoạt động.
           </>
-        }
+        )}
         isPending={remove.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(t) => remove.mutateAsync(t.id).then(() => toast.success(`Đã xóa loại phòng "${t.name}"`))}
       />
     </>
   )

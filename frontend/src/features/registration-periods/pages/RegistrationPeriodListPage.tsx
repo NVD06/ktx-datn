@@ -2,7 +2,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Lock, LockOpen, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
@@ -12,9 +11,10 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateRange } from '@/lib/format'
-import { PERIOD_STATUS } from '@/lib/labels'
+import { PERIOD_OPTIONS, PERIOD_STATUS } from '@/lib/labels'
 import type { RegistrationPeriod } from '@/types/registration'
 import { RegistrationPeriodFormDialog } from '../components/RegistrationPeriodFormDialog'
 import {
@@ -22,11 +22,6 @@ import {
   useRegistrationPeriods,
   useToggleRegistrationPeriod,
 } from '../hooks/useRegistrationPeriods'
-
-const OPEN_OPTIONS = [
-  { value: 'true', label: PERIOD_STATUS.OPEN.label },
-  { value: 'false', label: PERIOD_STATUS.CLOSED.label },
-]
 
 /** Đợt đăng ký ở KTX — ADMIN thêm/sửa/xóa và mở/đóng, MANAGER chỉ xem. */
 export function RegistrationPeriodListPage() {
@@ -38,38 +33,9 @@ export function RegistrationPeriodListPage() {
   const toggle = useToggleRegistrationPeriod()
   const remove = useDeleteRegistrationPeriod()
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<RegistrationPeriod | null>(null)
+  const form = useDialogState<RegistrationPeriod>()
   const [toggling, setToggling] = useState<RegistrationPeriod | null>(null)
   const [deleting, setDeleting] = useState<RegistrationPeriod | null>(null)
-
-  function openForm(period: RegistrationPeriod | null) {
-    setEditing(period)
-    setFormOpen(true)
-  }
-
-  function confirmToggle() {
-    if (!toggling) return
-    const { id, name, isOpen } = toggling
-    toggle.mutate(
-      { id, open: !isOpen },
-      {
-        onSuccess: () => toast.success(isOpen ? `Đã đóng đợt "${name}"` : `Đã mở đợt "${name}"`),
-        onError: (error) => toast.error(getErrorMessage(error)),
-        onSettled: () => setToggling(null),
-      },
-    )
-  }
-
-  function confirmDelete() {
-    if (!deleting) return
-    const { id, name } = deleting
-    remove.mutate(id, {
-      onSuccess: () => toast.success(`Đã xóa đợt "${name}"`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setDeleting(null),
-    })
-  }
 
   const columns: ColumnDef<RegistrationPeriod>[] = [
     {
@@ -119,7 +85,7 @@ export function RegistrationPeriodListPage() {
                   row.original.isOpen
                     ? { label: 'Đóng đợt', icon: Lock, onSelect: () => setToggling(row.original) }
                     : { label: 'Mở đợt', icon: LockOpen, onSelect: () => setToggling(row.original) },
-                  { label: 'Sửa', icon: Pencil, onSelect: () => openForm(row.original) },
+                  { label: 'Sửa', icon: Pencil, onSelect: () => form.show(row.original) },
                   {
                     label: 'Xóa',
                     icon: Trash2,
@@ -145,7 +111,7 @@ export function RegistrationPeriodListPage() {
         }
         actions={
           isAdmin && (
-            <Button onClick={() => openForm(null)}>
+            <Button onClick={() => form.show(null)}>
               <Plus />
               Thêm đợt đăng ký
             </Button>
@@ -165,45 +131,48 @@ export function RegistrationPeriodListPage() {
             <FilterSelect
               value={list.filters.isOpen}
               onChange={(v) => list.setFilter('isOpen', v)}
-              options={OPEN_OPTIONS}
+              options={PERIOD_OPTIONS}
               allLabel="Trạng thái"
             />
           </>
         }
       />
 
-      <RegistrationPeriodFormDialog open={formOpen} onOpenChange={setFormOpen} period={editing} />
+      <RegistrationPeriodFormDialog open={form.open} onOpenChange={form.setOpen} period={form.item} />
 
       <ConfirmDialog
-        open={!!toggling}
-        onOpenChange={(open) => !open && setToggling(null)}
+        target={toggling}
+        onClose={() => setToggling(null)}
         title={toggling?.isOpen ? 'Đóng đợt đăng ký?' : 'Mở đợt đăng ký?'}
-        description={
+        description={(p) => (
           <>
-            {toggling?.isOpen ? 'Đóng' : 'Mở'} đợt <strong>{toggling?.name}</strong>.{' '}
-            {toggling?.isOpen
+            {p.isOpen ? 'Đóng' : 'Mở'} đợt <strong>{p.name}</strong>.{' '}
+            {p.isOpen
               ? 'Sinh viên sẽ không nộp đơn mới được nữa; các đơn đã nộp vẫn được giữ để duyệt.'
               : 'Sinh viên nộp được đơn cho tới khi đóng đợt. Chỉ mở được khi không có đợt khác đang mở.'}
           </>
-        }
+        )}
         confirmLabel={toggling?.isOpen ? 'Đóng đợt' : 'Mở đợt'}
         destructive={!!toggling?.isOpen}
         isPending={toggle.isPending}
-        onConfirm={confirmToggle}
+        onConfirm={(p) =>
+          toggle
+            .mutateAsync({ id: p.id, open: !p.isOpen })
+            .then(() => toast.success(p.isOpen ? `Đã đóng đợt "${p.name}"` : `Đã mở đợt "${p.name}"`))
+        }
       />
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        target={deleting}
+        onClose={() => setDeleting(null)}
         title="Xóa đợt đăng ký?"
-        description={
+        description={(p) => (
           <>
-            Xóa đợt <strong>{deleting?.name}</strong>. Đợt đang mở hoặc đã có đơn đăng ký sẽ không xóa
-            được.
+            Xóa đợt <strong>{p.name}</strong>. Đợt đang mở hoặc đã có đơn đăng ký sẽ không xóa được.
           </>
-        }
+        )}
         isPending={remove.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(p) => remove.mutateAsync(p.id).then(() => toast.success(`Đã xóa đợt "${p.name}"`))}
       />
     </>
   )

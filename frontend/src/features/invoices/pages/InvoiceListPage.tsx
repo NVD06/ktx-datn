@@ -7,7 +7,7 @@ import { RowActions } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatCard } from '@/components/shared/StatCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { useDetailSheet } from '@/hooks/useDetailSheet'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDate, formatMoney } from '@/lib/format'
 import { INVOICE_FILTER_OPTIONS, INVOICE_TYPE, invoiceStatus, toOptions } from '@/lib/labels'
@@ -27,7 +27,7 @@ export function InvoiceListPage() {
   const query = useInvoices(list.params)
   const summary = useInvoiceSummary(list.params)
 
-  const detail = useDetailSheet<string>()
+  const detail = useDialogState<string>()
 
   const columns: ColumnDef<Invoice>[] = [
     {

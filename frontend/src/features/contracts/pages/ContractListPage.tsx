@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
-import { useDetailSheet } from '@/hooks/useDetailSheet'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { bedPlace, formatDateRange, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, toOptions } from '@/lib/labels'
@@ -46,7 +46,7 @@ export function ContractListPage() {
   const cancel = useEndContract('cancel')
   const terminate = useEndContract('terminate')
 
-  const detail = useDetailSheet<Contract>()
+  const detail = useDialogState<Contract>()
   const [cancelling, setCancelling] = useState<Contract | null>(null)
   const [extending, setExtending] = useState<Contract | null>(null)
   const [terminating, setTerminating] = useState<Contract | null>(null)

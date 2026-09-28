@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
-import { useDetailSheet } from '@/hooks/useDetailSheet'
+import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateTime, orDash } from '@/lib/format'
 import { GENDER, REGISTRATION_STATUS, toOptions } from '@/lib/labels'
@@ -36,7 +36,7 @@ export function RegistrationListPage() {
   const periodOptions = usePeriodOptions()
   const reject = useRejectRegistration()
 
-  const detail = useDetailSheet<RegistrationListItem>()
+  const detail = useDialogState<RegistrationListItem>()
   const [approving, setApproving] = useState<RegistrationListItem | null>(null)
   const [rejecting, setRejecting] = useState<RegistrationListItem | null>(null)
 

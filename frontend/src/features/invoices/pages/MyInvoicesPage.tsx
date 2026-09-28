@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { Card, CardContent } from '@/components/ui/card'
-import { useDetailSheet } from '@/hooks/useDetailSheet'
+import { useDialogState } from '@/hooks/useDialogState'
 import { formatMoney } from '@/lib/format'
 import { isOverdue } from '@/lib/labels'
 import { InvoiceDetailSheet } from '../components/InvoiceDetailSheet'
@@ -14,7 +14,7 @@ import { useMyInvoices } from '../hooks/useInvoices'
  */
 export function MyInvoicesPage() {
   const invoices = useMyInvoices()
-  const detail = useDetailSheet<string>()
+  const detail = useDialogState<string>()
 
   const unpaid = invoices.data?.filter((i) => i.status === 'UNPAID') ?? []
   const overdue = unpaid.filter(isOverdue).length

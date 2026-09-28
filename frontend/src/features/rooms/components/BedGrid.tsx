@@ -5,16 +5,19 @@ import { getErrorMessage } from '@/api/client'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/QueryState'
 import { RowActions, type RowAction } from '@/components/shared/RowActions'
-import { BED_STATUS, TONE_CLASS } from '@/lib/labels'
+import { BED_HELD, BED_STATUS, TONE_CLASS } from '@/lib/labels'
 import { cn } from '@/lib/utils'
-import type { Bed } from '@/types/facility'
+import type { RoomDetail } from '@/types/facility'
 import { useDeleteBed, useUpdateBed } from '../hooks/useRooms'
+
+type Bed = RoomDetail['beds'][number]
 
 /**
  * Sơ đồ giường trong phòng — mỗi ô một giường, tô màu theo trạng thái.
  *
  * Chỉ đổi tay được AVAILABLE ↔ MAINTENANCE. Giường OCCUPIED do hợp đồng quản lý
- * nên không có thao tác nào (backend cũng chặn bằng 409).
+ * nên không có thao tác nào (backend cũng chặn bằng 409). Giường "Giữ chỗ" vẫn là
+ * AVAILABLE nhưng đã có hợp đồng chờ SV ký — chuyển nó sang bảo trì thì SV không ký được.
  */
 export function BedGrid({ beds }: { beds: Bed[] }) {
   const update = useUpdateBed()
@@ -36,16 +39,6 @@ export function BedGrid({ beds }: { beds: Bed[] }) {
     )
   }
 
-  function confirmDelete() {
-    if (!deleting) return
-    const { id, code } = deleting
-    remove.mutate(id, {
-      onSuccess: () => toast.success(`Đã xóa giường ${code}`),
-      onError: (error) => toast.error(getErrorMessage(error)),
-      onSettled: () => setDeleting(null),
-    })
-  }
-
   if (beds.length === 0) {
     return (
       <EmptyState
@@ -60,6 +53,7 @@ export function BedGrid({ beds }: { beds: Bed[] }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {beds.map((bed) => {
           const occupied = bed.status === 'OCCUPIED'
+          const label = bed.held ? BED_HELD : BED_STATUS[bed.status]
           const actions: RowAction[] = occupied
             ? []
             : [
@@ -85,7 +79,7 @@ export function BedGrid({ beds }: { beds: Bed[] }) {
           return (
             <div
               key={bed.id}
-              className={cn('flex min-h-24 flex-col gap-2 rounded-xl border p-3', TONE_CLASS[BED_STATUS[bed.status].tone])}
+              className={cn('flex min-h-24 flex-col gap-2 rounded-xl border p-3', TONE_CLASS[label.tone])}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -94,25 +88,26 @@ export function BedGrid({ beds }: { beds: Bed[] }) {
                 </div>
                 <RowActions actions={actions} />
               </div>
-              <p className="text-sm font-medium">{BED_STATUS[bed.status].label}</p>
+              <p className="text-sm font-medium">{label.label}</p>
               {occupied && <p className="text-xs opacity-80">Đổi qua hợp đồng</p>}
+              {bed.held && <p className="text-xs opacity-80">Chờ sinh viên ký hợp đồng</p>}
             </div>
           )
         })}
       </div>
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        target={deleting}
+        onClose={() => setDeleting(null)}
         title="Xóa giường?"
-        description={
+        description={(b) => (
           <>
-            Xóa giường <strong>{deleting?.code}</strong>. Giường đã từng có hợp đồng sẽ không xóa được
-            — khi đó hãy chuyển sang bảo trì.
+            Xóa giường <strong>{b.code}</strong>. Giường đã từng có hợp đồng sẽ không xóa được — khi đó
+            hãy chuyển sang bảo trì.
           </>
-        }
+        )}
         isPending={remove.isPending}
-        onConfirm={confirmDelete}
+        onConfirm={(b) => remove.mutateAsync(b.id).then(() => toast.success(`Đã xóa giường ${b.code}`))}
       />
     </>
   )
