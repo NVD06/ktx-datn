@@ -116,7 +116,7 @@ export function InvoiceListPage() {
         query={query}
         list={list}
         emptyTitle="Không có hóa đơn nào"
-        emptyDescription={filtered ? 'Thử bỏ bớt bộ lọc.' : 'Hóa đơn được lập khi sinh viên ký hợp đồng.'}
+        emptyDescription={filtered ? 'Thử bỏ bớt bộ lọc.' : 'Tiền phòng lập khi sinh viên ký hợp đồng, điện nước lập ở trang Chốt điện nước.'}
         toolbar={
           <>
             <SearchInput

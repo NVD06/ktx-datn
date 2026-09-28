@@ -9,6 +9,7 @@ import {
   LogOut,
   Receipt,
   Users,
+  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
@@ -33,6 +34,7 @@ const NAV: NavItem[] = [
   { to: '/admin/registrations', label: 'Đơn đăng ký', icon: ClipboardList },
   { to: '/admin/contracts', label: 'Hợp đồng', icon: FileSignature },
   { to: '/admin/invoices', label: 'Hóa đơn', icon: Receipt },
+  { to: '/admin/utilities', label: 'Chốt điện nước', icon: Zap },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]
 

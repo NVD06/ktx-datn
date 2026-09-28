@@ -64,3 +64,44 @@ export interface InvoiceDetail extends Invoice {
 
 /** GET /invoices/summary — cùng bộ lọc với bảng. */
 export type InvoiceSummary = Record<'all' | 'unpaid' | 'overdue', { count: number; amount: string }>
+
+/** Chỉ số điện, nước của cả phòng trong một kỳ. */
+export interface MeterReading {
+  electricOld: number
+  electricNew: number
+  waterOld: number
+  waterNew: number
+}
+
+/** GET /invoices/utility-sheet — bảng chốt điện nước của một tòa trong một tháng. */
+export interface UtilitySheet {
+  building: { id: string; name: string }
+  /** "2026-09" */
+  period: string
+  /** Đơn giá hiện hành — đ/kWh, đ/m³. */
+  prices: { electric: number; water: number }
+  rooms: {
+    id: string
+    code: string
+    floor: number
+    /** Số SV chia tiền; 0 = phòng trống, không lập hóa đơn. */
+    residents: number
+    /** Kỳ này đã lập hóa đơn. */
+    billed: boolean
+    /** Chỉ số mới của lần chốt trước — điền sẵn làm chỉ số cũ. */
+    prefill: Partial<MeterReading> | null
+  }[]
+}
+
+export interface BillUtilitiesInput {
+  buildingId: string
+  period: string
+  readings: (MeterReading & { roomId: string })[]
+}
+
+/** BILLED: kỳ này đã chốt · EMPTY: không còn SV ở · NO_USAGE: không dùng gì. */
+export interface BillUtilitiesResult {
+  invoiceCount: number
+  roomCount: number
+  skipped: { code: string; reason: 'BILLED' | 'EMPTY' | 'NO_USAGE' }[]
+}

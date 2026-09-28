@@ -1,5 +1,6 @@
-import { keepPreviousData, skipToken, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, skipToken, useMutation, useQuery } from '@tanstack/react-query'
 import * as invoicesApi from '@/api/invoices'
+import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
 
 // Ký / gia hạn hợp đồng sinh hóa đơn, nên các mutation đó (useContracts.ts) làm mới cả invoiceKeys.all.
@@ -9,6 +10,7 @@ export const invoiceKeys = {
   summary: (params: ListParams) => ['invoices', 'summary', params] as const,
   mine: ['invoices', 'mine'] as const,
   detail: (id: string) => ['invoices', 'detail', id] as const,
+  utilitySheet: (buildingId: string, period: string) => ['invoices', 'utility-sheet', buildingId, period] as const,
 }
 
 export function useInvoices(params: ListParams) {
@@ -40,4 +42,17 @@ export function useInvoice(id: string | null) {
     queryKey: invoiceKeys.detail(id ?? ''),
     queryFn: id ? () => invoicesApi.getInvoice(id) : skipToken,
   })
+}
+
+export function useUtilitySheet(buildingId: string | null, period: string) {
+  return useQuery({
+    queryKey: invoiceKeys.utilitySheet(buildingId ?? '', period),
+    queryFn: buildingId ? () => invoicesApi.getUtilitySheet(buildingId, period) : skipToken,
+  })
+}
+
+/** Chốt xong: bảng chốt, bảng hóa đơn và tổng tiền đều nằm dưới invoiceKeys.all. */
+export function useBillUtilities() {
+  const invalidate = useInvalidate(invoiceKeys.all)
+  return useMutation({ mutationFn: invoicesApi.billUtilities, onSettled: invalidate })
 }
