@@ -56,3 +56,8 @@ export function useBillUtilities() {
   const invalidate = useInvalidate(invoiceKeys.all)
   return useMutation({ mutationFn: invoicesApi.billUtilities, onSettled: invalidate })
 }
+
+/** Không cần làm mới gì: thành công thì trình duyệt rời hẳn trang sang cổng VNPay. */
+export function usePayInvoice() {
+  return useMutation({ mutationFn: invoicesApi.payInvoice })
+}

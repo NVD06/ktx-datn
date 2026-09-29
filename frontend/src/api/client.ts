@@ -45,8 +45,16 @@ export function getFieldErrors(error: unknown): Record<string, string[]> | undef
  * api/* chỉ còn khai báo đường dẫn và kiểu.
  */
 
+/**
+ * Bỏ tham số rỗng để backend không nhận chuỗi "" — ví dụ `?status=` từ bộ lọc chưa
+ * chọn sẽ bị zod từ chối vì không thuộc enum. Dùng cho mọi request GET.
+ */
+function queryOf(params?: object) {
+  return params && Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined && value !== ''))
+}
+
 export async function apiGet<T>(url: string, params?: object): Promise<T> {
-  return (await api.get<SuccessResponse<T>>(url, { params })).data.data
+  return (await api.get<SuccessResponse<T>>(url, { params: queryOf(params) })).data.data
 }
 
 export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
@@ -57,15 +65,9 @@ export async function apiPatch<T>(url: string, body: unknown): Promise<T> {
   return (await api.patch<SuccessResponse<T>>(url, body)).data.data
 }
 
-/**
- * Gọi API danh sách có phân trang. Tham số rỗng bị bỏ đi để backend không nhận
- * chuỗi "" (ví dụ `?status=` sẽ bị zod từ chối vì không thuộc enum).
- */
+/** Gọi API danh sách có phân trang. */
 export async function getPaged<T>(url: string, params: ListParams = {}): Promise<Paged<T>> {
-  const query = Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== ''),
-  )
-  const res = await api.get<SuccessResponse<T[]>>(url, { params: query })
+  const res = await api.get<SuccessResponse<T[]>>(url, { params: queryOf(params) })
   const { data, meta } = res.data
   return { data, meta: meta ?? { page: 1, limit: data.length, total: data.length } }
 }

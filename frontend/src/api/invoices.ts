@@ -33,6 +33,11 @@ export function billUtilities(input: BillUtilitiesInput) {
   return apiPost<BillUtilitiesResult>('/invoices/utility', input)
 }
 
+/** SV tạo giao dịch VNPay — trả URL cổng thanh toán để chuyển trình duyệt sang. */
+export function payInvoice(id: string) {
+  return apiPost<{ payUrl: string }>(`/invoices/${id}/pay`)
+}
+
 export function getInvoice(id: string) {
   return apiGet<InvoiceDetail>(`/invoices/${id}`)
 }

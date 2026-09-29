@@ -10,6 +10,7 @@ import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { InvoiceListPage } from '@/features/invoices/pages/InvoiceListPage'
 import { MyInvoicesPage } from '@/features/invoices/pages/MyInvoicesPage'
+import { PaymentResultPage } from '@/features/invoices/pages/PaymentResultPage'
 import { UtilityBillingPage } from '@/features/invoices/pages/UtilityBillingPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
@@ -75,6 +76,7 @@ export const router = createBrowserRouter([
           { path: 'contracts', element: <MyContractsPage /> },
           { path: 'contracts/:id', element: <ContractDetailPage /> },
           { path: 'invoices', element: <MyInvoicesPage /> },
+          { path: 'payment-result', element: <PaymentResultPage /> },
           { path: 'profile', element: <ProfilePage /> },
         ],
       },
