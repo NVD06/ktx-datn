@@ -88,6 +88,21 @@ invoiceRoutes.get(
   ctrl.listMine,
 );
 
+invoiceRoutes.post(
+  '/:id/pay',
+  {
+    summary: 'Tạo giao dịch VNPay cho hóa đơn (STUDENT)',
+    description:
+      'Chỉ hóa đơn của chính SV, còn UNPAID. Số tiền lấy từ DB. Trả `payUrl` để chuyển trình duyệt sang cổng ' +
+      'VNPay; kết quả về qua /payments/vnpay-return (trình duyệt) và /payments/vnpay-ipn (server VNPay).',
+    status: 201,
+    data: z.object({ payUrl: z.url() }),
+    errors: [401, 403, 404, 409],
+  },
+  student,
+  ctrl.pay,
+);
+
 invoiceRoutes.get(
   '/:id',
   {

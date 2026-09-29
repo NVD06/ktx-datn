@@ -28,7 +28,9 @@ const LIST_INCLUDE = {
 const DETAIL_INCLUDE = {
   ...LIST_INCLUDE,
   items: { omit: { invoiceId: true, createdAt: true }, orderBy: { type: 'asc' } },
+  // Lượt bấm thanh toán rồi bỏ dở (còn PENDING) không phải lịch sử — chỉ hiện giao dịch đã có kết quả.
   payments: {
+    where: { status: { not: 'PENDING' } },
     select: { id: true, amount: true, status: true, vnpTransactionNo: true, paidAt: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
   },

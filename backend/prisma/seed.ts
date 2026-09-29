@@ -2,16 +2,21 @@ import 'dotenv/config';
 import { prisma } from '../src/config/prisma.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
+import * as contractService from '../src/modules/contracts/contract.service.js';
+import * as utilityService from '../src/modules/invoices/utility.service.js';
+import * as registrationService from '../src/modules/registrations/registration.service.js';
+import { currentMonthVN } from '../src/utils/date-vn.js';
 
 /**
- * Dữ liệu mẫu — phạm vi US-00 + US-01.
+ * Dữ liệu mẫu — phạm vi US-00 → US-04.
  *
  *   - 3 vai trò để test điều hướng sau login
  *   - 2 tòa nhà để test buildingScope() (Manager tòa B1 không đọc được B2)
  *   - 2 loại phòng (danh mục dùng chung)
  *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
+ *   - Đơn, hợp đồng, hóa đơn tiền phòng + điện nước đủ các trạng thái để demo
  *
- * Hợp đồng, hóa đơn... bổ sung vào file này khi tới các user story tương ứng.
+ * Sửa chữa, vệ sinh... bổ sung vào file này khi tới các user story tương ứng.
  *
  * Chạy lại được nhiều lần: xóa sạch dữ liệu cũ trước khi tạo mới.
  * KHÔNG chạy trên môi trường có dữ liệu thật.
@@ -164,13 +169,17 @@ async function main() {
     },
   });
 
-  // 4 sinh viên: 2 nam, 2 nữ — đủ để test lọc theo giới tính ở US-02
+  // 8 sinh viên: 4 nam, 4 nữ — đủ để test lọc theo giới tính ở US-02 và các tình huống ở US-03/04.
   // sv004 cố ý thiếu ngày sinh + CCCD để demo chặn nộp đơn khi hồ sơ chưa đủ (US-02.3).
   const studentSeed = [
     { code: '001', name: 'Lê Minh An', gender: 'MALE' as const, complete: true },
     { code: '002', name: 'Phạm Quốc Bảo', gender: 'MALE' as const, complete: true },
     { code: '003', name: 'Ngô Thu Cúc', gender: 'FEMALE' as const, complete: true },
     { code: '004', name: 'Đỗ Hải Duyên', gender: 'FEMALE' as const, complete: false },
+    { code: '005', name: 'Vũ Đức Hải', gender: 'MALE' as const, complete: true },
+    { code: '006', name: 'Hoàng Gia Huy', gender: 'MALE' as const, complete: true },
+    { code: '007', name: 'Bùi Lan Hương', gender: 'FEMALE' as const, complete: true },
+    { code: '008', name: 'Trịnh Mai Khanh', gender: 'FEMALE' as const, complete: true },
   ];
 
   for (const s of studentSeed) {
@@ -221,19 +230,84 @@ async function main() {
     },
   });
 
+  // ── Đơn, hợp đồng, hóa đơn (US-02 → US-04) ─────────────────────────────────
+  // Đi qua đúng các service như khi bấm trên giao diện, để dữ liệu mẫu tuân theo mọi
+  // quy tắc nghiệp vụ: mã HD/INV, giữ giường, snapshot giá, chia tiền điện nước.
+  console.log('Tạo đơn, hợp đồng, hóa đơn...');
+
+  const users = await prisma.user.findMany({
+    select: { id: true, fullName: true, email: true, role: true, buildingId: true },
+  });
+  const as = (email: string) => users.find((u) => u.email === email)!;
+  const sv = (code: string) => as(`sv${code}@ktx.edu.vn`);
+  const m1 = as(manager1.email);
+  const m2 = as(manager2.email);
+  const roomId = async (building: { id: string }, code: string) =>
+    (await prisma.room.findFirstOrThrow({ where: { buildingId: building.id, code }, select: { id: true } })).id;
+
+  /** Nộp đơn → Manager duyệt vào giường `bedCode` phòng `room` → (tùy chọn) SV ký. */
+  async function house(
+    student: string,
+    manager: typeof m1,
+    building: { id: string },
+    room: string,
+    bedCode: string,
+    sign: boolean,
+  ) {
+    const registration = await registrationService.create(sv(student), { buildingId: building.id });
+    const bed = await prisma.bed.findFirstOrThrow({ where: { code: bedCode, room: { buildingId: building.id, code: room } } });
+    const contract = await registrationService.approve(manager, registration.id, { bedId: bed.id });
+    if (sign) await contractService.sign(sv(student), contract.id);
+    return contract;
+  }
+
+  const anContract = await house('001', m1, b1, '103', 'G1', true); // đang ở
+  await house('002', m1, b1, '103', 'G2', true); // đang ở, cùng phòng
+  await house('005', m1, b1, '103', 'G3', false); // đã duyệt, chờ ký → giường "Giữ chỗ"
+  await house('003', m2, b2, '103', 'G1', true);
+  await registrationService.create(sv('006'), { buildingId: b1.id }); // chờ duyệt
+  await registrationService.create(sv('007'), {}); // chờ duyệt, tòa nào cũng được → Manager B2 thấy
+  const rejected = await registrationService.create(sv('008'), { buildingId: b2.id });
+  await registrationService.reject(m2, rejected.id, {
+    reviewNote: 'Tòa B2 đã hết phòng 4 giường điều hòa, mời bạn đăng ký đợt sau.',
+  });
+
+  // Điện nước tháng này của hai phòng 103. sv005 chưa ký nên chưa chia tiền.
+  const period = currentMonthVN();
+  await utilityService.bill(m1, {
+    buildingId: b1.id,
+    period,
+    readings: [{ roomId: await roomId(b1, '103'), electricOld: 1200, electricNew: 1350, waterOld: 300, waterNew: 312 }],
+  });
+  await utilityService.bill(m2, {
+    buildingId: b2.id,
+    period,
+    readings: [{ roomId: await roomId(b2, '103'), electricOld: 800, electricNew: 880, waterOld: 150, waterNew: 156 }],
+  });
+
+  // Một hóa đơn quá hạn để giao diện có đủ trạng thái (badge "Quá hạn", banner của SV).
+  await prisma.invoice.updateMany({
+    where: { contractId: anContract.id, type: 'ROOM_FEE' },
+    data: { dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+  });
+
+  const [contractCount, invoiceCount] = await Promise.all([prisma.contract.count(), prisma.invoice.count()]);
+
   console.log(`
-Seed xong (phạm vi US-00 + US-01 + US-02):
+Seed xong (phạm vi US-00 → US-04):
   Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
   Phòng      : ${roomCount}  (${bedCount} giường)
   Đợt đăng ký: 2  (đang mở: ${openPeriod.name})
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
+  Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)   Hóa đơn: ${invoiceCount}  (1 quá hạn)
+  Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
   ${admin.email}       → ADMIN
   ${manager1.email}    → MANAGER (tòa ${b1.name})
   ${manager2.email}    → MANAGER (tòa ${b2.name})
-  sv001@ktx.edu.vn … sv004@ktx.edu.vn  → STUDENT (sv004 hồ sơ chưa đủ)
+  sv001@ktx.edu.vn … sv008@ktx.edu.vn  → STUDENT (sv004 hồ sơ chưa đủ)
 `);
 }
 

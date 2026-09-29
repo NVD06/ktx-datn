@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
 import { invoiceListQuerySchema } from './invoice.schema.js';
+import * as paymentService from '../payments/payment.service.js';
 import * as invoiceService from './invoice.service.js';
 import { utilitySheetQuerySchema, type BillUtilitiesInput } from './utility.schema.js';
 import * as utilityService from './utility.service.js';
@@ -30,6 +31,11 @@ export async function billUtilities(req: Request, res: Response) {
 /** GET /api/v1/invoices/me */
 export async function listMine(req: Request, res: Response) {
   res.json(ok(await invoiceService.listMine(currentUser(req))));
+}
+
+/** POST /api/v1/invoices/:id/pay */
+export async function pay(req: Request, res: Response) {
+  res.status(201).json(ok(await paymentService.pay(currentUser(req), param(req), req.ip ?? '127.0.0.1')));
 }
 
 /** GET /api/v1/invoices/:id */

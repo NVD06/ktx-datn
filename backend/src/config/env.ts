@@ -11,6 +11,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.string('Thiếu chuỗi kết nối PostgreSQL').min(1, 'Thiếu chuỗi kết nối PostgreSQL'),
   AUTH_SECRET: z.string('Thiếu AUTH_SECRET').min(32, 'AUTH_SECRET phải dài tối thiểu 32 ký tự'),
+  // VNPay sandbox — thiếu thì phần còn lại vẫn chạy, chỉ nút thanh toán báo chưa cấu hình.
+  VNP_TMN_CODE: z.string().optional(),
+  VNP_HASH_SECRET: z.string().optional(),
+  VNP_URL: z.url('VNP_URL không hợp lệ').default('https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+  VNP_RETURN_URL: z.url('VNP_RETURN_URL không hợp lệ').optional(),
 });
 
 // Dòng `PORT=` để trống trong .env cho ra chuỗi rỗng — coi như chưa khai báo
