@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
-import { ACTIVE_OPTIONS, activeStatus, buildingGender } from '@/lib/labels'
+import { ACTIVE_OPTIONS, activeStatus, GENDER } from '@/lib/labels'
 import type { Building } from '@/types/facility'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
@@ -71,7 +71,7 @@ export function BuildingListPage() {
     {
       id: 'gender',
       header: 'Giới tính',
-      cell: ({ row }) => <StatusBadge {...buildingGender(row.original.gender)} />,
+      cell: ({ row }) => <StatusBadge {...GENDER[row.original.gender]} />,
     },
     {
       id: 'manager',

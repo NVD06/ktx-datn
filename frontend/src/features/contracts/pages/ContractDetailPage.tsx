@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { bedPlace, formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
-import { CONTRACT_STATUS, GENDER, buildingGender } from '@/lib/labels'
+import { CONTRACT_STATUS, GENDER } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS, ROOM_FEE_RULE } from '../contract-terms'
 import { InvoiceList } from '@/features/invoices/components/InvoiceList'
@@ -68,7 +68,7 @@ export function ContractDetailPage() {
               rows={[
                 [
                   'Tòa nhà',
-                  `Tòa ${c.bed.room.building.name} (${buildingGender(c.bed.room.building.gender).label})`,
+                  `Tòa ${c.bed.room.building.name} (${GENDER[c.bed.room.building.gender].label})`,
                 ],
                 ['Phòng', `${c.bed.room.code} · Tầng ${c.bed.room.floor}`],
                 ['Giường', c.bed.code],

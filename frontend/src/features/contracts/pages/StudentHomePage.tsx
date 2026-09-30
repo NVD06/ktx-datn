@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { InvoiceDueBanner } from '@/features/invoices/components/InvoiceDueBanner'
 import { bedPlace, formatDate, formatDateRange } from '@/lib/format'
-import { CONTRACT_STATUS, buildingGender } from '@/lib/labels'
+import { CONTRACT_STATUS, GENDER } from '@/lib/labels'
 import type { CurrentStay } from '@/types/contract'
 import { useCurrentStay, useMyContracts } from '../hooks/useContracts'
 
@@ -92,7 +92,7 @@ function StayCards({ stay: { contract: c, roommates } }: { stay: CurrentStay }) 
         <CardContent className="space-y-4 text-sm">
           <DetailList
             rows={[
-              ['Tòa nhà', `Tòa ${room.building.name} (${buildingGender(room.building.gender).label})`],
+              ['Tòa nhà', `Tòa ${room.building.name} (${GENDER[room.building.gender].label})`],
               ['Phòng', `${room.code} · Tầng ${room.floor}`],
               ['Loại phòng', `${room.roomType.name} · ${room.roomType.capacity} người`],
               ['Thời gian ở', formatDateRange(c.startDate, c.endDate)],

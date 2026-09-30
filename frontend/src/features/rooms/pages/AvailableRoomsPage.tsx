@@ -8,7 +8,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { RegistrationFormDialog } from '@/features/registrations/components/RegistrationFormDialog'
 import { useRegistrationEligibility } from '@/features/registrations/hooks/useRegistrations'
 import { formatDateRange, formatMoney } from '@/lib/format'
-import { buildingGender, missingFieldLabels, REGISTRATION_STATUS } from '@/lib/labels'
+import { GENDER, missingFieldLabels, REGISTRATION_STATUS } from '@/lib/labels'
 import type { AvailableSummary } from '@/types/facility'
 import { useAvailableSummary } from '../hooks/useRooms'
 
@@ -17,8 +17,7 @@ import { useAvailableSummary } from '../hooks/useRooms'
  * (US-02.3): bấm "Đăng ký" ở một dòng là nộp đơn với nguyện vọng đó.
  *
  * Không liệt kê từng phòng: ban quản lý mới là người xếp giường cụ thể khi duyệt
- * (US-03). Backend chỉ trả phòng sinh viên được ở — tòa cùng giới tính, phòng
- * tòa hỗn hợp chưa có người khác giới.
+ * (US-03). Backend chỉ trả phòng sinh viên được ở — tòa cùng giới tính.
  */
 export function AvailableRoomsPage() {
   const query = useAvailableSummary()
@@ -59,7 +58,7 @@ export function AvailableRoomsPage() {
               <CardHeader>
                 <CardTitle>Tòa {building.name}</CardTitle>
                 <CardAction>
-                  <StatusBadge {...buildingGender(building.gender)} />
+                  <StatusBadge {...GENDER[building.gender]} />
                 </CardAction>
               </CardHeader>
               <CardContent className="divide-y">

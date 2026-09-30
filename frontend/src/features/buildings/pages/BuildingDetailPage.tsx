@@ -11,7 +11,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { RoomFormDialog } from '@/features/rooms/components/RoomFormDialog'
 import { RoomTable } from '@/features/rooms/components/RoomTable'
 import { orDash } from '@/lib/format'
-import { activeStatus, buildingGender } from '@/lib/labels'
+import { activeStatus, GENDER } from '@/lib/labels'
 import { AssignManagerDialog } from '../components/AssignManagerDialog'
 import { BuildingFormDialog } from '../components/BuildingFormDialog'
 import { useBuilding } from '../hooks/useBuildings'
@@ -81,7 +81,7 @@ export function BuildingDetailPage() {
           <span className="text-muted-foreground text-sm font-normal"> / {building.floors} tầng</span>
         </StatCard>
         <StatCard label="Giới tính ở">
-          <StatusBadge {...buildingGender(building.gender)} />
+          <StatusBadge {...GENDER[building.gender]} />
         </StatCard>
         <StatCard label="Quản lý">
           <span className="text-sm">{building.manager?.fullName ?? 'Chưa gán'}</span>

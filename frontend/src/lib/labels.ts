@@ -58,14 +58,6 @@ export const BED_STATUS = def({
 /** Giường còn trống nhưng đã có hợp đồng chờ ký giữ chỗ — không nhận thêm người. */
 export const BED_HELD: LabelDef = { label: 'Giữ chỗ', tone: 'warning' }
 
-/** Tòa không đặt giới tính (`gender = null`). */
-export const MIXED_GENDER: LabelDef = { label: 'Hỗn hợp', tone: 'neutral' }
-
-/** Nhãn giới tính của tòa: Nam / Nữ / Hỗn hợp. */
-export function buildingGender(gender: keyof typeof GENDER | null): LabelDef {
-  return gender ? GENDER[gender] : MIXED_GENDER
-}
-
 /**
  * Trạng thái phòng — backend tính từ giường, không lưu DB.
  * FULL dùng `info` như "Đang ở": phòng đầy là đang được dùng bình thường.

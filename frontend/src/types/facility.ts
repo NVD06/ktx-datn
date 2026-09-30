@@ -13,8 +13,8 @@ export interface Building {
   id: string
   name: string
   floors: number
-  /** null = tòa hỗn hợp */
-  gender: Gender | null
+  /** Tòa nam hoặc tòa nữ — không có tòa hỗn hợp. */
+  gender: Gender
   description: string | null
   isActive: boolean
   /** Mỗi tòa tối đa 1 quản lý, null = chưa gán. */
@@ -27,7 +27,7 @@ export interface Building {
 export interface BuildingInput {
   name: string
   floors: number
-  gender: Gender | null
+  gender: Gender
   description: string | null
   isActive: boolean
 }
@@ -57,7 +57,7 @@ export interface RoomTypeInput {
 export interface BuildingRef {
   id: string
   name: string
-  gender: Gender | null
+  gender: Gender
 }
 
 export interface RoomTypeRef {

@@ -15,12 +15,11 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { showFormError } from '@/lib/form'
-import { GENDER, MIXED_GENDER } from '@/lib/labels'
+import { GENDER } from '@/lib/labels'
 import type { Building } from '@/types/facility'
 import { useSaveBuilding } from '../hooks/useBuildings'
 
 // Giữ khớp với backend/src/modules/buildings/building.schema.ts.
-// Select không nhận giá trị null nên tòa hỗn hợp tạm dùng 'MIXED', đổi lại khi gửi đi.
 const schema = z.object({
   name: z
     .string()
@@ -32,7 +31,8 @@ const schema = z.object({
     .int('Số tầng phải là số nguyên')
     .min(1, 'Tòa nhà phải có ít nhất 1 tầng')
     .max(50, 'Số tầng tối đa là 50'),
-  gender: z.enum(['MALE', 'FEMALE', 'MIXED']),
+  // Không có tòa hỗn hợp: tòa mới bắt buộc chọn nam hoặc nữ, không đặt sẵn để khỏi lưu nhầm.
+  gender: z.enum(['MALE', 'FEMALE'], 'Vui lòng chọn tòa nam hoặc tòa nữ'),
   description: z.string().max(500, 'Mô tả tối đa 500 ký tự'),
   isActive: z.boolean(),
 })
@@ -67,20 +67,16 @@ function BuildingForm({ building, onDone }: { building?: Building | null; onDone
       ? {
           name: building.name,
           floors: building.floors,
-          gender: building.gender ?? 'MIXED',
+          gender: building.gender,
           description: building.description ?? '',
           isActive: building.isActive,
         }
-      : { name: '', floors: 5, gender: 'MIXED', description: '', isActive: true },
+      : { name: '', floors: 5, description: '', isActive: true },
   })
   const err = form.formState.errors
 
   function onSubmit(values: FormValues) {
-    const input = {
-      ...values,
-      gender: values.gender === 'MIXED' ? null : values.gender,
-      description: values.description.trim() || null,
-    }
+    const input = { ...values, description: values.description.trim() || null }
     save.mutate(
       { id: building?.id, input },
       {
@@ -121,14 +117,13 @@ function BuildingForm({ building, onDone }: { building?: Building | null; onDone
           control={form.control}
           name="gender"
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="b-gender" className="w-full">
-                <SelectValue />
+            <Select value={field.value ?? ''} onValueChange={field.onChange}>
+              <SelectTrigger id="b-gender" className="w-full" aria-invalid={!!err.gender}>
+                <SelectValue placeholder="Chọn tòa nam hoặc tòa nữ" />
               </SelectTrigger>
               <SelectContent position="popper">
                 <SelectItem value="MALE">Tòa {GENDER.MALE.label.toLowerCase()}</SelectItem>
                 <SelectItem value="FEMALE">Tòa {GENDER.FEMALE.label.toLowerCase()}</SelectItem>
-                <SelectItem value="MIXED">{MIXED_GENDER.label}</SelectItem>
               </SelectContent>
             </Select>
           )}

@@ -21,7 +21,7 @@ import { useApproveRegistration } from '../hooks/useRegistrations'
 
 /**
  * 409 mang các mã này nghĩa là danh sách giường đang xem đã cũ (giường vừa bị
- * người khác lấy, phòng vừa có người khác giới, phòng vừa ngừng hoạt động) —
+ * người khác lấy, tòa vừa đổi giới tính, phòng vừa ngừng hoạt động) —
  * bỏ lựa chọn để Manager chọn lại trên danh sách mới (hook tự tải lại).
  */
 const STALE_BED_ERRORS = new Set(['BED_TAKEN', 'ROOM_GENDER_MISMATCH', 'ROOM_UNAVAILABLE'])

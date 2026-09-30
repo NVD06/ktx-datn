@@ -7,7 +7,7 @@ import { FormField } from '@/components/shared/FormField'
 import { Textarea } from '@/components/ui/textarea'
 import { formatMoney } from '@/lib/format'
 import { showFormError } from '@/lib/form'
-import { buildingGender } from '@/lib/labels'
+import { GENDER } from '@/lib/labels'
 import type { AvailableSummary } from '@/types/facility'
 import { useCreateRegistration } from '../hooks/useRegistrations'
 
@@ -63,7 +63,7 @@ function RegistrationForm({ target, onDone }: { target: AvailableSummary; onDone
         <div>
           <dt className="text-muted-foreground text-xs">Tòa nhà</dt>
           <dd className="font-medium">
-            Tòa {building.name} ({buildingGender(building.gender).label})
+            Tòa {building.name} ({GENDER[building.gender].label})
           </dd>
         </div>
         <div>
