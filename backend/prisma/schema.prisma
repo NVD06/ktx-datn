@@ -112,7 +112,8 @@ model User {
 model StudentProfile {
   id          String    @id @default(uuid())
   userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id])
+  // Hồ sơ không tồn tại độc lập — xóa User thì xóa luôn hồ sơ.
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   studentCode String    @unique
   gender      Gender
   dob         DateTime?
