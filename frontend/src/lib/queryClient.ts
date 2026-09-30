@@ -10,10 +10,10 @@ import { AxiosError } from 'axios'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Dữ liệu quản trị không đổi liên tục — 60s tránh gọi lại API mỗi lần
-      // chuyển tab hoặc quay lại trang.
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
+      // Giữ mặc định của TanStack Query (staleTime = 0, tải lại khi quay về cửa sổ):
+      // dữ liệu ở đây do nhiều người cùng sửa — Manager duyệt đơn thì trang của SV
+      // phải thấy mà không cần F5. Mở trang vẫn hiện ngay bản đã có trong cache,
+      // chỉ tải lại ngầm rồi cập nhật.
 
       // Thử lại chỉ có ý nghĩa với lỗi mạng hoặc lỗi máy chủ. Lỗi 4xx (sai
       // dữ liệu, hết quyền, không tìm thấy) thì gọi lại bao nhiêu lần cũng vậy.

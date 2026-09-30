@@ -40,9 +40,12 @@ export function useContract(id: string) {
   })
 }
 
-/** Làm mới cả khi lỗi: 409 nghĩa là trạng thái trên màn hình đã cũ (đã ký ở tab khác, đã hết hạn…). */
+/**
+ * Ký xong giường chuyển OCCUPIED và sinh hóa đơn tiền phòng, nên làm mới cả chỗ trống và hóa đơn.
+ * Làm mới cả khi lỗi: 409 nghĩa là trạng thái trên màn hình đã cũ (đã ký ở tab khác, đã hết hạn…).
+ */
 export function useSignContract() {
-  const invalidate = useInvalidate(contractKeys.all, invoiceKeys.all)
+  const invalidate = useInvalidate(contractKeys.all, invoiceKeys.all, roomKeys.all)
   return useMutation({ mutationFn: contractsApi.signContract, onSettled: invalidate })
 }
 

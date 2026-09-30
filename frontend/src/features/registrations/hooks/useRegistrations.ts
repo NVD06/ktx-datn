@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as registrationsApi from '@/api/registrations'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { contractKeys } from '@/features/contracts/hooks/useContracts'
 import { roomKeys } from '@/features/rooms/hooks/useRooms'
 import {
   registrationPeriodKeys,
@@ -43,12 +44,12 @@ export function useCancelRegistration() {
 }
 
 /**
- * Duyệt đơn + xếp giường. Làm mới cả khi LỖI: 409 thường nghĩa là dữ liệu trên
- * màn hình đã cũ (giường vừa bị người khác lấy, đơn vừa được người khác xử lý),
- * nên tải lại danh sách đơn và giường trống để Manager chọn lại cho đúng.
+ * Duyệt đơn + xếp giường, sinh hợp đồng chờ ký. Làm mới cả khi LỖI: 409 thường nghĩa
+ * là dữ liệu trên màn hình đã cũ (giường vừa bị người khác lấy, đơn vừa được người
+ * khác xử lý), nên tải lại danh sách đơn và giường trống để Manager chọn lại cho đúng.
  */
 export function useApproveRegistration() {
-  const invalidate = useInvalidate(registrationKeys.all, roomKeys.all)
+  const invalidate = useInvalidate(registrationKeys.all, roomKeys.all, contractKeys.all)
   return useMutation({
     mutationFn: ({ id, bedId }: { id: string; bedId: string }) =>
       registrationsApi.approveRegistration(id, bedId),
