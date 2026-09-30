@@ -65,7 +65,7 @@ export function RoomTable({ building }: { building: Pick<Building, 'id' | 'name'
       cell: ({ row }) => (
         <div>
           <p>{row.original.roomType.name}</p>
-          <p className="text-muted-foreground text-xs">{formatMoney(row.original.roomType.price)} / kỳ</p>
+          <p className="text-muted-foreground text-xs">{formatMoney(row.original.roomType.price)} / tháng</p>
         </div>
       ),
     },

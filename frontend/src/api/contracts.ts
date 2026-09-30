@@ -21,7 +21,7 @@ export function getContract(id: string) {
   return apiGet<Contract>(`/contracts/${id}`)
 }
 
-/** Sinh viên ký: hợp đồng có hiệu lực, giường có người, sinh hóa đơn tiền phòng. */
+/** Sinh viên ký: hợp đồng có hiệu lực, giường có người. Tiền phòng lập hằng tháng, không lập lúc ký. */
 export function signContract(id: string) {
   return apiPost<Contract>(`/contracts/${id}/sign`)
 }
@@ -37,7 +37,7 @@ export function endContract(id: string, action: ContractEndAction, reason: strin
 
 export type ContractEndAction = 'decline' | 'cancel' | 'terminate'
 
-/** Manager gia hạn — backend lập hóa đơn tiền phòng cho số ngày ở thêm. `endDate` là ISO. */
+/** Manager gia hạn — chỉ lùi ngày kết thúc, tháng ở thêm lập hóa đơn hằng tháng như thường. `endDate` là ISO. */
 export function extendContract(id: string, endDate: string) {
   return apiPost<Contract>(`/contracts/${id}/extend`, { endDate })
 }

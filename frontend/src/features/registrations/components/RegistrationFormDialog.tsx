@@ -69,7 +69,7 @@ function RegistrationForm({ target, onDone }: { target: AvailableSummary; onDone
         <div>
           <dt className="text-muted-foreground text-xs">Loại phòng</dt>
           <dd className="font-medium">
-            {roomType.name} — {formatMoney(roomType.price)} / kỳ
+            {roomType.name} — {formatMoney(roomType.price)} / tháng
           </dd>
         </div>
       </dl>

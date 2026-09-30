@@ -18,7 +18,7 @@ export interface InvoiceRef {
   /** INV-2026-0001 */
   code: string
   type: InvoiceType
-  /** "2026-HK1" tiền phòng · "2026-HK1-GH-20270228" gia hạn · "2026-09" điện nước */
+  /** Tháng "2026-09" — tiền phòng và điện nước. Hóa đơn tiền phòng cũ theo kỳ: "2026-HK1", gia hạn "2026-HK1-GH-20270228". */
   period: string
   amount: string
   dueDate: string
@@ -41,7 +41,7 @@ export interface InvoiceItem {
   /** Chỉ số cũ / mới — chỉ điện, nước. */
   oldIndex: number | null
   newIndex: number | null
-  /** kWh / m³ của cả phòng, số ngày (gia hạn), 1 (tiền phòng cả kỳ). */
+  /** kWh / m³ của cả phòng; tiền phòng: 1 hoặc 0.5 tháng (hóa đơn cũ: 1 cả kỳ, số ngày gia hạn). */
   quantity: string
   unitPrice: string
   /** Phần của sinh viên này. */
@@ -103,6 +103,8 @@ export interface UtilitySheet {
     billed: boolean
     /** Chỉ số mới của lần chốt trước — điền sẵn làm chỉ số cũ. */
     prefill: Partial<MeterReading> | null
+    /** Vì sao lần chốt kỳ này không hủy được — null: hủy được (khi `billed`). */
+    cancelBlock: 'PAID' | 'LATER_BILLED' | null
   }[]
 }
 
@@ -117,4 +119,15 @@ export interface BillUtilitiesResult {
   invoiceCount: number
   roomCount: number
   skipped: { code: string; reason: 'BILLED' | 'EMPTY' | 'NO_USAGE' }[]
+}
+
+export interface CancelUtilityInput {
+  roomId: string
+  period: string
+}
+
+/** Số hóa đơn đã xóa và chỉ số của lần chốt vừa hủy — điền lại vào bảng để sửa. */
+export interface CancelUtilityResult {
+  invoiceCount: number
+  reading: MeterReading
 }

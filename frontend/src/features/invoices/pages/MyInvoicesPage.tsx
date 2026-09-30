@@ -22,7 +22,7 @@ export function MyInvoicesPage() {
 
   return (
     <>
-      <PageHeader title="Hóa đơn của tôi" description="Tiền phòng và tiền điện nước theo từng kỳ." />
+      <PageHeader title="Hóa đơn của tôi" description="Tiền phòng và tiền điện nước theo từng tháng." />
 
       {unpaid.length > 0 && (
         <p className={`${overdue > 0 ? 'tone-danger' : 'tone-warning'} mb-4 rounded-md border p-3 text-sm`}>
@@ -34,7 +34,7 @@ export function MyInvoicesPage() {
       {invoices.isPending && <LoadingState />}
       {invoices.isError && <ErrorState error={invoices.error} />}
       {invoices.data?.length === 0 && (
-        <EmptyState title="Chưa có hóa đơn nào" description="Hóa đơn tiền phòng được lập khi bạn ký hợp đồng." />
+        <EmptyState title="Chưa có hóa đơn nào" description="Hóa đơn tiền phòng được lập vào ngày 1 hằng tháng cho tháng trước." />
       )}
       {invoices.data && invoices.data.length > 0 && (
         <Card>

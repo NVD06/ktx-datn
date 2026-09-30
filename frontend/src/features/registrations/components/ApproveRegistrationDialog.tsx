@@ -215,7 +215,7 @@ function ApproveContent({
                       {buildingOptions.length > 1 && ` · Tòa ${room.building.name}`}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      Tầng {room.floor} · {room.roomType.name} · {formatMoney(room.roomType.price)} / kỳ
+                      Tầng {room.floor} · {room.roomType.name} · {formatMoney(room.roomType.price)} / tháng
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -248,11 +248,11 @@ function ApproveContent({
           <p>
             Xếp vào{' '}
             <span className="font-medium">{bedPlace(selected)}</span>
-            , giá hợp đồng {formatMoney(selected.room.roomType.price)} / kỳ.
+            , giá hợp đồng {formatMoney(selected.room.roomType.price)} / tháng.
           </p>
           {typeMismatch && (
             <p className="tone-warning rounded-md border p-2 text-xs">
-              Sinh viên muốn loại "{preferred.name}" ({formatMoney(preferred.price)} / kỳ), giường đã
+              Sinh viên muốn loại "{preferred.name}" ({formatMoney(preferred.price)} / tháng), giường đã
               chọn thuộc loại "{selected.room.roomType.name}".
             </p>
           )}

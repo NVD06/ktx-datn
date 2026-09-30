@@ -113,7 +113,7 @@ function RoomTypeForm({ roomType, onDone }: { roomType?: RoomType | null; onDone
         </FormField>
 
         <FormField
-          label="Giá một kỳ / sinh viên"
+          label="Giá một tháng / sinh viên"
           htmlFor="rt-price"
           error={err.price?.message}
           hint={formatMoney(price)}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/api/client'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -13,7 +14,7 @@ import { useBuildings } from '@/features/buildings/hooks/useBuildings'
 import { toDateInput } from '@/lib/date-input'
 import { formatMoney } from '@/lib/format'
 import type { MeterReading, UtilitySheet } from '@/types/invoice'
-import { useBillUtilities, useUtilitySheet } from '../hooks/useInvoices'
+import { useBillUtilities, useCancelUtility, useUtilitySheet } from '../hooks/useInvoices'
 
 const BUILDING_PARAMS = { limit: 100, sortBy: 'name', order: 'asc' } as const
 const FIELDS = [
@@ -23,8 +24,10 @@ const FIELDS = [
   ['waterNew', 'Nước mới'],
 ] as const
 const SKIP_TEXT = { BILLED: 'đã chốt trước đó', EMPTY: 'không còn sinh viên ở', NO_USAGE: 'không dùng điện nước' }
+const CANCEL_BLOCK_TEXT = { PAID: 'Đã có SV thanh toán', LATER_BILLED: 'Đã chốt tháng sau' }
 
 type Field = (typeof FIELDS)[number][0]
+type SheetRoom = UtilitySheet['rooms'][number]
 
 /** Chốt điện nước hàng tháng (US-04.2) — Manager chỉ thấy tòa mình. */
 export function UtilityBillingPage() {
@@ -75,8 +78,10 @@ export function UtilityBillingPage() {
 
 function ReadingTable({ sheet: { building, period, prices, rooms } }: { sheet: UtilitySheet }) {
   const bill = useBillUtilities()
+  const cancel = useCancelUtility()
   // Chỉ giữ ô đã sửa; ô chưa sửa lấy chỉ số cũ gợi ý từ lần chốt trước.
   const [edits, setEdits] = useState<Record<string, Partial<Record<Field, string>>>>({})
+  const [cancelling, setCancelling] = useState<SheetRoom | null>(null)
 
   const rows = rooms
     .filter((room) => room.residents > 0 || room.billed)
@@ -114,6 +119,13 @@ function ReadingTable({ sheet: { building, period, prices, rooms } }: { sheet: U
     )
   }
 
+  async function confirmCancel(room: SheetRoom) {
+    const { invoiceCount, reading } = await cancel.mutateAsync({ roomId: room.id, period })
+    // Điền lại chỉ số vừa hủy — chỉ cần sửa ô nhập sai rồi chốt lại.
+    setEdits((d) => ({ ...d, [room.id]: Object.fromEntries(FIELDS.map(([f]) => [f, String(reading[f])])) }))
+    toast.success(`Đã hủy ${invoiceCount} hóa đơn phòng ${room.code}. Sửa chỉ số rồi chốt lại.`)
+  }
+
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -146,8 +158,17 @@ function ReadingTable({ sheet: { building, period, prices, rooms } }: { sheet: U
                   </TableCell>
                   <TableCell className="text-right">{room.residents}</TableCell>
                   {room.billed ? (
-                    <TableCell colSpan={5} className="text-right">
-                      <StatusBadge label="Đã lập hóa đơn" tone="success" />
+                    <TableCell colSpan={5}>
+                      <div className="flex items-center justify-end gap-3">
+                        <StatusBadge label="Đã lập hóa đơn" tone="success" />
+                        {room.cancelBlock ? (
+                          <span className="text-muted-foreground text-xs">{CANCEL_BLOCK_TEXT[room.cancelBlock]}</span>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setCancelling(room)}>
+                            Hủy chốt
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   ) : (
                     <>
@@ -193,6 +214,22 @@ function ReadingTable({ sheet: { building, period, prices, rooms } }: { sheet: U
           {bill.isPending ? 'Đang lập hóa đơn…' : `Chốt ${ready.length} phòng và lập hóa đơn`}
         </Button>
       </div>
+
+      <ConfirmDialog
+        target={cancelling}
+        onClose={() => setCancelling(null)}
+        title="Hủy chốt điện nước?"
+        description={(room) => (
+          <>
+            Xóa hóa đơn điện nước tháng <strong>{period}</strong> của mọi sinh viên phòng <strong>{room.code}</strong>.
+            Chỉ số đã nhập được điền lại vào bảng để bạn sửa rồi chốt lại.
+          </>
+        )}
+        confirmLabel="Hủy chốt"
+        cancelLabel="Giữ lại"
+        isPending={cancel.isPending}
+        onConfirm={confirmCancel}
+      />
     </>
   )
 }

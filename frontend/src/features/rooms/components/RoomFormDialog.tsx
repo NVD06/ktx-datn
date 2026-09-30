@@ -115,7 +115,7 @@ function RoomForm({
     typeHint = room
       ? `Sức chứa ${selectedType.capacity} giường · phòng đang có ${room.bedCount} giường`
       : `Tự tạo ${selectedType.capacity} giường (G1–G${selectedType.capacity})`
-    typeHint += ` · ${formatMoney(selectedType.price)} / kỳ`
+    typeHint += ` · ${formatMoney(selectedType.price)} / tháng`
   }
 
   return (

@@ -1,17 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { FormDialog, FormDialogFooter } from '@/components/shared/FormDialog'
 import { FormField } from '@/components/shared/FormField'
 import { Input } from '@/components/ui/input'
 import { fromDateInput, toDateInput } from '@/lib/date-input'
-import { formatDate, formatMoney } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { showFormError } from '@/lib/form'
 import type { Contract } from '@/types/contract'
-import { ROOM_FEE_DUE_DAYS } from '../contract-terms'
-import { extensionFee } from '../contract-actions'
 import { useExtendContract } from '../hooks/useContracts'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -28,8 +26,8 @@ interface Props {
 }
 
 /**
- * Gia hạn hợp đồng đang ở (US-03.4). Hệ thống lập hóa đơn tiền phòng cho số ngày ở
- * thêm (chốt 25/09, phương án B) — số tiền hiện ngay khi chọn ngày để Manager thấy trước.
+ * Gia hạn hợp đồng đang ở (US-03.4): chỉ lùi ngày kết thúc. Không lập hóa đơn riêng —
+ * tiền phòng những tháng ở thêm được lập hằng tháng như mọi tháng khác.
  */
 export function ExtendContractDialog({ contract, onClose }: Props) {
   return (
@@ -40,7 +38,7 @@ export function ExtendContractDialog({ contract, onClose }: Props) {
       description={
         contract
           ? `Hợp đồng ${contract.code} của ${contract.student.fullName}, hiện kết thúc ngày ` +
-            `${formatDate(contract.endDate)}. Giường giữ nguyên, số ngày ở thêm được lập hóa đơn tiền phòng.`
+            `${formatDate(contract.endDate)}. Giường giữ nguyên, tiền phòng những tháng ở thêm lập hằng tháng như thường.`
           : ''
       }
     >
@@ -63,19 +61,13 @@ function ExtendForm({ contract: c, onDone }: { contract: Contract; onDone: () =>
       .refine((v) => v >= minDate, `Chọn từ ngày ${formatDate(fromDateInput(minDate))} trở đi`),
   })
   const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), defaultValues: { endDate: '' } })
-  const endDate = useWatch({ control: form.control, name: 'endDate' })
-  const fee = endDate >= minDate ? extensionFee(c, fromDateInput(endDate, 'end')) : null
 
   function onSubmit(values: z.infer<typeof schema>) {
     extend.mutate(
       { id: c.id, endDate: fromDateInput(values.endDate, 'end') },
       {
         onSuccess(updated) {
-          const invoice = updated.invoices[updated.invoices.length - 1]
-          toast.success(
-            `Đã gia hạn ${updated.code} đến ngày ${formatDate(updated.endDate)}` +
-              (invoice ? `. Hóa đơn ${invoice.code}: ${formatMoney(invoice.amount)}` : ''),
-          )
+          toast.success(`Đã gia hạn ${updated.code} đến ngày ${formatDate(updated.endDate)}`)
           onDone()
         },
         onError: (error) => showFormError(form, error),
@@ -93,16 +85,6 @@ function ExtendForm({ contract: c, onDone }: { contract: Contract; onDone: () =>
       >
         <Input id="ext-end" type="date" min={minDate} {...form.register('endDate')} />
       </FormField>
-
-      {fee && (
-        <p className="bg-muted/50 rounded-md border p-3 text-sm">
-          Hóa đơn tiền phòng gia hạn:{' '}
-          <span className="font-medium">
-            {fee.days} ngày × {formatMoney(fee.dailyRate)} = {formatMoney(fee.amount)}
-          </span>
-          , hạn thanh toán {ROOM_FEE_DUE_DAYS} ngày.
-        </p>
-      )}
 
       <FormDialogFooter onCancel={onDone} isPending={extend.isPending} submitLabel="Gia hạn" />
     </form>

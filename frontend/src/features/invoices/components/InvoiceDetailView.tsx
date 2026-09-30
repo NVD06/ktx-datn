@@ -7,11 +7,16 @@ import type { InvoiceDetail, InvoiceItem } from '@/types/invoice'
 
 const number = (value: string) => Number(value).toLocaleString('vi-VN')
 
-/** Số lượng kèm đơn vị: kWh / m³ của cả phòng, số ngày gia hạn, hoặc cả kỳ. */
+/**
+ * Số lượng kèm đơn vị: kWh / m³ của cả phòng, hoặc số tháng tiền phòng (quy tắc nửa tháng).
+ * Hóa đơn tiền phòng cũ, trước khi tính theo tháng: cả kỳ ("2026-HK1") hoặc số ngày gia hạn ("…-GH-…").
+ */
 function quantityLabel(item: InvoiceItem, period: string) {
   if (item.type === 'ELECTRIC') return `${number(item.quantity)} kWh`
   if (item.type === 'WATER') return `${number(item.quantity)} m³`
-  return period.includes('-GH-') ? `${number(item.quantity)} ngày` : 'Cả kỳ'
+  if (period.includes('-GH-')) return `${number(item.quantity)} ngày`
+  if (period.includes('-HK')) return 'Cả kỳ'
+  return Number(item.quantity) === 1 ? '1 tháng' : 'Nửa tháng'
 }
 
 /**

@@ -3,7 +3,6 @@ import * as invoicesApi from '@/api/invoices'
 import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
 
-// Ký / gia hạn hợp đồng sinh hóa đơn, nên các mutation đó (useContracts.ts) làm mới cả invoiceKeys.all.
 export const invoiceKeys = {
   all: ['invoices'] as const,
   list: (params: ListParams) => ['invoices', 'list', params] as const,
@@ -66,6 +65,12 @@ export function useUtilitySheet(buildingId: string | null, period: string) {
 export function useBillUtilities() {
   const invalidate = useInvalidate(invoiceKeys.all)
   return useMutation({ mutationFn: invoicesApi.billUtilities, onSettled: invalidate })
+}
+
+/** Hủy lần chốt: hóa đơn bị xóa khỏi mọi bảng, nên làm mới cả invoiceKeys.all như lúc chốt. */
+export function useCancelUtility() {
+  const invalidate = useInvalidate(invoiceKeys.all)
+  return useMutation({ mutationFn: invoicesApi.cancelUtility, onSettled: invalidate })
 }
 
 /** Không cần làm mới gì: thành công thì trình duyệt rời hẳn trang sang cổng VNPay. */

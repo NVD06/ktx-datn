@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { bedPlace, formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, GENDER, buildingGender } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
-import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS } from '../contract-terms'
+import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS, ROOM_FEE_RULE } from '../contract-terms'
 import { InvoiceList } from '@/features/invoices/components/InvoiceList'
 import { useContract, useEndContract, useSignContract } from '../hooks/useContracts'
 
@@ -21,7 +21,8 @@ const BACK = <BackLink to="/student/contracts">Hợp đồng của tôi</BackLin
 
 /**
  * Chi tiết hợp đồng + ký online (US-03.3). Ký xong backend làm trong một
- * transaction: hợp đồng có hiệu lực, giường có người ở, lập hóa đơn tiền phòng.
+ * transaction: hợp đồng có hiệu lực, giường có người ở. Tiền phòng tính từ ngày ký,
+ * hóa đơn lập vào đầu tháng sau.
  */
 export function ContractDetailPage() {
   const { id = '' } = useParams()
@@ -46,13 +47,7 @@ export function ContractDetailPage() {
 
   async function confirmSign(contract: Contract) {
     const signed = await sign.mutateAsync(contract.id)
-    const invoice = signed.invoices[0]
-    toast.success(
-      `Đã ký hợp đồng ${signed.code}.` +
-        (invoice
-          ? ` Hóa đơn tiền phòng ${invoice.code}: ${formatMoney(invoice.amount)}, hạn ${formatDate(invoice.dueDate)}.`
-          : ''),
-    )
+    toast.success(`Đã ký hợp đồng ${signed.code}. Hóa đơn tiền phòng tháng này được lập vào ngày 1 tháng sau.`)
   }
 
   return (
@@ -89,8 +84,8 @@ export function ContractDetailPage() {
             <DetailList
               rows={[
                 ['Thời gian ở', formatDateRange(c.startDate, c.endDate), true],
-                ['Tiền phòng', `${formatMoney(c.price)} / kỳ`],
-                ['Hạn đóng tiền phòng', `${ROOM_FEE_DUE_DAYS} ngày kể từ ngày ký`],
+                ['Tiền phòng', `${formatMoney(c.price)} / tháng`],
+                ['Thanh toán tiền phòng', `Hằng tháng, hạn ${ROOM_FEE_DUE_DAYS} ngày từ ngày 1 tháng sau`],
                 ['Ngày lập', formatDateTime(c.createdAt)],
                 ['Ngày ký', c.signedAt && formatDateTime(c.signedAt)],
               ]}
@@ -142,8 +137,8 @@ export function ContractDetailPage() {
         title="Ký hợp đồng?"
         description={(k) => (
           <>
-            Ký hợp đồng <strong>{k.code}</strong>: {bedPlace(k.bed)}, tiền phòng {formatMoney(k.price)} / kỳ.
-            Sau khi ký, hệ thống lập hóa đơn tiền phòng, hạn thanh toán {ROOM_FEE_DUE_DAYS} ngày.
+            Ký hợp đồng <strong>{k.code}</strong>: {bedPlace(k.bed)}, tiền phòng {formatMoney(k.price)} / tháng,
+            tính từ ngày ký. {ROOM_FEE_RULE}
           </>
         )}
         confirmLabel="Ký hợp đồng"

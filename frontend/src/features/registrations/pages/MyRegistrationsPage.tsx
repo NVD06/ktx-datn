@@ -85,7 +85,7 @@ function RegistrationCard({
     [
       'Nguyện vọng loại phòng',
       r.preferredRoomType
-        ? `${r.preferredRoomType.name} — ${formatMoney(r.preferredRoomType.price)} / kỳ`
+        ? `${r.preferredRoomType.name} — ${formatMoney(r.preferredRoomType.price)} / tháng`
         : 'Loại nào cũng được',
     ],
     ['Ghi chú', r.note, true],

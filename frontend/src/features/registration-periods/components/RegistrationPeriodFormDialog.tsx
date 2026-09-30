@@ -130,7 +130,7 @@ function RegistrationPeriodForm({
         label="Mã học kỳ"
         htmlFor="rp-term"
         error={err.term?.message}
-        hint="Năm bắt đầu năm học + học kỳ, ví dụ HK2 năm học 2026-2027 là 2026-HK2. Dùng làm kỳ của hóa đơn tiền phòng."
+        hint="Năm bắt đầu năm học + học kỳ, ví dụ HK2 năm học 2026-2027 là 2026-HK2."
       >
         <Input id="rp-term" placeholder="2026-HK1" className="uppercase" {...form.register('term')} />
       </FormField>

@@ -20,6 +20,8 @@ interface Props<T> {
   /** Mô tả phải nêu rõ tên bản ghi — convention.md §8.4. */
   description: (target: T) => ReactNode
   confirmLabel?: string
+  /** Đổi khi nút xác nhận cũng là "Hủy …" — hai nút cùng chữ "Hủy" dễ bấm nhầm. */
+  cancelLabel?: string
   /** `false` cho thao tác đảo lại được (mở đợt, mở khóa…) — nút xác nhận không tô đỏ. */
   destructive?: boolean
   isPending: boolean
@@ -34,6 +36,7 @@ export function ConfirmDialog<T>({
   title,
   description,
   confirmLabel = 'Xóa',
+  cancelLabel = 'Hủy',
   destructive = true,
   isPending,
   onConfirm,
@@ -46,7 +49,7 @@ export function ConfirmDialog<T>({
           <AlertDialogDescription>{target && description(target)}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Hủy</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             variant={destructive ? 'destructive' : 'default'}
             disabled={isPending}

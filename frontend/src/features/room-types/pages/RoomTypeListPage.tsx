@@ -54,7 +54,7 @@ export function RoomTypeListPage() {
     },
     {
       id: 'price',
-      header: 'Giá / kỳ',
+      header: 'Giá / tháng',
       enableSorting: true,
       meta: { className: 'text-right' },
       cell: ({ row }) => formatMoney(row.original.price),

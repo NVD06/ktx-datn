@@ -73,7 +73,7 @@ function ContractCard({ contract: c }: { contract: Contract }) {
           rows={[
             ['Chỗ ở', `Giường ${bed.code} · Phòng ${bed.room.code} · Tòa ${bed.room.building.name}`],
             ['Thời gian ở', formatDateRange(c.startDate, c.endDate)],
-            ['Tiền phòng', `${formatMoney(c.price)} / kỳ`],
+            ['Tiền phòng', `${formatMoney(c.price)} / tháng`],
             ['Ngày ký', c.signedAt && formatDate(c.signedAt)],
             ['Lý do hủy', c.status === 'CANCELLED' ? c.terminationReason : null, true],
           ]}

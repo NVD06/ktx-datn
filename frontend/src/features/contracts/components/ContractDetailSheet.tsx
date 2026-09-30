@@ -62,7 +62,7 @@ function Content({ contract: c }: { contract: Contract }) {
     ['Đợt', `${c.period.name} · ${c.period.term}`, true],
     ['Chỗ ở', `Giường ${c.bed.code} · Phòng ${c.bed.room.code} · Tầng ${c.bed.room.floor} · Tòa ${c.bed.room.building.name}`, true],
     ['Loại phòng', c.bed.room.roomType.name],
-    ['Tiền phòng', `${formatMoney(c.price)} / kỳ`],
+    ['Tiền phòng', `${formatMoney(c.price)} / tháng`],
     ['Thời gian ở', formatDateRange(c.startDate, c.endDate), true],
     ['Ngày lập', formatDateTime(c.createdAt)],
     ['Ngày ký', c.signedAt && formatDateTime(c.signedAt)],

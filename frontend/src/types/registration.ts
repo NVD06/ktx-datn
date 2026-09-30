@@ -17,7 +17,7 @@ export interface RegistrationPeriod {
   /** Thời gian ở — kỳ hạn hợp đồng sinh ra từ đợt. */
   stayStartAt: string
   stayEndAt: string
-  /** Mã học kỳ "2026-HK1" — kỳ của hóa đơn tiền phòng lập từ hợp đồng của đợt. */
+  /** Mã học kỳ "2026-HK1" của đợt. */
   term: string
   registrationCount: number
   createdAt: string

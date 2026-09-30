@@ -4,6 +4,8 @@ import type {
   BillUtilitiesInput,
   BillUtilitiesResult,
   BuildingDebt,
+  CancelUtilityInput,
+  CancelUtilityResult,
   Invoice,
   InvoiceDetail,
   InvoiceSummary,
@@ -37,6 +39,11 @@ export function getUtilitySheet(buildingId: string, period: string) {
 
 export function billUtilities(input: BillUtilitiesInput) {
   return apiPost<BillUtilitiesResult>('/invoices/utility', input)
+}
+
+/** Hủy lần chốt của một phòng khi nhập sai — backend chặn nếu đã có SV thanh toán. */
+export function cancelUtility(input: CancelUtilityInput) {
+  return apiPost<CancelUtilityResult>('/invoices/utility/cancel', input)
 }
 
 /** SV tạo giao dịch VNPay — trả URL cổng thanh toán để chuyển trình duyệt sang. */

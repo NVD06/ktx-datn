@@ -97,7 +97,7 @@ export function RoomDetailPage() {
             {room.heldBeds > 0 && ` · ${BED_HELD.label} ${room.heldBeds}`}
           </span>
         </StatCard>
-        <StatCard label="Giá / kỳ / sinh viên">{formatMoney(room.roomType.price)}</StatCard>
+        <StatCard label="Giá / tháng / sinh viên">{formatMoney(room.roomType.price)}</StatCard>
       </div>
 
       <h2 className="mb-3 text-base font-semibold">Sơ đồ giường</h2>

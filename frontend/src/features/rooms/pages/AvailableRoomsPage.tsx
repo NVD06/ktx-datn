@@ -37,7 +37,7 @@ export function AvailableRoomsPage() {
     <>
       <PageHeader
         title="Chỗ trống"
-        description="Số giường còn trống ở các tòa dành cho bạn. Giá tính cho một sinh viên trong một kỳ; ban quản lý xếp phòng cụ thể khi duyệt đơn."
+        description="Số giường còn trống ở các tòa dành cho bạn. Giá tính cho một sinh viên trong một tháng; ban quản lý xếp phòng cụ thể khi duyệt đơn."
       />
 
       {!eligibility.isLoading && <EligibilityNotice {...eligibility} />}
@@ -71,7 +71,7 @@ export function AvailableRoomsPage() {
                     <div className="min-w-0">
                       <p className="font-medium">{row.roomType.name}</p>
                       <p className="text-muted-foreground text-sm">
-                        {formatMoney(row.roomType.price)} / kỳ · {row.roomType.capacity} giường/phòng
+                        {formatMoney(row.roomType.price)} / tháng · {row.roomType.capacity} giường/phòng
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
