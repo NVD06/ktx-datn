@@ -45,7 +45,7 @@ export const buildingSchema = z
     id: z.uuid(),
     name: z.string().openapi({ example: 'Tòa A' }),
     floors: z.int().openapi({ example: 5 }),
-    gender: genderSchema.nullable().openapi({ description: 'null = tòa hỗn hợp' }),
+    gender: genderSchema.openapi({ description: 'Tòa nam hoặc tòa nữ' }),
     description: z.string().nullable(),
     isActive: z.boolean(),
     manager: z
@@ -133,7 +133,7 @@ export const roomDetailSchema = roomSchema
   })
   .openapi('RoomDetail');
 
-const buildingRefSchema = z.object({ id: z.uuid(), name: z.string(), gender: genderSchema.nullable() });
+const buildingRefSchema = z.object({ id: z.uuid(), name: z.string(), gender: genderSchema });
 const roomTypeRefSchema = z.object({ id: z.uuid(), name: z.string(), capacity: z.int(), price: moneySchema });
 
 export const availableSummarySchema = z

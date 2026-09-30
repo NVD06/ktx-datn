@@ -25,7 +25,7 @@ registrationRoutes.get(
     summary: 'Danh sách đơn để duyệt (ADMIN, MANAGER)',
     description:
       'ADMIN thấy mọi đơn. MANAGER thấy đơn nguyện vọng vào tòa mình và đơn "tòa nào cũng được" ' +
-      'của sinh viên hợp giới tính tòa (tòa hỗn hợp: mọi sinh viên). `search` tìm theo tên, email, ' +
+      'của sinh viên cùng giới tính với tòa. `search` tìm theo tên, email, ' +
       'mã sinh viên. Sắp xếp: createdAt, status. Mặc định createdAt giảm dần.',
     query: registrationListQuerySchema,
     paged: registrationListItemSchema,

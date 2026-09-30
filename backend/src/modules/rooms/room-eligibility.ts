@@ -36,32 +36,7 @@ export const OTHER_GENDER: Record<Gender, Gender> = { MALE: 'FEMALE', FEMALE: 'M
 /** Giới tính trong câu thông báo: "sinh viên nam", "tòa nữ". */
 export const GENDER_LABEL = { MALE: 'nam', FEMALE: 'nữ' } as const satisfies Record<Gender, string>;
 
-/**
- * Phòng mà sinh viên giới tính `gender` được ở:
- *   - tòa cùng giới tính: mọi phòng;
- *   - tòa hỗn hợp: phòng chưa có ai khác giới đang ở hoặc đã được xếp vào.
- *     Tòa hỗn hợp vẫn tách phòng nam/nữ — phòng không lưu giới tính mà mang
- *     giới tính của người đang ở, phòng trống thì ai cũng vào được.
- */
+/** Phòng mà sinh viên giới tính `gender` được ở: mọi phòng của tòa cùng giới tính (không có tòa hỗn hợp). */
 export function roomForGender(gender: Gender): Prisma.RoomWhereInput {
-  return {
-    OR: [
-      { building: { gender } },
-      {
-        building: { gender: null },
-        NOT: {
-          beds: {
-            some: {
-              contracts: {
-                some: {
-                  status: { in: [...HOLDING_CONTRACT_STATUSES] },
-                  registration: { student: { profile: { gender: OTHER_GENDER[gender] } } },
-                },
-              },
-            },
-          },
-        },
-      },
-    ],
-  };
+  return { building: { gender } };
 }

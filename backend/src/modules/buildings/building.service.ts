@@ -87,9 +87,9 @@ export async function create(input: CreateBuildingInput) {
 }
 
 /**
- * Chuyển tòa sang một giới tính (null -> hỗn hợp thì luôn được) chỉ khi trong tòa
- * không còn sinh viên khác giới đang ở / đã được xếp giường, và không còn đơn
- * đang chờ duyệt của sinh viên khác giới chọn tòa này.
+ * Đổi tòa nam ↔ tòa nữ chỉ khi trong tòa không còn sinh viên khác giới đang ở /
+ * đã được xếp giường, và không còn đơn đang chờ duyệt của sinh viên khác giới
+ * chọn tòa này.
  */
 async function assertGenderChangeable(building: { id: string; name: string }, gender: Gender) {
   const other = OTHER_GENDER[gender];

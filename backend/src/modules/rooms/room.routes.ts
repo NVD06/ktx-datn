@@ -24,8 +24,8 @@ roomRoutes.get(
     summary: 'Chỗ trống theo tòa × loại phòng (mọi vai trò)',
     description:
       'Phòng, tòa, loại phòng đang hoạt động, còn giường trống (giường bị hợp đồng DRAFT giữ chỗ không tính), ' +
-      'gom theo tòa × loại phòng. STUDENT chỉ thấy phòng ở tòa cùng giới tính, hoặc phòng ở tòa hỗn hợp ' +
-      'chưa có người khác giới. Sinh viên dùng để chọn nguyện vọng khi nộp đơn.',
+      'gom theo tòa × loại phòng. STUDENT chỉ thấy phòng ở tòa cùng giới tính. Sinh viên dùng để chọn ' +
+      'nguyện vọng khi nộp đơn.',
     data: z.array(availableSummarySchema),
     errors: [401],
   },

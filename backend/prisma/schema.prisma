@@ -127,7 +127,7 @@ model Building {
   id          String  @id @default(uuid())
   name        String  @unique
   floors      Int
-  gender      Gender? // null = tòa hỗn hợp
+  gender      Gender // tòa nam hoặc tòa nữ — không có tòa hỗn hợp
   description String?
   isActive    Boolean @default(true)
 

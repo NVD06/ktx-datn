@@ -13,16 +13,15 @@ const floors = z
   .min(1, 'Tòa nhà phải có ít nhất 1 tầng')
   .max(50, 'Số tầng tối đa là 50');
 const gender = z
-  .enum(['MALE', 'FEMALE'], 'Giới tính không hợp lệ')
-  .nullable()
-  .openapi({ description: 'null = tòa hỗn hợp' });
+  .enum(['MALE', 'FEMALE'], 'Vui lòng chọn tòa nam hoặc tòa nữ')
+  .openapi({ description: 'Tòa nam hoặc tòa nữ — không có tòa hỗn hợp' });
 const description = optionalText('Mô tả', 500);
 
 export const createBuildingSchema = z
   .object({
     name: name.openapi({ example: 'B3' }),
     floors: floors.openapi({ example: 5 }),
-    gender: gender.exactOptional(),
+    gender,
     description: description.exactOptional(),
     isActive: z.boolean().exactOptional(),
   })

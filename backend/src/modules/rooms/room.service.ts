@@ -153,8 +153,7 @@ export async function getById(user: AuthUser, id: string) {
  * và còn ít nhất 1 giường trống thật sự (không bị hợp đồng DRAFT giữ chỗ).
  *
  * Sinh viên chỉ thấy phòng mình được ở (room-eligibility.ts): tòa cùng giới
- * tính, và phòng ở tòa hỗn hợp chưa có người khác giới. Bộ lọc `gender` trên
- * URL bị bỏ qua để không xem được tòa khác giới.
+ * tính. Bộ lọc `gender` trên URL bị bỏ qua để không xem được tòa khác giới.
  */
 async function availableWhere(user: AuthUser): Promise<Prisma.RoomWhereInput> {
   const base: Prisma.RoomWhereInput = { ...ASSIGNABLE_ROOM, beds: { some: FREE_BED } };

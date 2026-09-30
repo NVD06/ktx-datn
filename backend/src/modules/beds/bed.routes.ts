@@ -13,8 +13,8 @@ bedRoutes.get(
   {
     summary: 'Giường còn xếp được cho một sinh viên, gom theo phòng (duyệt đơn)',
     description:
-      'Phòng/tòa/loại phòng đang hoạt động, hợp giới tính `gender` (tòa hỗn hợp: phòng chưa có ' +
-      'người khác giới ở hoặc được xếp), giường chưa có người và chưa bị hợp đồng DRAFT giữ chỗ. ' +
+      'Phòng/tòa/loại phòng đang hoạt động, thuộc tòa cùng giới tính `gender`, giường chưa có người và ' +
+      'chưa bị hợp đồng DRAFT giữ chỗ. ' +
       'MANAGER chỉ thấy tòa mình. Không phân trang.',
     query: availableBedQuerySchema,
     data: z.array(availableRoomSchema),

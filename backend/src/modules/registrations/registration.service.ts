@@ -13,7 +13,6 @@ import {
   FREE_BED,
   GENDER_LABEL,
   HOLDING_CONTRACT_STATUSES,
-  OTHER_GENDER,
   roomForGender,
 } from '../rooms/room-eligibility.js';
 import { BUILDING_REF_SELECT, ROOM_TYPE_SELECT } from '../rooms/room.service.js';
@@ -86,8 +85,8 @@ function findOverlappingContract(
 
 /**
  * Đơn mà người duyệt được thấy. ADMIN: tất cả. MANAGER: đơn nguyện vọng vào tòa
- * mình **và** đơn "tòa nào cũng được" của sinh viên hợp giới tính tòa (tòa hỗn
- * hợp: mọi sinh viên) — ai duyệt trước thì nhận. Nhờ vậy đơn nào cũng có tòa
+ * mình **và** đơn "tòa nào cũng được" của sinh viên cùng giới tính với tòa — ai
+ * duyệt trước thì nhận. Nhờ vậy đơn nào cũng có tòa
  * nhìn thấy, không có đơn mồ côi; còn đơn đã chọn tòa khác thì không lộ ra.
  */
 async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereInput> {
@@ -98,14 +97,7 @@ async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereIn
   // Không tra được tòa thì chỉ thấy đơn chọn đích danh tòa đó — không mở rộng phạm vi.
   if (!building) return { buildingId };
 
-  return {
-    OR: [
-      { buildingId },
-      building.gender
-        ? { buildingId: null, student: { profile: { gender: building.gender } } }
-        : { buildingId: null },
-    ],
-  };
+  return { OR: [{ buildingId }, { buildingId: null, student: { profile: { gender: building.gender } } }] };
 }
 
 export async function list(user: AuthUser, query: RegistrationListQuery) {
@@ -161,7 +153,7 @@ export async function create(user: AuthUser, input: CreateRegistrationInput) {
         if (!found?.isActive) {
           throw ApiError.validation({ buildingId: ['Tòa nhà không tồn tại hoặc đang ngừng hoạt động'] });
         }
-        if (found.gender && found.gender !== profile.gender) {
+        if (found.gender !== profile.gender) {
           throw ApiError.validation({
             buildingId: [`Tòa ${found.name} chỉ dành cho sinh viên ${GENDER_LABEL[found.gender]}`],
           });
@@ -281,9 +273,7 @@ export async function cancel(user: AuthUser, id: string) {
  * AVAILABLE, chỉ có thêm hợp đồng DRAFT — hai lệnh duyệt song song ở READ
  * COMMITTED đều đọc thấy giường trống. Vì vậy phải KHÓA DÒNG PHÒNG trước rồi mới
  * kiểm tra: lệnh sau vào cùng phòng phải chờ lệnh trước commit, và khi đọc lại
- * sẽ thấy hợp đồng DRAFT vừa tạo. Khóa theo phòng chứ không theo giường vì ở tòa
- * hỗn hợp, xếp nam và nữ vào hai giường khác nhau của cùng một phòng trống cũng
- * là tranh chấp. Lọt qua hết thì unique index của Contract chặn nốt.
+ * sẽ thấy hợp đồng DRAFT vừa tạo. Lọt qua hết thì unique index của Contract chặn nốt.
  *
  * Thứ tự khóa luôn là đơn → phòng, nên hai lệnh duyệt không thể chờ nhau vòng tròn.
  */
@@ -378,9 +368,7 @@ export async function approve(user: AuthUser, id: string, input: ApproveRegistra
     if (!fits) {
       throw ApiError.conflict(
         'ROOM_GENDER_MISMATCH',
-        room.building.gender
-          ? `Tòa ${room.building.name} chỉ dành cho sinh viên ${GENDER_LABEL[room.building.gender]}.`
-          : `Phòng ${room.code} đã có sinh viên ${GENDER_LABEL[OTHER_GENDER[gender]]} ở hoặc được xếp vào.`,
+        `Tòa ${room.building.name} chỉ dành cho sinh viên ${GENDER_LABEL[room.building.gender]}.`,
       );
     }
 
