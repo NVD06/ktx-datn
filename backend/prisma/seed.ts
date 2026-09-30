@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { env } from '../src/config/env.js';
 import { prisma } from '../src/config/prisma.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
@@ -6,6 +7,7 @@ import * as contractService from '../src/modules/contracts/contract.service.js';
 import * as utilityService from '../src/modules/invoices/utility.service.js';
 import * as registrationService from '../src/modules/registrations/registration.service.js';
 import { currentMonthVN } from '../src/utils/date-vn.js';
+import { dbTarget, isLocalDatabase } from './db-target.js';
 
 /**
  * Dữ liệu mẫu — phạm vi US-00 → US-04.
@@ -19,7 +21,7 @@ import { currentMonthVN } from '../src/utils/date-vn.js';
  * Sửa chữa, vệ sinh... bổ sung vào file này khi tới các user story tương ứng.
  *
  * Chạy lại được nhiều lần: xóa sạch dữ liệu cũ trước khi tạo mới.
- * KHÔNG chạy trên môi trường có dữ liệu thật.
+ * KHÔNG chạy trên môi trường có dữ liệu thật — `assertDevDatabase` chặn cứng.
  */
 
 const PASSWORD = '123456';
@@ -42,7 +44,23 @@ async function clearAll() {
   await prisma.building.deleteMany();
 }
 
+/**
+ * Chỉ cho seed chạy trên database ở máy dev, và không ở chế độ production. Bản deploy (Neon) dùng
+ * dữ liệu thật: Admin đầu tiên tạo bằng `npm run create-admin`, phần còn lại nhập qua giao diện.
+ * Chặn cả khi gọi gián tiếp — `prisma migrate reset` tự chạy seed sau khi xóa database.
+ */
+function assertDevDatabase() {
+  if (env.NODE_ENV !== 'production' && isLocalDatabase()) return;
+  console.error(`
+Không chạy seed: seed xóa sạch dữ liệu, chỉ dùng cho database ở máy dev.
+  Database: ${dbTarget()} · NODE_ENV=${env.NODE_ENV}
+  Database dữ liệu thật: tạo Admin đầu tiên bằng "npm run create-admin".
+`);
+  process.exit(1);
+}
+
 async function main() {
+  assertDevDatabase();
   console.log('Xóa dữ liệu cũ...');
   await clearAll();
 
@@ -70,7 +88,7 @@ async function main() {
       data: {
         name: 'Phòng 4 giường - điều hòa',
         capacity: 4,
-        price: 1_500_000,
+        price: 500_000, // đ/tháng/sinh viên
         description: 'Phòng khép kín, điều hòa, 4 giường tầng',
       },
     }),
@@ -78,7 +96,7 @@ async function main() {
       data: {
         name: 'Phòng 8 giường - quạt',
         capacity: 8,
-        price: 900_000,
+        price: 250_000,
         description: 'Phòng khép kín, quạt trần, 8 giường tầng',
       },
     }),
@@ -265,6 +283,9 @@ async function main() {
   await house('002', m1, b1, '103', 'G2', true); // đang ở, cùng phòng
   await house('005', m1, b1, '103', 'G3', false); // đã duyệt, chờ ký → giường "Giữ chỗ"
   await house('003', m2, b2, '103', 'G1', true);
+  // Seed chạy giữa kỳ: coi như SV đã ký từ ngày đầu kỳ, để tiền phòng tháng đầu (server tự lập
+  // ngày 1 tháng sau) tính cả tháng thay vì nửa tháng tính từ hôm chạy seed.
+  await prisma.contract.updateMany({ where: { status: 'ACTIVE' }, data: { signedAt: openPeriod.stayStartAt } });
   await registrationService.create(sv('006'), { buildingId: b1.id }); // chờ duyệt
   await registrationService.create(sv('007'), {}); // chờ duyệt, tòa nào cũng được → Manager B2 thấy
   const rejected = await registrationService.create(sv('008'), { buildingId: b2.id });
@@ -287,7 +308,7 @@ async function main() {
 
   // Một hóa đơn quá hạn để giao diện có đủ trạng thái (badge "Quá hạn", banner của SV).
   await prisma.invoice.updateMany({
-    where: { contractId: anContract.id, type: 'ROOM_FEE' },
+    where: { contractId: anContract.id, type: 'UTILITY' },
     data: { dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
   });
 
@@ -300,7 +321,8 @@ Seed xong (phạm vi US-00 → US-04):
   Phòng      : ${roomCount}  (${bedCount} giường)
   Đợt đăng ký: 2  (đang mở: ${openPeriod.name})
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
-  Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)   Hóa đơn: ${invoiceCount}  (1 quá hạn)
+  Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)   Hóa đơn: ${invoiceCount} điện nước (1 quá hạn)
+               Tiền phòng tháng này do server tự lập vào ngày 1 tháng sau
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
