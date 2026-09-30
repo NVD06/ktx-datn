@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { PAYMENT_EXPIRE_MINUTES } from '../../config/constants.js';
 import { env } from '../../config/env.js';
 import { prisma } from '../../config/prisma.js';
 import type { AuthUser } from '../../types/auth-user.js';
@@ -59,7 +60,7 @@ export async function pay(user: AuthUser, invoiceId: string, ipAddr: string) {
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: ipAddr,
       vnp_CreateDate: vnpDate(now),
-      vnp_ExpireDate: vnpDate(new Date(now.getTime() + 15 * 60 * 1000)),
+      vnp_ExpireDate: vnpDate(new Date(now.getTime() + PAYMENT_EXPIRE_MINUTES * 60 * 1000)),
     },
     secret,
   );

@@ -4,7 +4,7 @@ import { currentUser, param } from '../../utils/request.js';
 import { invoiceListQuerySchema } from './invoice.schema.js';
 import * as paymentService from '../payments/payment.service.js';
 import * as invoiceService from './invoice.service.js';
-import { utilitySheetQuerySchema, type BillUtilitiesInput } from './utility.schema.js';
+import { utilitySheetQuerySchema, type BillUtilitiesInput, type CancelUtilityInput } from './utility.schema.js';
 import * as utilityService from './utility.service.js';
 
 /** GET /api/v1/invoices */
@@ -31,6 +31,11 @@ export async function utilitySheet(req: Request, res: Response) {
 /** POST /api/v1/invoices/utility */
 export async function billUtilities(req: Request, res: Response) {
   res.status(201).json(ok(await utilityService.bill(currentUser(req), req.body as BillUtilitiesInput)));
+}
+
+/** POST /api/v1/invoices/utility/cancel */
+export async function cancelUtility(req: Request, res: Response) {
+  res.json(ok(await utilityService.cancel(currentUser(req), req.body as CancelUtilityInput)));
 }
 
 /** GET /api/v1/invoices/me */

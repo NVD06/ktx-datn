@@ -4,13 +4,11 @@ import type { ContractStatus } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { endOfDayVN, formatDateVN } from '../../utils/date-vn.js';
-import { nextDocumentCode } from '../../utils/document-code.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { compareBedCode } from '../beds/bed-code.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
-import { invoiceDueDate } from '../invoices/invoice-rules.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
 import type { ContractListQuery, ContractReasonInput, ExtendContractInput } from './contract.schema.js';
 
@@ -18,26 +16,12 @@ import type { ContractListQuery, ContractReasonInput, ExtendContractInput } from
  * Hợp đồng ở KTX (US-03.3, US-03.4). Hợp đồng DRAFT sinh ra khi duyệt đơn
  * (registration.service.ts → approve); sinh viên ký thì hợp đồng có hiệu lực.
  * Hợp đồng còn chờ ký có thể bị hủy (SV từ chối ký / Manager hủy); hợp đồng đang ở
- * thì Manager gia hạn hoặc chấm dứt.
+ * thì Manager gia hạn hoặc chấm dứt. Ký, gia hạn, chấm dứt đều không lập hóa đơn: tiền
+ * phòng lập hằng tháng theo số ngày ở thực tế (invoices/room-fee.service.ts).
  *
  * Phạm vi: sinh viên chỉ thấy hợp đồng của mình; Manager thấy hợp đồng có
  * giường thuộc tòa mình (lồng scope qua bed → room); Admin thấy tất cả.
  */
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/**
- * Tiền gia hạn (chốt 25/09, phương án B): tính theo số ngày ở thêm, đơn giá ngày
- * = giá kỳ ÷ số ngày của kỳ (thời gian ở của đợt), làm tròn đồng. Ví dụ kỳ
- * 1.500.000 đ / 153 ngày = 9.804 đ/ngày; gia hạn 28 ngày = 274.512 đ.
- * Giữ khớp với extensionFee() ở frontend/src/features/contracts/contract-actions.ts.
- */
-function extensionFee(price: number, term: { stayStartAt: Date; stayEndAt: Date }, from: Date, to: Date) {
-  const termDays = Math.max(1, Math.round((term.stayEndAt.getTime() - term.stayStartAt.getTime()) / DAY_MS));
-  const days = Math.round((to.getTime() - from.getTime()) / DAY_MS);
-  const dailyRate = Math.round(price / termDays);
-  return { days, dailyRate, amount: days * dailyRate };
-}
 
 /** Giường và sinh viên của hợp đồng — hóa đơn (invoice.service.ts) trả kèm đúng dạng này. */
 export const CONTRACT_BED_SELECT = { id: true, code: true, room: { select: ROOM_REF_SELECT } } as const;
@@ -252,8 +236,8 @@ async function transition(
 
 /**
  * Sinh viên ký hợp đồng — một transaction: hợp đồng DRAFT → ACTIVE, giường →
- * OCCUPIED, sinh hóa đơn tiền phòng (US-04.1) kèm một dòng chi tiết. Hỏng bước
- * nào thì không bước nào được ghi.
+ * OCCUPIED. Hỏng bước nào thì không bước nào được ghi. Không lập hóa đơn: tiền
+ * phòng tính từ ngày ký, lập vào đầu tháng sau cùng các tháng khác.
  */
 export async function sign(user: AuthUser, id: string) {
   await prisma.$transaction(async (tx) => {
@@ -262,10 +246,8 @@ export async function sign(user: AuthUser, id: string) {
       select: {
         status: true,
         endDate: true,
-        price: true,
         bedId: true,
         bed: { select: { code: true, room: { select: { code: true } } } },
-        registration: { select: { period: { select: { term: true } } } },
       },
     });
     assertStatus(user, contract, 'DRAFT', 'ký');
@@ -294,21 +276,6 @@ export async function sign(user: AuthUser, id: string) {
           'Hãy liên hệ ban quản lý để được đổi giường.',
       );
     }
-
-    await tx.invoice.create({
-      data: {
-        code: await nextDocumentCode(tx, 'INV'),
-        contractId: id,
-        type: 'ROOM_FEE',
-        // Bắt buộc có giá trị: @@unique([contractId, type, period]) chặn sinh trùng hóa đơn.
-        period: contract.registration.period.term,
-        amount: contract.price,
-        dueDate: invoiceDueDate(now),
-        items: {
-          create: { type: 'ROOM_FEE', quantity: 1, unitPrice: contract.price, amount: contract.price },
-        },
-      },
-    });
   });
 
   return getById(user, id);
@@ -354,11 +321,10 @@ export function cancel(user: AuthUser, id: string, { reason }: ContractReasonInp
 }
 
 /**
- * Gia hạn hợp đồng đang ở (US-03.4): giữ nguyên giường, lùi ngày kết thúc và lập
- * hóa đơn tiền phòng cho số ngày ở thêm — 1 dòng "số ngày × đơn giá ngày". Mỗi lần
- * gia hạn một hóa đơn, kỳ ghi theo ngày kết thúc mới cho khỏi trùng @@unique.
- * Gia hạn được cả hợp đồng đã quá ngày kết thúc mà SV vẫn ở: số ngày tính từ ngày
- * kết thúc cũ nên không sót những ngày đã ở quá hạn.
+ * Gia hạn hợp đồng đang ở (US-03.4): giữ nguyên giường, lùi ngày kết thúc. Không lập
+ * hóa đơn riêng — những tháng ở thêm được lập hằng tháng như mọi tháng khác. Gia hạn
+ * được cả hợp đồng đã quá ngày kết thúc mà SV vẫn ở: tháng ở quá hạn chưa tính tiền
+ * sẽ được lập bù ở lần chạy sau (room-fee.service.ts).
  */
 export async function extend(user: AuthUser, id: string, input: ExtendContractInput) {
   const endDate = endOfDayVN(input.endDate);
@@ -369,10 +335,7 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
       select: {
         status: true,
         endDate: true,
-        price: true,
-        registration: {
-          select: { studentId: true, period: { select: { term: true, stayStartAt: true, stayEndAt: true } } },
-        },
+        registration: { select: { studentId: true } },
       },
     });
     assertStatus(user, contract, 'ACTIVE', 'gia hạn');
@@ -386,7 +349,7 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
     if (endDate < now) throw ApiError.validation({ endDate: ['Ngày kết thúc mới không được trước hôm nay'] });
 
     // Phần ở thêm không được đè lên hợp đồng kỳ sau của chính SV (đã duyệt hoặc đang ở).
-    const { studentId, period } = contract.registration;
+    const { studentId } = contract.registration;
     const next = await tx.contract.findFirst({
       where: {
         id: { not: id },
@@ -405,24 +368,9 @@ export async function extend(user: AuthUser, id: string, input: ExtendContractIn
     }
 
     // Kèm cả ngày kết thúc cũ: hai người cùng gia hạn một lúc thì người sau nhận 409
-    // thay vì bị tính tiền chồng lên nhau.
+    // thay vì ghi đè ngày kết thúc của người trước.
     await transition(tx, { id, status: 'ACTIVE', endDate: contract.endDate }, { endDate }, 'gia hạn');
 
-    const fee = extensionFee(Number(contract.price), period, contract.endDate, endDate);
-    await tx.invoice.create({
-      data: {
-        code: await nextDocumentCode(tx, 'INV'),
-        contractId: id,
-        type: 'ROOM_FEE',
-        // "2026-HK1-GH-20270228" — năm/tháng/ngày của ngày kết thúc mới (giờ VN).
-        period: `${period.term}-GH-${formatDateVN(endDate).split('/').reverse().join('')}`,
-        amount: fee.amount,
-        dueDate: invoiceDueDate(now),
-        items: {
-          create: { type: 'ROOM_FEE', quantity: fee.days, unitPrice: fee.dailyRate, amount: fee.amount },
-        },
-      },
-    });
   });
 
   return getById(user, id);

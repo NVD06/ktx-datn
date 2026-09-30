@@ -22,7 +22,7 @@ export const createRoomTypeSchema = z
   .object({
     name: name.openapi({ example: 'Phòng 6 giường - điều hòa' }),
     capacity: capacity.openapi({ example: 6 }),
-    price: price.openapi({ example: 1_200_000, description: 'Giá một kỳ cho một sinh viên' }),
+    price: price.openapi({ example: 500_000, description: 'Giá một tháng cho một sinh viên' }),
     description: description.exactOptional(),
     isActive: z.boolean().exactOptional(),
   })

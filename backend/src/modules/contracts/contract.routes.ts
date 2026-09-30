@@ -72,8 +72,8 @@ contractRoutes.post(
   {
     summary: 'Ký hợp đồng (STUDENT)',
     description:
-      'Một transaction: DRAFT -> ACTIVE, giường -> OCCUPIED, sinh hóa đơn tiền phòng `INV-YYYY-XXXX` ' +
-      '(kỳ = mã học kỳ của đợt, hạn 14 ngày). 409 khi: hợp đồng không còn DRAFT (`CONTRACT_NOT_DRAFT`) · ' +
+      'Một transaction: DRAFT -> ACTIVE, giường -> OCCUPIED. Không lập hóa đơn: tiền phòng tính từ ngày ký, ' +
+      'lập vào đầu tháng sau. 409 khi: hợp đồng không còn DRAFT (`CONTRACT_NOT_DRAFT`) · ' +
       'đã quá ngày kết thúc (`CONTRACT_EXPIRED`) · giường đang bảo trì (`BED_UNAVAILABLE`).',
     data: contractSchema,
     errors: [401, 403, 404, 409],
@@ -119,9 +119,8 @@ contractRoutes.post(
     summary: 'Gia hạn hợp đồng đang ở (ADMIN, MANAGER)',
     description:
       'Hợp đồng ACTIVE (kể cả đã quá ngày kết thúc mà SV vẫn ở). `endDate` mới tính hết ngày (23:59 giờ VN), ' +
-      'phải sau ngày kết thúc hiện tại và không trước hôm nay (400). Giường giữ nguyên. Lập hóa đơn tiền phòng ' +
-      'cho số ngày ở thêm: đơn giá ngày = giá kỳ ÷ số ngày của kỳ, 1 dòng "số ngày × đơn giá ngày", hạn hết ngày ' +
-      'thứ 14; kỳ hóa đơn `2026-HK1-GH-20270228`. 409 khi: không còn ACTIVE (`CONTRACT_NOT_ACTIVE`) · phần ở ' +
+      'phải sau ngày kết thúc hiện tại và không trước hôm nay (400). Giường giữ nguyên. Không lập hóa đơn riêng: ' +
+      'những tháng ở thêm được lập hằng tháng. 409 khi: không còn ACTIVE (`CONTRACT_NOT_ACTIVE`) · phần ở ' +
       'thêm đè lên hợp đồng kỳ sau của SV (`CONTRACT_OVERLAP`).',
     body: extendContractSchema,
     data: contractSchema,

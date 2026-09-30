@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   billUtilitiesResultSchema,
   buildingDebtSchema,
+  cancelUtilityResultSchema,
   invoiceDetailSchema,
   invoiceSchema,
   invoiceSummarySchema,
@@ -11,7 +12,7 @@ import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './invoice.controller.js';
 import { invoiceListQuerySchema } from './invoice.schema.js';
-import { billUtilitiesSchema, utilitySheetQuerySchema } from './utility.schema.js';
+import { billUtilitiesSchema, cancelUtilitySchema, utilitySheetQuerySchema } from './utility.schema.js';
 
 // Không chặn vai trò chung: sinh viên xem hóa đơn của mình, ADMIN/MANAGER xem theo phạm vi tòa.
 export const invoiceRoutes = defineRoutes('/invoices', 'Invoices', requireAuth);
@@ -89,6 +90,22 @@ invoiceRoutes.post(
   },
   staff,
   ctrl.billUtilities,
+);
+
+invoiceRoutes.post(
+  '/utility/cancel',
+  {
+    summary: 'Hủy lần chốt điện nước của một phòng (ADMIN, MANAGER)',
+    description:
+      'Nhập sai chỉ số thì hủy rồi chốt lại. Xóa mọi hóa đơn UTILITY của phòng trong kỳ, trả lại chỉ số đã nhập. ' +
+      '409 khi đã có SV thanh toán (UTILITY_PAID), có SV đang ở cổng VNPay (PAYMENT_IN_PROGRESS) hoặc phòng đã ' +
+      'chốt tháng sau (LATER_PERIOD_BILLED).',
+    body: cancelUtilitySchema,
+    data: cancelUtilityResultSchema,
+    errors: [400, 401, 403, 404, 409],
+  },
+  staff,
+  ctrl.cancelUtility,
 );
 
 invoiceRoutes.get(

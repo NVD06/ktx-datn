@@ -81,7 +81,7 @@ export const registrationPeriodSchema = z
     isOpen: z.boolean().openapi({ description: 'Tối đa 1 đợt mở tại một thời điểm' }),
     stayStartAt: z.iso.datetime().openapi({ description: 'Bắt đầu ở — kỳ hạn hợp đồng' }),
     stayEndAt: z.iso.datetime().openapi({ description: 'Kết thúc ở — kỳ hạn hợp đồng' }),
-    term: z.string().openapi({ example: '2026-HK1', description: 'Mã học kỳ — kỳ của hóa đơn tiền phòng' }),
+    term: z.string().openapi({ example: '2026-HK1', description: 'Mã học kỳ của đợt' }),
     registrationCount: z.int(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
@@ -240,8 +240,8 @@ const invoiceRefSchema = z.object({
   code: z.string().openapi({ example: 'INV-2026-0001' }),
   type: invoiceTypeSchema,
   period: z.string().openapi({
-    example: '2026-HK1',
-    description: '"2026-HK1" tiền phòng · "2026-HK1-GH-20270228" gia hạn · "2026-09" điện nước',
+    example: '2026-09',
+    description: 'Tháng "2026-09" (tiền phòng, điện nước). Hóa đơn tiền phòng cũ theo kỳ: "2026-HK1", gia hạn "2026-HK1-GH-20270228"',
   }),
   amount: moneySchema,
   dueDate: z.iso.datetime(),
@@ -259,7 +259,7 @@ export const contractSchema = z
     }),
     startDate: z.iso.datetime(),
     endDate: z.iso.datetime(),
-    price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt, đồng / kỳ' }),
+    price: moneySchema.openapi({ description: 'Snapshot giá loại phòng lúc duyệt, đồng / tháng' }),
     signedAt: z.iso.datetime().nullable(),
     terminatedAt: z.iso.datetime().nullable(),
     terminationReason: z.string().nullable().openapi({ description: 'Lý do chấm dứt / hủy' }),
@@ -337,7 +337,7 @@ export const invoiceDetailSchema = invoiceSchema
         type: invoiceItemTypeSchema,
         oldIndex: z.int().nullable().openapi({ description: 'Chỉ số cũ — chỉ điện/nước' }),
         newIndex: z.int().nullable(),
-        quantity: z.string().openapi({ description: 'kWh / m³ của cả phòng, số ngày (gia hạn), 1 (tiền phòng cả kỳ)' }),
+        quantity: z.string().openapi({ description: 'kWh / m³ của cả phòng; tiền phòng: 1 hoặc 0.5 tháng (hóa đơn cũ theo kỳ: 1 cả kỳ, số ngày gia hạn)' }),
         unitPrice: moneySchema,
         amount: moneySchema.openapi({ description: 'Phần của SV này' }),
       }),
@@ -371,6 +371,11 @@ export const utilitySheetSchema = z
           .object({ electricOld: z.int().optional(), waterOld: z.int().optional() })
           .nullable()
           .openapi({ description: 'Chỉ số mới của lần chốt trước — điền sẵn làm chỉ số cũ' }),
+        cancelBlock: z.enum(['PAID', 'LATER_BILLED']).nullable().openapi({
+          description:
+            'Vì sao lần chốt kỳ này không hủy được: PAID đã có SV thanh toán, LATER_BILLED đã chốt tháng sau. ' +
+            'null: hủy được (nếu `billed`)',
+        }),
       }),
     ),
   })
@@ -383,6 +388,15 @@ export const billUtilitiesResultSchema = z
     skipped: z.array(z.object({ code: z.string(), reason: z.enum(['BILLED', 'EMPTY', 'NO_USAGE']) })),
   })
   .openapi('BillUtilitiesResult');
+
+export const cancelUtilityResultSchema = z
+  .object({
+    invoiceCount: z.int().openapi({ description: 'Số hóa đơn đã xóa' }),
+    reading: z
+      .object({ electricOld: z.int(), electricNew: z.int(), waterOld: z.int(), waterNew: z.int() })
+      .openapi({ description: 'Chỉ số của lần chốt vừa hủy — để điền lại vào bảng chốt' }),
+  })
+  .openapi('CancelUtilityResult');
 
 const moneyTotal = z.object({ count: z.int(), amount: moneySchema });
 export const invoiceSummarySchema = z

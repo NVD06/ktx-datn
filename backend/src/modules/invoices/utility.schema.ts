@@ -34,5 +34,10 @@ export const billUtilitiesSchema = z
   })
   .openapi('BillUtilitiesInput');
 
+export const cancelUtilitySchema = z
+  .object({ roomId: z.uuid('Phòng không hợp lệ'), period })
+  .openapi('CancelUtilityInput');
+
 export type UtilitySheetQuery = z.infer<typeof utilitySheetQuerySchema>;
 export type BillUtilitiesInput = z.infer<typeof billUtilitiesSchema>;
+export type CancelUtilityInput = z.infer<typeof cancelUtilitySchema>;
