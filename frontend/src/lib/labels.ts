@@ -182,6 +182,15 @@ export function isOverdue(invoice: { status: keyof typeof INVOICE_STATUS; dueDat
   return invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
 }
 
+/** Nhắc hạn (US-04.6): còn chưa tới hạn nhưng hạn nằm trong số ngày này. */
+export const DUE_SOON_DAYS = 3
+
+/** Chưa thanh toán, chưa quá hạn và hạn còn ≤ DUE_SOON_DAYS ngày. */
+export function isDueSoon(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }) {
+  const left = new Date(invoice.dueDate).getTime() - Date.now()
+  return invoice.status === 'UNPAID' && left >= 0 && left <= DUE_SOON_DAYS * 24 * 60 * 60 * 1000
+}
+
 export function invoiceStatus(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }): LabelDef {
   return isOverdue(invoice) ? OVERDUE : INVOICE_STATUS[invoice.status]
 }

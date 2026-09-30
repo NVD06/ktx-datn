@@ -7,22 +7,32 @@ import { RowActions } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatCard } from '@/components/shared/StatCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDate, formatMoney } from '@/lib/format'
 import { INVOICE_FILTER_OPTIONS, INVOICE_TYPE, invoiceStatus, toOptions } from '@/lib/labels'
 import type { Invoice } from '@/types/invoice'
+import { BuildingDebtCard } from '../components/BuildingDebtCard'
 import { InvoiceDetailSheet } from '../components/InvoiceDetailSheet'
 import { useInvoices, useInvoiceSummary } from '../hooks/useInvoices'
 
 const TYPE_OPTIONS = toOptions(INVOICE_TYPE)
-const SUMMARY_LABELS = { all: 'Tổng', unpaid: 'Chưa thanh toán', overdue: 'Quá hạn' } as const
+
+/** Ô tổng tiền kiêm nút lọc nhanh (US-04.6) — bấm vào thì đặt bộ lọc `status` bằng giá trị này. */
+const SUMMARY_CARDS = [
+  { key: 'all', label: 'Tổng', status: '' },
+  { key: 'unpaid', label: 'Chưa thanh toán', status: 'UNPAID' },
+  { key: 'overdue', label: 'Quá hạn', status: 'OVERDUE' },
+] as const
 
 /**
  * Hóa đơn cho người quản lý (US-04.3): lọc theo trạng thái / loại, tìm theo mã / kỳ / SV,
- * tổng tiền theo đúng bộ lọc. Backend tự giới hạn phạm vi: MANAGER chỉ thấy tòa mình.
+ * tổng tiền theo bộ lọc; ô tổng bấm được để lọc nhanh, Admin xem thêm công nợ từng tòa (US-04.6).
+ * Backend tự giới hạn phạm vi: MANAGER chỉ thấy tòa mình.
  */
 export function InvoiceListPage() {
+  const { user } = useAuth()
   const list = useListParams(['status', 'type'] as const)
   const query = useInvoices(list.params)
   const summary = useInvoiceSummary(list.params)
@@ -99,10 +109,15 @@ export function InvoiceListPage() {
       <PageHeader title="Hóa đơn" description="Tiền phòng và tiền điện nước của sinh viên." />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        {Object.entries(SUMMARY_LABELS).map(([key, label]) => {
-          const total = summary.data?.[key as keyof typeof SUMMARY_LABELS]
+        {SUMMARY_CARDS.map(({ key, label, status }) => {
+          const total = summary.data?.[key]
           return (
-            <StatCard key={key} label={total ? `${label} (${total.count})` : label}>
+            <StatCard
+              key={key}
+              label={total ? `${label} (${total.count})` : label}
+              active={list.filters.status === status}
+              onClick={() => list.setFilter('status', status)}
+            >
               <span className={key === 'overdue' && total?.count ? 'text-destructive' : undefined}>
                 {total ? formatMoney(total.amount) : '—'}
               </span>
@@ -110,6 +125,8 @@ export function InvoiceListPage() {
           )
         })}
       </div>
+
+      {user?.role === 'ADMIN' && <BuildingDebtCard />}
 
       <DataTable
         columns={columns}

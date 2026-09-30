@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { InvoiceDueBanner } from '@/features/invoices/components/InvoiceDueBanner'
 import { bedPlace, formatDate, formatDateRange } from '@/lib/format'
 import { CONTRACT_STATUS, buildingGender } from '@/lib/labels'
 import type { CurrentStay } from '@/types/contract'
@@ -43,6 +44,8 @@ export function StudentHomePage() {
           </Button>
         </div>
       )}
+
+      <InvoiceDueBanner />
 
       {stay.isPending && <LoadingState />}
       {stay.isError && <ErrorState error={stay.error} />}

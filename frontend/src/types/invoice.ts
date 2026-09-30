@@ -4,6 +4,7 @@
  */
 
 import type { Contract } from './contract'
+import type { BuildingRef } from './facility'
 
 /** Quá hạn không phải giá trị trong DB — tính khi đọc bằng invoiceStatus() ở lib/labels.ts. */
 export type InvoiceStatus = 'UNPAID' | 'PAID'
@@ -62,8 +63,20 @@ export interface InvoiceDetail extends Invoice {
   payments: InvoicePayment[]
 }
 
+export interface MoneyTotal {
+  count: number
+  amount: string
+}
+
 /** GET /invoices/summary — cùng bộ lọc với bảng. */
-export type InvoiceSummary = Record<'all' | 'unpaid' | 'overdue', { count: number; amount: string }>
+export type InvoiceSummary = Record<'all' | 'unpaid' | 'overdue', MoneyTotal>
+
+/** GET /invoices/debt-by-building — một dòng mỗi tòa trong phạm vi, sắp theo tên. */
+export interface BuildingDebt {
+  building: BuildingRef
+  unpaid: MoneyTotal
+  overdue: MoneyTotal
+}
 
 /** Chỉ số điện, nước của cả phòng trong một kỳ. */
 export interface MeterReading {

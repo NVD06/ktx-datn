@@ -3,6 +3,7 @@ import type { ListParams } from '@/types/api'
 import type {
   BillUtilitiesInput,
   BillUtilitiesResult,
+  BuildingDebt,
   Invoice,
   InvoiceDetail,
   InvoiceSummary,
@@ -17,6 +18,11 @@ export function listInvoices(params: ListParams) {
 /** Tổng tiền theo cùng bộ lọc với bảng (bỏ qua phân trang). */
 export function getInvoiceSummary(params: ListParams) {
   return apiGet<InvoiceSummary>('/invoices/summary', params)
+}
+
+/** Công nợ từng tòa — MANAGER chỉ nhận tòa mình. */
+export function getDebtByBuilding() {
+  return apiGet<BuildingDebt[]>('/invoices/debt-by-building')
 }
 
 /** Hóa đơn của sinh viên đang đăng nhập — chưa thanh toán lên đầu. */
