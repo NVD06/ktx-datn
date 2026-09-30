@@ -388,3 +388,7 @@ const moneyTotal = z.object({ count: z.int(), amount: moneySchema });
 export const invoiceSummarySchema = z
   .object({ all: moneyTotal, unpaid: moneyTotal, overdue: moneyTotal })
   .openapi('InvoiceSummary');
+
+export const buildingDebtSchema = z
+  .object({ building: buildingRefSchema, unpaid: moneyTotal, overdue: moneyTotal })
+  .openapi('BuildingDebt');

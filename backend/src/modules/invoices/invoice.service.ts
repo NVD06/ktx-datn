@@ -2,9 +2,10 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { paginate } from '../../utils/paginate.js';
-import { outOfScope } from '../../utils/scope.js';
+import { outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { CONTRACT_BED_SELECT, CONTRACT_STUDENT_SELECT, contractScope } from '../contracts/contract.service.js';
 import { studentSearch } from '../profile/profile.service.js';
+import { BUILDING_REF_SELECT } from '../rooms/room.service.js';
 import { overdueWhere } from './invoice-rules.js';
 import type { InvoiceListQuery } from './invoice.schema.js';
 
@@ -75,15 +76,44 @@ export async function list(user: AuthUser, query: InvoiceListQuery) {
   return { data: result.data.map(toDto), meta: result.meta };
 }
 
+/** Số hóa đơn và tổng tiền thỏa `where`. Tiền trả dạng chuỗi như mọi chỗ khác; không có dòng nào thì "0". */
+async function total(where: Prisma.InvoiceWhereInput) {
+  const r = await prisma.invoice.aggregate({ where, _sum: { amount: true }, _count: { _all: true } });
+  return { count: r._count._all, amount: String(r._sum.amount ?? 0) };
+}
+
 /** Tổng tiền theo đúng bộ lọc của bảng: tất cả / chưa thu / quá hạn. */
 export async function summary(user: AuthUser, query: InvoiceListQuery) {
   const where = listWhere(user, query);
-  const sum = (extra: Prisma.InvoiceWhereInput) =>
-    prisma.invoice.aggregate({ where: { AND: [where, extra] }, _sum: { amount: true }, _count: { _all: true } });
-  const [all, unpaid, overdue] = await Promise.all([sum({}), sum({ status: 'UNPAID' }), sum(overdueWhere(new Date()))]);
-  // Tiền trả dạng chuỗi như mọi chỗ khác (Decimal không mất chính xác); không có dòng nào thì "0".
-  const total = (r: typeof all) => ({ count: r._count._all, amount: String(r._sum.amount ?? 0) });
-  return { all: total(all), unpaid: total(unpaid), overdue: total(overdue) };
+  const [all, unpaid, overdue] = await Promise.all([
+    total(where),
+    total({ AND: [where, { status: 'UNPAID' }] }),
+    total({ AND: [where, overdueWhere(new Date())] }),
+  ]);
+  return { all, unpaid, overdue };
+}
+
+/**
+ * Công nợ từng tòa trong phạm vi (US-04.6): chưa thu và quá hạn. Manager chỉ có tòa mình.
+ * Mỗi tòa hai lệnh aggregate — KTX chỉ vài tòa nên không cần gộp thành một câu SQL.
+ */
+export async function debtByBuilding(user: AuthUser) {
+  const buildings = await prisma.building.findMany({
+    where: ownBuildingScope(user),
+    select: BUILDING_REF_SELECT,
+    orderBy: { name: 'asc' },
+  });
+  const now = new Date();
+  return Promise.all(
+    buildings.map(async (building) => {
+      const inBuilding: Prisma.InvoiceWhereInput = { contract: { bed: { room: { buildingId: building.id } } } };
+      const [unpaid, overdue] = await Promise.all([
+        total({ AND: [inBuilding, { status: 'UNPAID' }] }),
+        total({ AND: [inBuilding, overdueWhere(now)] }),
+      ]);
+      return { building, unpaid, overdue };
+    }),
+  );
 }
 
 /**
