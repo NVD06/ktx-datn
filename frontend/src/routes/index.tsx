@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
   // Đổi mật khẩu ban đầu — mọi vai trò, cần đăng nhập nhưng nằm ngoài hai layout.
   { element: <ProtectedRoute />, children: [{ path: CHANGE_PASSWORD_PATH, element: <ChangePasswordPage /> }] },
 
-  // '/' tự điều hướng theo vai trò
+  // '/' — trang giới thiệu cho khách; đã đăng nhập thì về khu theo vai trò
   { path: '/', element: <HomeRedirect /> },
 
   // Khu quản trị — ADMIN và MANAGER

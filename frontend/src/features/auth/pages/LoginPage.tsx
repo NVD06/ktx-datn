@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage } from '@/api/client'
+import { BackLink } from '@/components/shared/BackLink'
 import { FormField } from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,49 +43,52 @@ export function LoginPage() {
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Đăng nhập</CardTitle>
-          <CardDescription>Hệ thống quản lý ký túc xá sinh viên</CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-sm">
+        <BackLink to="/">Về trang chủ</BackLink>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+            <CardDescription>Hệ thống quản lý ký túc xá sinh viên</CardDescription>
+          </CardHeader>
 
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField label="Email" htmlFor="email" error={err.email?.message}>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="sv001@ktx.edu.vn"
-                {...form.register('email')}
-              />
-            </FormField>
+          <CardContent>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <FormField label="Email" htmlFor="email" error={err.email?.message}>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="sv001@ktx.edu.vn"
+                  {...form.register('email')}
+                />
+              </FormField>
 
-            <FormField label="Mật khẩu" htmlFor="password" error={err.password?.message}>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                {...form.register('password')}
-              />
-            </FormField>
+              <FormField label="Mật khẩu" htmlFor="password" error={err.password?.message}>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  {...form.register('password')}
+                />
+              </FormField>
 
-            {login.isError && (
-              <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">
-                {getErrorMessage(login.error, 'Email hoặc mật khẩu không đúng')}
-              </p>
-            )}
+              {login.isError && (
+                <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">
+                  {getErrorMessage(login.error, 'Email hoặc mật khẩu không đúng')}
+                </p>
+              )}
 
-            <Button type="submit" className="w-full" disabled={login.isPending}>
-              {login.isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
-            </Button>
-          </form>
+              <Button type="submit" className="w-full" disabled={login.isPending}>
+                {login.isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
+              </Button>
+            </form>
 
-          <p className="text-muted-foreground mt-4 text-center text-sm">
-            Chưa có tài khoản? Liên hệ ban quản lý ký túc xá để được cấp.
-          </p>
-        </CardContent>
-      </Card>
+            <p className="text-muted-foreground mt-4 text-center text-sm">
+              Chưa có tài khoản? Liên hệ ban quản lý ký túc xá để được cấp.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }

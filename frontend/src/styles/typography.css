@@ -14,5 +14,9 @@
  * Tiêu đề thẻ     text-base font-medium                   (CardTitle)
  * Nội dung        text-sm                                 (mặc định trong app)
  * Chú thích       text-sm text-muted-foreground
+ *
+ * Riêng trang giới thiệu công khai ('/', LandingPage) cần chữ lớn hơn:
+ * Tiêu đề chính   text-4xl sm:text-5xl font-bold tracking-tight
+ * Tiêu đề khối    text-3xl font-bold tracking-tight
  * Không tự đặt cỡ chữ khác — xem docs/convention.md §8.1.
  * ------------------------------------------------------------------------ */
