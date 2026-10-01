@@ -34,7 +34,7 @@ export function MyInvoicesPage() {
       {invoices.isPending && <LoadingState />}
       {invoices.isError && <ErrorState error={invoices.error} />}
       {invoices.data?.length === 0 && (
-        <EmptyState title="Chưa có hóa đơn nào" description="Hóa đơn tiền phòng được lập vào ngày 1 hằng tháng cho tháng trước." />
+        <EmptyState title="Chưa có hóa đơn nào" description="Hóa đơn tiền phòng tháng đầu được lập khi bạn ký hợp đồng, các tháng sau vào ngày 1 hằng tháng." />
       )}
       {invoices.data && invoices.data.length > 0 && (
         <Card>

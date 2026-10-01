@@ -63,7 +63,11 @@ export function useLogout() {
         predicate: (q) => q.queryKey[0] !== AUTH_QUERY_KEY[0],
       })
 
-      void navigate('/login', { replace: true })
+      // Về trang giới thiệu. Cache đã là null ở trên nên '/' hiện trang giới
+      // thiệu chứ không đẩy ngược về khu của người vừa đăng xuất.
+      // flushSync: chuyển trang ngay, không qua transition — nếu không,
+      // ProtectedRoute của trang cũ nhận user = null trước và tự đẩy sang /login.
+      void navigate('/', { replace: true, flushSync: true })
     },
   })
 }

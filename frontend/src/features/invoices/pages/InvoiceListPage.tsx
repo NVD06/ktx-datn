@@ -133,7 +133,7 @@ export function InvoiceListPage() {
         query={query}
         list={list}
         emptyTitle="Không có hóa đơn nào"
-        emptyDescription={filtered ? 'Thử bỏ bớt bộ lọc.' : 'Tiền phòng tự lập vào ngày 1 hằng tháng cho tháng trước, điện nước lập ở trang Chốt điện nước.'}
+        emptyDescription={filtered ? 'Thử bỏ bớt bộ lọc.' : 'Tiền phòng tự lập khi sinh viên ký hợp đồng và vào ngày 1 hằng tháng, điện nước lập ở trang Chốt điện nước.'}
         toolbar={
           <>
             <SearchInput

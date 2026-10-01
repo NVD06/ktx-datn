@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as contractsApi from '@/api/contracts'
 import type { ContractEndAction } from '@/api/contracts'
+import { invoiceKeys } from '@/features/invoices/hooks/useInvoices'
 import { registrationKeys } from '@/features/registrations/hooks/useRegistrations'
 import { roomKeys } from '@/features/rooms/hooks/useRooms'
 import { useInvalidate } from '@/hooks/useInvalidate'
@@ -40,11 +41,12 @@ export function useContract(id: string) {
 }
 
 /**
- * Ký xong giường chuyển OCCUPIED nên làm mới cả chỗ trống (hóa đơn tiền phòng lập vào đầu tháng sau).
- * Làm mới cả khi lỗi: 409 nghĩa là trạng thái trên màn hình đã cũ (đã ký ở tab khác, đã hết hạn…).
+ * Ký xong giường chuyển OCCUPIED và có ngay hóa đơn tiền phòng tháng đầu, nên làm mới cả chỗ
+ * trống lẫn hóa đơn. Làm mới cả khi lỗi: 409 nghĩa là trạng thái trên màn hình đã cũ (đã ký ở
+ * tab khác, đã hết hạn…).
  */
 export function useSignContract() {
-  const invalidate = useInvalidate(contractKeys.all, roomKeys.all)
+  const invalidate = useInvalidate(contractKeys.all, roomKeys.all, invoiceKeys.all)
   return useMutation({ mutationFn: contractsApi.signContract, onSettled: invalidate })
 }
 

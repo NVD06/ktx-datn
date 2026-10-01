@@ -72,8 +72,8 @@ contractRoutes.post(
   {
     summary: 'Ký hợp đồng (STUDENT)',
     description:
-      'Một transaction: DRAFT -> ACTIVE, giường -> OCCUPIED. Không lập hóa đơn: tiền phòng tính từ ngày ký, ' +
-      'lập vào đầu tháng sau. 409 khi: hợp đồng không còn DRAFT (`CONTRACT_NOT_DRAFT`) · ' +
+      'Một transaction: DRAFT -> ACTIVE, giường -> OCCUPIED, lập hóa đơn tiền phòng tháng đầu (trả trước, ' +
+      'tính từ ngày ký); các tháng sau server tự lập vào đầu tháng. 409 khi: hợp đồng không còn DRAFT (`CONTRACT_NOT_DRAFT`) · ' +
       'đã quá ngày kết thúc (`CONTRACT_EXPIRED`) · giường đang bảo trì (`BED_UNAVAILABLE`).',
     data: contractSchema,
     errors: [401, 403, 404, 409],

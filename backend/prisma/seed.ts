@@ -4,6 +4,7 @@ import { prisma } from '../src/config/prisma.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
 import * as contractService from '../src/modules/contracts/contract.service.js';
+import * as roomFeeService from '../src/modules/invoices/room-fee.service.js';
 import * as utilityService from '../src/modules/invoices/utility.service.js';
 import * as registrationService from '../src/modules/registrations/registration.service.js';
 import { currentMonthVN } from '../src/utils/date-vn.js';
@@ -283,9 +284,10 @@ async function main() {
   await house('002', m1, b1, '103', 'G2', true); // đang ở, cùng phòng
   await house('005', m1, b1, '103', 'G3', false); // đã duyệt, chờ ký → giường "Giữ chỗ"
   await house('003', m2, b2, '103', 'G1', true);
-  // Seed chạy giữa kỳ: coi như SV đã ký từ ngày đầu kỳ, để tiền phòng tháng đầu (server tự lập
-  // ngày 1 tháng sau) tính cả tháng thay vì nửa tháng tính từ hôm chạy seed.
+  // Seed chạy giữa kỳ: coi như SV đã ký từ ngày đầu kỳ. Lúc ký mới có hóa đơn tháng này; lập bù
+  // những tháng đã ở từ đầu kỳ tới giờ, như server tự làm lúc khởi động.
   await prisma.contract.updateMany({ where: { status: 'ACTIVE' }, data: { signedAt: openPeriod.stayStartAt } });
+  await roomFeeService.billPendingMonths();
   await registrationService.create(sv('006'), { buildingId: b1.id }); // chờ duyệt
   await registrationService.create(sv('007'), {}); // chờ duyệt, tòa nào cũng được → Manager B2 thấy
   const rejected = await registrationService.create(sv('008'), { buildingId: b2.id });
@@ -312,7 +314,11 @@ async function main() {
     data: { dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
   });
 
-  const [contractCount, invoiceCount] = await Promise.all([prisma.contract.count(), prisma.invoice.count()]);
+  const [contractCount, roomFeeCount, utilityCount] = await Promise.all([
+    prisma.contract.count(),
+    prisma.invoice.count({ where: { type: 'ROOM_FEE' } }),
+    prisma.invoice.count({ where: { type: 'UTILITY' } }),
+  ]);
 
   console.log(`
 Seed xong (phạm vi US-00 → US-04):
@@ -321,8 +327,8 @@ Seed xong (phạm vi US-00 → US-04):
   Phòng      : ${roomCount}  (${bedCount} giường)
   Đợt đăng ký: 2  (đang mở: ${openPeriod.name})
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
-  Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)   Hóa đơn: ${invoiceCount} điện nước (1 quá hạn)
-               Tiền phòng tháng này do server tự lập vào ngày 1 tháng sau
+  Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)
+  Hóa đơn    : ${roomFeeCount} tiền phòng (trả trước, từ đầu kỳ tới tháng này) + ${utilityCount} điện nước (1 quá hạn)
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":

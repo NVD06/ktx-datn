@@ -1,5 +1,5 @@
 /**
- * Hạn thanh toán hóa đơn tiền phòng, tính từ ngày lập (ngày 1 tháng sau).
+ * Hạn thanh toán hóa đơn tiền phòng, tính từ ngày lập (lúc ký với tháng đầu, ngày 1 với các tháng sau).
  * Giữ khớp với INVOICE_DUE_DAYS trong backend/src/config/constants.ts.
  */
 export const ROOM_FEE_DUE_DAYS = 14
@@ -12,9 +12,9 @@ export const HALF_MONTH_DAYS = 15
 
 /** Cách tính tiền phòng — dùng chung cho điều khoản hợp đồng và hộp xác nhận ký. */
 export const ROOM_FEE_RULE =
-  `Tiền phòng tính theo tháng, trả sau: ngày 1 hằng tháng hệ thống lập hóa đơn tiền phòng của tháng trước, ` +
-  `hạn thanh toán ${ROOM_FEE_DUE_DAYS} ngày. Tháng ở dưới ${HALF_MONTH_DAYS} ngày (tháng vào ở, tháng trả phòng) ` +
-  `tính nửa tháng, từ ${HALF_MONTH_DAYS} ngày trở lên tính cả tháng.`
+  `Tiền phòng tính theo tháng, trả trước: hóa đơn tháng đầu được lập ngay khi ký hợp đồng, các tháng sau ` +
+  `hệ thống lập vào ngày 1 hằng tháng, hạn thanh toán ${ROOM_FEE_DUE_DAYS} ngày kể từ ngày lập. Tháng ở dưới ` +
+  `${HALF_MONTH_DAYS} ngày (tháng vào ở, tháng trả phòng) tính nửa tháng, từ ${HALF_MONTH_DAYS} ngày trở lên tính cả tháng.`
 
 /**
  * Điều khoản chung in trên mọi hợp đồng. Thông tin riêng từng hợp đồng (giường,

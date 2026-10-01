@@ -5,6 +5,6 @@ import { startRoomFeeBilling } from './modules/invoices/room-fee.service.js';
 
 app.listen(env.PORT, () => {
   console.log(`API chạy tại http://localhost:${env.PORT}/api/v1  (${env.NODE_ENV})`);
-  // Tự lập hóa đơn tiền phòng tháng trước — lúc khởi động và mỗi giờ.
+  // Tự lập hóa đơn tiền phòng tháng mới (trả trước) — lúc khởi động và mỗi giờ.
   startRoomFeeBilling();
 });

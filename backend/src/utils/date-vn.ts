@@ -27,7 +27,12 @@ export function currentYearVN(): number {
 
 /** Tháng hiện tại ở Việt Nam: "2026-09" — kỳ của hóa đơn điện nước. */
 export function currentMonthVN(): string {
-  return toVN(new Date()).toISOString().slice(0, 7);
+  return monthOfVN(new Date());
+}
+
+/** Tháng (giờ Việt Nam) chứa `date`: 00:30 ngày 01/10 giờ VN đã là "2026-10". */
+export function monthOfVN(date: Date): string {
+  return toVN(date).toISOString().slice(0, 7);
 }
 
 /** 00:00 giờ Việt Nam ngày đầu của tháng "2026-09". */

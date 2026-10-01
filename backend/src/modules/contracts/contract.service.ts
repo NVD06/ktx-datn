@@ -7,6 +7,7 @@ import { endOfDayVN, formatDateVN } from '../../utils/date-vn.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { compareBedCode } from '../beds/bed-code.js';
+import { billFirstMonth } from '../invoices/room-fee.service.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
@@ -16,8 +17,9 @@ import type { ContractListQuery, ContractReasonInput, ExtendContractInput } from
  * Hợp đồng ở KTX (US-03.3, US-03.4). Hợp đồng DRAFT sinh ra khi duyệt đơn
  * (registration.service.ts → approve); sinh viên ký thì hợp đồng có hiệu lực.
  * Hợp đồng còn chờ ký có thể bị hủy (SV từ chối ký / Manager hủy); hợp đồng đang ở
- * thì Manager gia hạn hoặc chấm dứt. Ký, gia hạn, chấm dứt đều không lập hóa đơn: tiền
- * phòng lập hằng tháng theo số ngày ở thực tế (invoices/room-fee.service.ts).
+ * thì Manager gia hạn hoặc chấm dứt. Tiền phòng trả trước theo tháng: ký thì lập ngay hóa đơn
+ * tháng đầu, các tháng sau server tự lập vào đầu tháng; gia hạn, chấm dứt không lập hóa đơn
+ * (invoices/room-fee.service.ts).
  *
  * Phạm vi: sinh viên chỉ thấy hợp đồng của mình; Manager thấy hợp đồng có
  * giường thuộc tòa mình (lồng scope qua bed → room); Admin thấy tất cả.
@@ -236,8 +238,8 @@ async function transition(
 
 /**
  * Sinh viên ký hợp đồng — một transaction: hợp đồng DRAFT → ACTIVE, giường →
- * OCCUPIED. Hỏng bước nào thì không bước nào được ghi. Không lập hóa đơn: tiền
- * phòng tính từ ngày ký, lập vào đầu tháng sau cùng các tháng khác.
+ * OCCUPIED, lập hóa đơn tiền phòng tháng đầu (tính từ ngày ký). Hỏng bước nào thì
+ * không bước nào được ghi. Các tháng sau server tự lập vào đầu tháng.
  */
 export async function sign(user: AuthUser, id: string) {
   await prisma.$transaction(async (tx) => {
@@ -276,6 +278,8 @@ export async function sign(user: AuthUser, id: string) {
           'Hãy liên hệ ban quản lý để được đổi giường.',
       );
     }
+
+    await billFirstMonth(tx, id);
   });
 
   return getById(user, id);
