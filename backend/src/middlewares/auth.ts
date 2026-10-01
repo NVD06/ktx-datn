@@ -14,12 +14,39 @@ import { ApiError } from '../utils/api-error.js';
  * phiên hết hạn. Ở quy mô này, đánh đổi đó là xứng đáng.
  */
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
+  const user = await loadUser(req);
+  // Mật khẩu ban đầu do Admin cấp (mã SV) ai biết mã SV cũng đoán được — chưa đổi thì
+  // chưa dùng được gì. Giao diện tự chuyển sang trang đổi mật khẩu; đây là lớp chặn thật.
+  if (user.mustChangePassword) {
+    throw new ApiError(403, 'PASSWORD_CHANGE_REQUIRED', 'Bạn cần đổi mật khẩu ban đầu trước khi tiếp tục');
+  }
+  next();
+}
+
+/**
+ * Như `requireAuth` nhưng vẫn cho qua tài khoản chưa đổi mật khẩu ban đầu — chỉ dùng
+ * cho /auth/me (giao diện cần biết để chuyển trang) và /auth/change-password.
+ */
+export async function requireSession(req: Request, _res: Response, next: NextFunction) {
+  await loadUser(req);
+  next();
+}
+
+async function loadUser(req: Request): Promise<AuthUser> {
   const userId = await getUserIdFromRequest(req);
   if (!userId) throw ApiError.unauthorized();
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, fullName: true, email: true, role: true, isActive: true, buildingId: true },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      isActive: true,
+      buildingId: true,
+      mustChangePassword: true,
+    },
   });
 
   // Tài khoản bị xóa hoặc bị khóa sau khi đã đăng nhập -> phiên mất hiệu lực ngay.
@@ -27,8 +54,7 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
 
   const { isActive: _isActive, ...authUser } = user;
   req.user = authUser satisfies AuthUser;
-
-  next();
+  return authUser;
 }
 
 /**

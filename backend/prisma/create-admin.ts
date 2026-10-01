@@ -6,7 +6,7 @@ import { dbTarget } from './db-target.js';
 /**
  * Tạo tài khoản Admin đầu tiên cho database dữ liệu thật — đúng một tài khoản, không kèm dữ liệu
  * mẫu và không xóa gì như seed. Đăng nhập rồi nhập tiếp qua giao diện: tòa nhà, loại phòng, phòng,
- * tài khoản Manager, đợt đăng ký. Sinh viên tự đăng ký tài khoản ở trang /register.
+ * tài khoản Manager, tài khoản sinh viên (từng người hoặc nhập Excel), đợt đăng ký.
  *
  *   Database trong .env (máy dev):
  *     npm run create-admin -- admin@ktx.edu.vn "Nguyễn Văn A"

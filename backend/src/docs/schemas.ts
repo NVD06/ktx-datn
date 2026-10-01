@@ -26,17 +26,11 @@ export const authUserSchema = z
     email: z.email().openapi({ example: 'sv001@example.com' }),
     role: roleSchema,
     buildingId: z.uuid().nullable().openapi({ description: 'Chỉ MANAGER mới có giá trị' }),
+    mustChangePassword: z
+      .boolean()
+      .openapi({ description: 'Đang dùng mật khẩu ban đầu do Admin cấp — phải đổi mới dùng được API khác' }),
   })
   .openapi('AuthUser');
-
-export const registeredUserSchema = z
-  .object({
-    id: z.uuid(),
-    email: z.email(),
-    fullName: z.string(),
-    role: roleSchema,
-  })
-  .openapi('RegisteredUser');
 
 export const deletedSchema = z.object({ id: z.uuid() }).openapi('Deleted');
 
@@ -309,8 +303,10 @@ export const userSchema = z
     phone: z.string().nullable(),
     role: roleSchema,
     isActive: z.boolean(),
+    mustChangePassword: z.boolean().openapi({ description: 'Chưa đổi mật khẩu ban đầu' }),
     buildingId: z.uuid().nullable(),
     building: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+    profile: z.object({ studentCode: z.string() }).nullable().openapi({ description: 'Chỉ sinh viên' }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

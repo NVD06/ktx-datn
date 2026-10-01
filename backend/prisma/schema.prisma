@@ -94,6 +94,9 @@ model User {
   phone        String?
   role         Role    @default(STUDENT)
   isActive     Boolean @default(true)
+  // Mật khẩu ban đầu do Admin cấp (sinh viên: mã SV) — bắt đổi ở lần đăng nhập đầu,
+  // chưa đổi thì mọi API trừ /auth/me và /auth/change-password trả 403.
+  mustChangePassword Boolean @default(false)
 
   // Chỉ dùng cho MANAGER: tòa được gán. Mọi kiểm tra phạm vi quyền dựa vào cột này.
   // @unique: mỗi tòa tối đa 1 Manager (NULL không tính trùng — Admin, SV, Manager chưa gán).

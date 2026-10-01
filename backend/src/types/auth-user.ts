@@ -14,6 +14,8 @@ export interface AuthUser {
   role: Role;
   /** Chỉ MANAGER mới có giá trị — tòa nhà được gán quản lý. */
   buildingId: string | null;
+  /** Đang dùng mật khẩu ban đầu do Admin cấp — phải đổi mới dùng được các API khác. */
+  mustChangePassword: boolean;
 }
 
 declare global {

@@ -1,6 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
-import { emailSchema, fullNameSchema, passwordSchema, phoneSchema } from '../../utils/zod-fields.js';
+import { passwordSchema } from '../../utils/zod-fields.js';
 
 /**
  * Chuẩn hóa TRƯỚC, kiểm tra SAU.
@@ -16,17 +16,15 @@ import { emailSchema, fullNameSchema, passwordSchema, phoneSchema } from '../../
  * bằng `.pipe()` mới đặt được `.trim()` lên trước.
  */
 
-export const registerSchema = z
+/**
+ * Không có đăng ký: tài khoản sinh viên do Admin cấp (users/user.schema.ts), mật khẩu
+ * ban đầu là mã SV và phải đổi ở lần đăng nhập đầu — qua schema này.
+ */
+export const changePasswordSchema = z
   .object({
-    email: emailSchema,
-    password: passwordSchema,
-    fullName: fullNameSchema,
-    phone: phoneSchema.optional(),
-    studentCode: z.string().trim().min(3, 'Mã sinh viên quá ngắn').max(20).openapi({ example: 'SV001' }),
-    gender: z.enum(['MALE', 'FEMALE']),
-    className: z.string().trim().max(50).optional().openapi({ example: 'CNTT1' }),
-    faculty: z.string().trim().max(100).optional().openapi({ example: 'Công nghệ thông tin' }),
+    currentPassword: z.string('Vui lòng nhập mật khẩu hiện tại').min(1, 'Vui lòng nhập mật khẩu hiện tại'),
+    newPassword: passwordSchema,
   })
-  .openapi('RegisterInput');
+  .openapi('ChangePasswordInput');
 
-export type RegisterInput = z.infer<typeof registerSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

@@ -1,54 +1,39 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../../config/prisma.js';
 import { ApiError } from '../../utils/api-error.js';
-import type { RegisterInput } from './auth.schema.js';
+import type { AuthUser } from '../../types/auth-user.js';
+import type { ChangePasswordInput } from './auth.schema.js';
 
 const BCRYPT_ROUNDS = 10;
 
-/** Băm mật khẩu trước khi lưu — dùng chung cho SV tự đăng ký và Admin tạo Manager. */
+/** Băm mật khẩu trước khi lưu — Admin tạo tài khoản, đổi mật khẩu, lệnh create-admin, seed. */
 export function hashPassword(password: string) {
   return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
 /**
- * Đăng ký tài khoản sinh viên.
- *
- * Auth.js không xử lý đăng ký — phần này tự viết. Vai trò luôn là STUDENT và
- * không nhận từ client: nếu để client gửi `role` lên thì ai cũng tự tạo được
- * tài khoản ADMIN.
+ * Đổi mật khẩu — tự đổi, hoặc lần đầu bắt buộc khi đang dùng mật khẩu ban đầu do Admin
+ * cấp. Mật khẩu mới phải khác mật khẩu hiện tại; với sinh viên cũng không được là mã SV,
+ * vì đó chính là mật khẩu ban đầu mà ai biết mã SV cũng đoán được.
  */
-export async function register(input: RegisterInput) {
-  const [emailTaken, codeTaken] = await Promise.all([
-    prisma.user.findUnique({ where: { email: input.email }, select: { id: true } }),
-    prisma.studentProfile.findUnique({
-      where: { studentCode: input.studentCode },
-      select: { id: true },
-    }),
-  ]);
-
-  if (emailTaken) throw ApiError.conflict('EMAIL_TAKEN', 'Email này đã được đăng ký');
-  if (codeTaken) throw ApiError.conflict('STUDENT_CODE_TAKEN', 'Mã sinh viên này đã tồn tại');
-
-  const passwordHash = await hashPassword(input.password);
-
-  const user = await prisma.user.create({
-    data: {
-      email: input.email,
-      passwordHash,
-      fullName: input.fullName,
-      ...(input.phone ? { phone: input.phone } : {}),
-      role: 'STUDENT',
-      profile: {
-        create: {
-          studentCode: input.studentCode,
-          gender: input.gender,
-          ...(input.className ? { className: input.className } : {}),
-          ...(input.faculty ? { faculty: input.faculty } : {}),
-        },
-      },
-    },
-    select: { id: true, email: true, fullName: true, role: true },
+export async function changePassword(user: AuthUser, { currentPassword, newPassword }: ChangePasswordInput) {
+  const { passwordHash, profile } = await prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    select: { passwordHash: true, profile: { select: { studentCode: true } } },
   });
+  if (!(await bcrypt.compare(currentPassword, passwordHash))) {
+    throw ApiError.validation({ currentPassword: ['Mật khẩu hiện tại không đúng'] });
+  }
+  if (newPassword === currentPassword) {
+    throw ApiError.validation({ newPassword: ['Mật khẩu mới phải khác mật khẩu hiện tại'] });
+  }
+  if (newPassword === profile?.studentCode) {
+    throw ApiError.validation({ newPassword: ['Không dùng mã sinh viên làm mật khẩu'] });
+  }
 
-  return user;
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await hashPassword(newPassword), mustChangePassword: false },
+  });
+  return { ...user, mustChangePassword: false };
 }
