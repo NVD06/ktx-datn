@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
   Building2,
   CalendarRange,
   ClipboardList,
   FileSignature,
+  KeyRound,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -12,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import type { Role } from '@/types/auth'
@@ -41,12 +44,14 @@ const NAV: NavItem[] = [
 export function AdminLayout() {
   const { user } = useAuth()
   const logout = useLogout()
+  const [changingPassword, setChangingPassword] = useState(false)
 
   const items = NAV.filter((i) => !i.roles || (user && i.roles.includes(user.role)))
 
   return (
     <div className="flex min-h-svh">
-      <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-60 shrink-0 flex-col border-r">
+      {/* sticky + h-svh: bảng dài cuộn thì sidebar đứng yên, tài khoản và nút Đăng xuất luôn ở đáy màn hình. */}
+      <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border sticky top-0 flex h-svh w-60 shrink-0 flex-col border-r">
         <div className="border-sidebar-border border-b px-4 py-4">
           <Link to="/admin/dashboard" className="font-semibold text-white">
             Quản lý KTX
@@ -56,7 +61,7 @@ export function AdminLayout() {
           </p>
         </div>
 
-        <nav className="flex-1 space-y-1 p-2">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-2">
           {items.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -85,6 +90,15 @@ export function AdminLayout() {
             variant="outline"
             size="sm"
             className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-white w-full bg-transparent"
+            onClick={() => setChangingPassword(true)}
+          >
+            <KeyRound className="size-4" />
+            Đổi mật khẩu
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-white w-full bg-transparent"
             disabled={logout.isPending}
             onClick={() => logout.mutate()}
           >
@@ -94,9 +108,13 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-x-auto p-6">
+      {/* Không đặt overflow ở đây: overflow biến <main> thành khung cuộn riêng, đầu trang (PageHeader)
+          sẽ dính theo khung đó thay vì theo trang. Bảng rộng tự cuộn ngang trong khung của bảng (min-w-0). */}
+      <main className="min-w-0 flex-1 p-6">
         <Outlet />
       </main>
+
+      <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
     </div>
   )
 }

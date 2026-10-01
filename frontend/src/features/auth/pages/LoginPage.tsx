@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { getErrorMessage } from '@/api/client'
 import { FormField } from '@/components/shared/FormField'
@@ -81,10 +81,7 @@ export function LoginPage() {
           </form>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            Chưa có tài khoản?{' '}
-            <Link to="/register" className="text-foreground underline underline-offset-4">
-              Đăng ký
-            </Link>
+            Chưa có tài khoản? Liên hệ ban quản lý ký túc xá để được cấp.
           </p>
         </CardContent>
       </Card>

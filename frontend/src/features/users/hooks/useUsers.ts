@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as usersApi from '@/api/users'
 import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
+import type { StudentAccountInput } from '@/types/user'
 
 const MANAGER_PARAMS = { role: 'MANAGER', limit: 100, sortBy: 'fullName', order: 'asc' }
 
@@ -30,6 +31,33 @@ function useInvalidateUsers() {
 export function useCreateManager() {
   const invalidate = useInvalidateUsers()
   return useMutation({ mutationFn: usersApi.createManager, onSuccess: invalidate })
+}
+
+export function useCreateStudent() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({ mutationFn: usersApi.createStudent, onSuccess: invalidate })
+}
+
+/** Kiểm tra (`dryRun`) và nhập thật dùng chung một hook; chỉ nhập thật mới cần làm mới bảng. */
+export function useImportStudents() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({
+    mutationFn: ({ rows, dryRun }: { rows: StudentAccountInput[]; dryRun: boolean }) =>
+      usersApi.importStudents(rows, dryRun),
+    onSuccess(result) {
+      if (!result.dryRun) return invalidate()
+    },
+  })
+}
+
+export function useResetStudentPassword() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({ mutationFn: usersApi.resetStudentPassword, onSuccess: invalidate })
+}
+
+export function useDeleteUser() {
+  const invalidate = useInvalidateUsers()
+  return useMutation({ mutationFn: usersApi.deleteUser, onSuccess: invalidate })
 }
 
 export function useAssignManager() {

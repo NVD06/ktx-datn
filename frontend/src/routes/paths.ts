@@ -8,6 +8,9 @@ export function homePathFor(role: Role): string {
   return role === 'STUDENT' ? '/student' : '/admin/dashboard'
 }
 
+/** Trang bắt đổi mật khẩu ban đầu — mọi vai trò, ngoài hai layout. */
+export const CHANGE_PASSWORD_PATH = '/change-password'
+
 /** Tiền tố đường dẫn mà từng vai trò được phép vào. */
 const AREA: Record<Role, string> = {
   ADMIN: '/admin',

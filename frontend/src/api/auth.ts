@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 import { apiGet, apiPost } from './client'
-import type { AuthUser, RegisteredUser, RegisterInput } from '@/types/auth'
+import type { AuthUser, ChangePasswordInput } from '@/types/auth'
 
 /**
  * Các hàm gọi API xác thực.
@@ -64,7 +64,10 @@ export async function logout(): Promise<void> {
   })
 }
 
-/** Đăng ký tài khoản sinh viên. Không tự động đăng nhập sau khi tạo. */
-export function register(input: RegisterInput): Promise<RegisteredUser> {
-  return apiPost<RegisteredUser>('/auth/register', input)
+/**
+ * Đổi mật khẩu — trả người dùng hiện tại, `mustChangePassword` đã về false. Không có
+ * đăng ký: tài khoản sinh viên do Admin cấp (api/users.ts).
+ */
+export function changePassword(input: ChangePasswordInput): Promise<AuthUser> {
+  return apiPost<AuthUser>('/auth/change-password', input)
 }

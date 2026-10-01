@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
-import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { ChangePasswordPage } from '@/features/auth/pages/ChangePasswordPage'
 import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPage'
 import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
 import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
@@ -26,12 +26,15 @@ import { NotFoundPage } from '@/features/system/pages/NotFoundPage'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { ProtectedRoute } from './ProtectedRoute'
+import { CHANGE_PASSWORD_PATH } from './paths'
 
 export const router = createBrowserRouter([
-  // Công khai
+  // Công khai. Không có trang đăng ký: tài khoản sinh viên do Admin cấp.
   { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
   { path: '/403', element: <ForbiddenPage /> },
+
+  // Đổi mật khẩu ban đầu — mọi vai trò, cần đăng nhập nhưng nằm ngoài hai layout.
+  { element: <ProtectedRoute />, children: [{ path: CHANGE_PASSWORD_PATH, element: <ChangePasswordPage /> }] },
 
   // '/' tự điều hướng theo vai trò
   { path: '/', element: <HomeRedirect /> },

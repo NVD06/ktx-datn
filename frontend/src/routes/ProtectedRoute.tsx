@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { FullPageError, FullPageLoading } from '@/components/shared/QueryState'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import type { Role } from '@/types/auth'
+import { CHANGE_PASSWORD_PATH } from './paths'
 
 interface Props {
   /** Bỏ trống = chỉ cần đăng nhập, không giới hạn vai trò. */
@@ -33,6 +34,12 @@ export function ProtectedRoute({ roles }: Props) {
   if (!user) {
     // Nhớ trang đang muốn vào (kèm bộ lọc trên URL) để đăng nhập xong quay lại đúng chỗ.
     return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />
+  }
+
+  // Mật khẩu ban đầu do Admin cấp: chưa đổi thì chỉ vào được trang đổi mật khẩu
+  // (backend cũng trả 403 cho mọi API khác tới khi đổi).
+  if (user.mustChangePassword && location.pathname !== CHANGE_PASSWORD_PATH) {
+    return <Navigate to={CHANGE_PASSWORD_PATH} replace />
   }
 
   if (roles && !roles.includes(user.role)) {

@@ -67,3 +67,15 @@ export function useLogout() {
     },
   })
 }
+
+/** Đổi mật khẩu: ghi thẳng người dùng mới vào cache — hết cờ bắt đổi thì route guard cho vào lại. */
+export function useChangePassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: authApi.changePassword,
+    onSuccess(user) {
+      queryClient.setQueryData(AUTH_QUERY_KEY, user)
+    },
+  })
+}

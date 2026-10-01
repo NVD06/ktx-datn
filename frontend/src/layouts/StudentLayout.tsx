@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FileSignature,
   House,
+  KeyRound,
   LogOut,
   Menu,
   Receipt,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
+import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
@@ -33,12 +35,14 @@ const NAV = [
  */
 export function StudentLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const changePassword = () => setChangingPassword(true)
 
   return (
     <div className="flex min-h-svh">
       {/* sticky + h-svh: trang dài cuộn thì sidebar vẫn đứng yên, nút Đăng xuất luôn ở đáy màn hình. */}
       <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r md:flex">
-        <SidebarContent />
+        <SidebarContent onChangePassword={changePassword} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -70,14 +74,17 @@ export function StudentLayout() {
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">Các trang của khu sinh viên</SheetDescription>
-          <SidebarContent onNavigate={() => setMenuOpen(false)} />
+          <SidebarContent onNavigate={() => setMenuOpen(false)} onChangePassword={changePassword} />
         </SheetContent>
       </Sheet>
+
+      {/* Nằm ngoài Sheet: bấm từ menu trượt thì menu đóng lại mà hộp thoại vẫn mở. */}
+      <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
     </div>
   )
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, onChangePassword }: { onNavigate?: () => void; onChangePassword: () => void }) {
   const { user } = useAuth()
   const logout = useLogout()
 
@@ -118,6 +125,18 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <p className="text-sidebar-accent-foreground truncate text-sm font-medium">{user?.fullName}</p>
           <p className="text-sidebar-foreground/60 truncate text-xs">{user?.email}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full bg-transparent"
+          onClick={() => {
+            onNavigate?.()
+            onChangePassword()
+          }}
+        >
+          <KeyRound className="size-4" />
+          Đổi mật khẩu
+        </Button>
         <Button
           variant="outline"
           size="sm"
