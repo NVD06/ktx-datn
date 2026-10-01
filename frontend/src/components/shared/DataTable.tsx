@@ -10,6 +10,7 @@ import {
 import type { UseQueryResult } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { useEffect, useEffectEvent, useMemo, type ReactNode } from 'react'
+import { PageSizeSelect } from '@/components/shared/PageSizeSelect'
 import { Pagination } from '@/components/shared/Pagination'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import {
@@ -35,8 +36,8 @@ interface DataTableProps<TData extends { id: string }, TValue> {
   /** Kết quả useQuery của API danh sách (getPaged). */
   query: Pick<UseQueryResult<Paged<TData>>, 'data' | 'isPending' | 'isFetching' | 'error'>
   /** Trang/sắp xếp đang lưu trên URL — kết quả của useListParams. */
-  list: Pick<ReturnType<typeof useListParams>, 'sortBy' | 'order' | 'setSort' | 'setPage'>
-  /** Ô tìm kiếm, bộ lọc — đặt phía trên bảng. */
+  list: Pick<ReturnType<typeof useListParams>, 'sortBy' | 'order' | 'setSort' | 'setPage' | 'limit' | 'setLimit'>
+  /** Ô tìm kiếm, bộ lọc — đặt phía trên bảng, ô chọn số dòng mỗi trang tự thêm vào cuối. */
   toolbar?: ReactNode
   emptyTitle?: string
   emptyDescription?: string
@@ -119,7 +120,10 @@ export function DataTable<TData extends { id: string }, TValue>({
 
   return (
     <div className="space-y-3">
-      {toolbar && <div className="flex flex-wrap items-center gap-2">{toolbar}</div>}
+      <div className="flex flex-wrap items-center gap-2">
+        {toolbar}
+        <PageSizeSelect value={list.limit} onChange={list.setLimit} />
+      </div>
 
       <div className="bg-card ring-foreground/10 overflow-hidden rounded-xl ring-1">
         <Table>

@@ -25,7 +25,14 @@ export function useInvoices(params: ListParams) {
  * Tổng tiền theo bộ lọc — bỏ tham số phân trang/sắp xếp để đổi trang không gọi lại, và bỏ cả
  * `status`: các ô tổng là nút lọc nhanh theo trạng thái, bấm vào ô nào thì số trên các ô vẫn giữ nguyên.
  */
-export function useInvoiceSummary({ page: _page, sortBy: _sortBy, order: _order, status: _status, ...filters }: ListParams) {
+export function useInvoiceSummary({
+  page: _page,
+  limit: _limit,
+  sortBy: _sortBy,
+  order: _order,
+  status: _status,
+  ...filters
+}: ListParams) {
   return useQuery({
     queryKey: invoiceKeys.summary(filters),
     queryFn: () => invoicesApi.getInvoiceSummary(filters),

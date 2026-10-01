@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { PaginationMeta } from '@/types/api'
 
+/** Cuối bảng: đang xem dòng nào, chuyển trang. Số dòng mỗi trang chọn ở hàng bộ lọc (PageSizeSelect). */
 export function Pagination({
   meta,
   onPageChange,
