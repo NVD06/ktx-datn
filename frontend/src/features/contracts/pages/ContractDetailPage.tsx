@@ -14,15 +14,14 @@ import { bedPlace, formatDate, formatDateRange, formatDateTime, formatMoney } fr
 import { CONTRACT_STATUS, GENDER } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { CONTRACT_TERMS, ROOM_FEE_DUE_DAYS, ROOM_FEE_RULE } from '../contract-terms'
-import { InvoiceList } from '@/features/invoices/components/InvoiceList'
 import { useContract, useEndContract, useSignContract } from '../hooks/useContracts'
 
 const BACK = <BackLink to="/student/contracts">Hợp đồng của tôi</BackLink>
 
 /**
  * Chi tiết hợp đồng + ký online (US-03.3). Ký xong backend làm trong một
- * transaction: hợp đồng có hiệu lực, giường có người ở. Tiền phòng tính từ ngày ký,
- * hóa đơn lập vào đầu tháng sau.
+ * transaction: hợp đồng có hiệu lực, giường có người ở, có ngay hóa đơn tiền phòng
+ * tháng đầu (tính từ ngày ký). Hóa đơn chỉ xem ở trang Hóa đơn, trang này không liệt kê.
  */
 export function ContractDetailPage() {
   const { id = '' } = useParams()
@@ -47,7 +46,7 @@ export function ContractDetailPage() {
 
   async function confirmSign(contract: Contract) {
     const signed = await sign.mutateAsync(contract.id)
-    toast.success(`Đã ký hợp đồng ${signed.code}. Hóa đơn tiền phòng tháng này được lập vào ngày 1 tháng sau.`)
+    toast.success(`Đã ký hợp đồng ${signed.code}. Hóa đơn tiền phòng tháng đầu đã được lập, xem ở mục Hóa đơn.`)
   }
 
   return (
@@ -85,7 +84,7 @@ export function ContractDetailPage() {
               rows={[
                 ['Thời gian ở', formatDateRange(c.startDate, c.endDate), true],
                 ['Tiền phòng', `${formatMoney(c.price)} / tháng`],
-                ['Thanh toán tiền phòng', `Hằng tháng, hạn ${ROOM_FEE_DUE_DAYS} ngày từ ngày 1 tháng sau`],
+                ['Thanh toán tiền phòng', `Trả trước hằng tháng, hạn ${ROOM_FEE_DUE_DAYS} ngày từ ngày lập hóa đơn`],
                 ['Ngày lập', formatDateTime(c.createdAt)],
                 ['Ngày ký', c.signedAt && formatDateTime(c.signedAt)],
               ]}
@@ -114,12 +113,6 @@ export function ContractDetailPage() {
             ))}
           </ol>
         </Section>
-
-        {c.invoices.length > 0 && (
-          <Section title="Hóa đơn">
-            <InvoiceList invoices={c.invoices} />
-          </Section>
-        )}
 
         {c.status === 'DRAFT' && (
           <div className="flex justify-end gap-2">
