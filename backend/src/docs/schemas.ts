@@ -402,3 +402,38 @@ export const invoiceSummarySchema = z
 export const buildingDebtSchema = z
   .object({ building: buildingRefSchema, unpaid: moneyTotal, overdue: moneyTotal })
   .openapi('BuildingDebt');
+
+export const requestStatusSchema = z
+  .enum(['PENDING', 'RECEIVED', 'DONE', 'CONFIRMED', 'REJECTED'])
+  .openapi('RequestStatus');
+
+export const maintenanceRequestSchema = z
+  .object({
+    id: z.uuid(),
+    roomId: z.uuid(),
+    studentId: z.uuid(),
+    title: z.string().openapi({ example: 'Vòi nước nhà vệ sinh bị rỉ' }),
+    description: z.string(),
+    status: requestStatusSchema,
+    assigneeNote: z.string().nullable().openapi({ description: 'Phản hồi của ban quản lý; lý do khi từ chối' }),
+    handledById: z.uuid().nullable(),
+    handledBy: z
+      .object({ id: z.uuid(), fullName: z.string() })
+      .nullable()
+      .openapi({ description: 'Người chuyển trạng thái gần nhất' }),
+    receivedAt: z.iso.datetime().nullable(),
+    doneAt: z.iso.datetime().nullable(),
+    confirmedAt: z.iso.datetime().nullable(),
+    rejectedAt: z.iso.datetime().nullable(),
+    room: roomRefSchema,
+    student: z.object({
+      id: z.uuid(),
+      fullName: z.string(),
+      email: z.email(),
+      phone: z.string().nullable(),
+      profile: studentProfileSchema.pick({ studentCode: true, className: true }).nullable(),
+    }),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('MaintenanceRequest');

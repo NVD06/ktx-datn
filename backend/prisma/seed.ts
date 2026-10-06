@@ -6,26 +6,32 @@ import { bedCodes } from '../src/modules/beds/bed-code.js';
 import * as contractService from '../src/modules/contracts/contract.service.js';
 import * as roomFeeService from '../src/modules/invoices/room-fee.service.js';
 import * as utilityService from '../src/modules/invoices/utility.service.js';
+import * as maintenanceService from '../src/modules/maintenance/maintenance.service.js';
 import * as registrationService from '../src/modules/registrations/registration.service.js';
 import { currentMonthVN } from '../src/utils/date-vn.js';
 import { dbTarget, isLocalDatabase } from './db-target.js';
 
 /**
- * Dữ liệu mẫu — phạm vi US-00 → US-04.
+ * Dữ liệu mẫu — phạm vi US-00 → US-05.
  *
  *   - 3 vai trò để test điều hướng sau login
  *   - 2 tòa nhà để test buildingScope() (Manager tòa B1 không đọc được B2)
  *   - 2 loại phòng (danh mục dùng chung)
  *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
  *   - Đơn, hợp đồng, hóa đơn tiền phòng + điện nước đủ các trạng thái để demo
+ *   - Yêu cầu sửa chữa đủ các trạng thái
  *
- * Sửa chữa, vệ sinh... bổ sung vào file này khi tới các user story tương ứng.
+ * Thống kê (US-06) dùng lại dữ liệu trên, bổ sung vào file này nếu cần.
  *
  * Chạy lại được nhiều lần: xóa sạch dữ liệu cũ trước khi tạo mới.
  * KHÔNG chạy trên môi trường có dữ liệu thật — `assertDevDatabase` chặn cứng.
  */
 
 const PASSWORD = '123456';
+
+/** Thứ tự xử lý một yêu cầu sửa chữa khi không bị từ chối. */
+const REQUEST_FLOW = ['RECEIVED', 'DONE', 'CONFIRMED'] as const;
+type RequestStatus = 'PENDING' | (typeof REQUEST_FLOW)[number];
 
 async function clearAll() {
   // Xóa theo thứ tự ngược với phụ thuộc khóa ngoại.
@@ -314,6 +320,30 @@ async function main() {
     data: { dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
   });
 
+  // ── Sửa chữa (US-05) ───────────────────────────────────────────────────────
+  console.log('Tạo yêu cầu sửa chữa...');
+
+  /** Gửi yêu cầu rồi đi lần lượt tới `until` qua service — có mốc thời gian, người xử lý như thật. */
+  async function request(student: string, manager: typeof m1, title: string, description: string, until: RequestStatus) {
+    const created = await maintenanceService.create(sv(student), { title, description });
+    const steps = until === 'PENDING' ? [] : REQUEST_FLOW.slice(0, REQUEST_FLOW.indexOf(until) + 1);
+    for (const status of steps) {
+      if (status === 'CONFIRMED') await maintenanceService.confirm(sv(student), created.id);
+      else await maintenanceService.updateStatus(manager, created.id, { status });
+    }
+    return created;
+  }
+  await request('001', m1, 'Bóng đèn nhà vệ sinh bị cháy', 'Bóng đèn trong nhà vệ sinh không sáng từ tối qua.', 'CONFIRMED');
+  await request('001', m1, 'Quạt trần kêu to', 'Quạt trần phòng 103 kêu lạch cạch khi bật số 3.', 'RECEIVED');
+  await request('002', m1, 'Khóa tủ cá nhân bị kẹt', 'Tủ giường G2 không mở được khóa.', 'DONE'); // chờ SV xác nhận
+  await request('002', m1, 'Vòi nước bồn rửa bị rỉ', 'Vòi bồn rửa nhỏ giọt liên tục kể cả khi đã khóa chặt.', 'PENDING');
+  await request('003', m2, 'Rèm cửa sổ bị rách', 'Rèm cửa sổ phía giường G1 rách một đoạn dài.', 'RECEIVED');
+  const socket = await request('003', m2, 'Xin lắp thêm ổ cắm', 'Phòng thiếu ổ cắm, xin lắp thêm một ổ ở bàn học.', 'PENDING');
+  await maintenanceService.updateStatus(m2, socket.id, {
+    status: 'REJECTED',
+    assigneeNote: 'Không lắp thêm ổ cắm vì quy định phòng cháy; dùng ổ chung cạnh cửa ra vào.',
+  });
+
   const [contractCount, roomFeeCount, utilityCount] = await Promise.all([
     prisma.contract.count(),
     prisma.invoice.count({ where: { type: 'ROOM_FEE' } }),
@@ -321,7 +351,7 @@ async function main() {
   ]);
 
   console.log(`
-Seed xong (phạm vi US-00 → US-04):
+Seed xong (phạm vi US-00 → US-05):
   Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
   Phòng      : ${roomCount}  (${bedCount} giường)
@@ -330,6 +360,7 @@ Seed xong (phạm vi US-00 → US-04):
   Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)
   Hóa đơn    : ${roomFeeCount} tiền phòng (trả trước, từ đầu kỳ tới tháng này) + ${utilityCount} điện nước (1 quá hạn)
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
+  Sửa chữa   : 6 yêu cầu đủ trạng thái (sv001, sv002 tòa ${b1.name}; sv003 tòa ${b2.name})
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
   ${admin.email}       → ADMIN

@@ -80,7 +80,6 @@ enum PaymentStatus {
 enum RequestStatus {
   PENDING
   RECEIVED
-  IN_PROGRESS
   DONE
   CONFIRMED
   REJECTED
@@ -103,10 +102,11 @@ model User {
   buildingId String?   @unique
   building   Building? @relation(fields: [buildingId], references: [id])
 
-  profile        StudentProfile?
-  registrations  Registration[]
-  requests       MaintenanceRequest[]
-  endedContracts Contract[]         @relation("ContractEndedBy")
+  profile         StudentProfile?
+  registrations   Registration[]
+  requests        MaintenanceRequest[] @relation("MaintenanceRequestedBy")
+  handledRequests MaintenanceRequest[] @relation("MaintenanceHandledBy")
+  endedContracts  Contract[]           @relation("ContractEndedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -340,14 +340,20 @@ model MaintenanceRequest {
   roomId      String
   room        Room          @relation(fields: [roomId], references: [id])
   studentId   String
-  student     User          @relation(fields: [studentId], references: [id])
+  student     User          @relation("MaintenanceRequestedBy", fields: [studentId], references: [id])
   title       String
   description String
   status      RequestStatus @default(PENDING)
 
-  assigneeNote String?
-  handledById  String?
-  doneAt       DateTime?
+  assigneeNote String? // phản hồi của ban quản lý — bắt buộc khi từ chối (lý do)
+  handledById  String? // người chuyển trạng thái gần nhất
+  handledBy    User?   @relation("MaintenanceHandledBy", fields: [handledById], references: [id])
+
+  // Mốc thời gian từng bước — tiến độ cho SV, thời gian xử lý trung bình (US-06.4).
+  receivedAt  DateTime?
+  doneAt      DateTime?
+  confirmedAt DateTime?
+  rejectedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
