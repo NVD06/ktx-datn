@@ -12,6 +12,8 @@ import { InvoiceListPage } from '@/features/invoices/pages/InvoiceListPage'
 import { MyInvoicesPage } from '@/features/invoices/pages/MyInvoicesPage'
 import { PaymentResultPage } from '@/features/invoices/pages/PaymentResultPage'
 import { UtilityBillingPage } from '@/features/invoices/pages/UtilityBillingPage'
+import { MaintenanceListPage } from '@/features/maintenance/pages/MaintenanceListPage'
+import { MyMaintenancePage } from '@/features/maintenance/pages/MyMaintenancePage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
 import { MyRegistrationsPage } from '@/features/registrations/pages/MyRegistrationsPage'
@@ -58,6 +60,7 @@ export const router = createBrowserRouter([
           { path: 'contracts', element: <ContractListPage /> },
           { path: 'invoices', element: <InvoiceListPage /> },
           { path: 'utilities', element: <UtilityBillingPage /> },
+          { path: 'maintenance', element: <MaintenanceListPage /> },
           // Chỉ ADMIN — Manager gõ thẳng URL thì sang trang 403 thay vì bảng lỗi.
           { element: <ProtectedRoute roles={['ADMIN']} />, children: [{ path: 'users', element: <UserListPage /> }] },
         ],
@@ -80,6 +83,7 @@ export const router = createBrowserRouter([
           { path: 'contracts/:id', element: <ContractDetailPage /> },
           { path: 'invoices', element: <MyInvoicesPage /> },
           { path: 'payment-result', element: <PaymentResultPage /> },
+          { path: 'maintenance', element: <MyMaintenancePage /> },
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

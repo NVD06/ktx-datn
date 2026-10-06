@@ -11,6 +11,7 @@ import {
   LogOut,
   Receipt,
   Users,
+  Wrench,
   Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,7 +29,7 @@ interface NavItem {
 }
 
 // Phòng và giường không có mục riêng: vào qua Tòa nhà → chi tiết tòa → chi tiết phòng.
-// Sẽ bổ sung dần: Sửa chữa, Vệ sinh, Báo cáo.
+// Sẽ bổ sung: Báo cáo (US-06).
 const NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/admin/buildings', label: 'Tòa nhà', icon: Building2 },
@@ -38,6 +39,7 @@ const NAV: NavItem[] = [
   { to: '/admin/contracts', label: 'Hợp đồng', icon: FileSignature },
   { to: '/admin/invoices', label: 'Hóa đơn', icon: Receipt },
   { to: '/admin/utilities', label: 'Chốt điện nước', icon: Zap },
+  { to: '/admin/maintenance', label: 'Sửa chữa', icon: Wrench },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]
 

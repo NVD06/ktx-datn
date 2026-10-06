@@ -157,7 +157,6 @@ export const PAYMENT_STATUS = def({
 export const REQUEST_STATUS = def({
   PENDING: { label: 'Chờ tiếp nhận', tone: 'warning' },
   RECEIVED: { label: 'Đã tiếp nhận', tone: 'info' },
-  IN_PROGRESS: { label: 'Đang xử lý', tone: 'info' },
   DONE: { label: 'Đã sửa xong', tone: 'success' },
   CONFIRMED: { label: 'Đã xác nhận', tone: 'success' },
   REJECTED: { label: 'Từ chối', tone: 'danger' },

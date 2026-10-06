@@ -10,6 +10,7 @@ import {
   Menu,
   Receipt,
   UserRound,
+  Wrench,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
@@ -17,13 +18,13 @@ import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordD
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
-// US-05 sẽ bổ sung: Sửa chữa.
 const NAV = [
   { to: '/student', label: 'Trang cá nhân', icon: House },
   { to: '/student/rooms', label: 'Chỗ trống', icon: BedDouble },
   { to: '/student/registrations', label: 'Đơn của tôi', icon: ClipboardList },
   { to: '/student/contracts', label: 'Hợp đồng', icon: FileSignature },
   { to: '/student/invoices', label: 'Hóa đơn', icon: Receipt },
+  { to: '/student/maintenance', label: 'Sửa chữa', icon: Wrench },
   { to: '/student/profile', label: 'Hồ sơ', icon: UserRound },
 ]
 

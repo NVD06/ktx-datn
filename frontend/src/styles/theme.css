@@ -102,7 +102,7 @@
  *   success  việc đã xong          Đã thanh toán · Còn trống · Đang hiệu lực
  *   warning  đang chờ xử lý        Chờ duyệt · Chưa thanh toán · Chờ ký
  *   danger   từ chối / quá hạn     Từ chối · Quá hạn · Đã chấm dứt
- *   info     đang diễn ra          Đang ở · Đang xử lý
+ *   info     đang diễn ra          Đang ở · Đã tiếp nhận
  *   neutral  trung tính            Đã hủy · Hết hạn · Nam/Nữ
  * ========================================================================== */
 :root {
