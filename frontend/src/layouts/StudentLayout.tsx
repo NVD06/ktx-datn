@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   Receipt,
+  Sparkles,
   UserRound,
   Wrench,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ const NAV = [
   { to: '/student/contracts', label: 'Hợp đồng', icon: FileSignature },
   { to: '/student/invoices', label: 'Hóa đơn', icon: Receipt },
   { to: '/student/maintenance', label: 'Sửa chữa', icon: Wrench },
+  { to: '/student/hygiene', label: 'Vệ sinh', icon: Sparkles },
   { to: '/student/profile', label: 'Hồ sơ', icon: UserRound },
 ]
 

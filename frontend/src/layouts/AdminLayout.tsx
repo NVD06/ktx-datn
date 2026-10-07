@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  Sparkles,
   Users,
   Wrench,
   Zap,
@@ -40,6 +41,7 @@ const NAV: NavItem[] = [
   { to: '/admin/invoices', label: 'Hóa đơn', icon: Receipt },
   { to: '/admin/utilities', label: 'Chốt điện nước', icon: Zap },
   { to: '/admin/maintenance', label: 'Sửa chữa', icon: Wrench },
+  { to: '/admin/hygiene', label: 'Vệ sinh', icon: Sparkles },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]
 

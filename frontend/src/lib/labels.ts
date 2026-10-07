@@ -163,6 +163,23 @@ export const REQUEST_STATUS = def({
 })
 
 /**
+ * Điểm vệ sinh dưới mức này là cảnh báo (US-05.5) — xét từng lần chấm.
+ * Giữ khớp với HYGIENE_WARNING_SCORE ở backend/src/config/constants.ts.
+ */
+export const HYGIENE_WARNING_SCORE = 60
+
+/** Badge điểm vệ sinh: dưới ngưỡng là cảnh báo (đỏ), còn lại là đạt (xanh). */
+export function hygieneScore(score: number): LabelDef {
+  return { label: `${score} điểm`, tone: score < HYGIENE_WARNING_SCORE ? 'danger' : 'success' }
+}
+
+/** Bộ lọc `?belowWarning=` của bảng điểm vệ sinh. */
+export const HYGIENE_FILTER_OPTIONS = flagOptions(
+  { label: `Dưới ${HYGIENE_WARNING_SCORE} điểm`, tone: 'danger' },
+  { label: `Từ ${HYGIENE_WARNING_SCORE} điểm`, tone: 'success' },
+)
+
+/**
  * OVERDUE không phải giá trị trong DB mà tính khi đọc
  * (dueDate < now && status = UNPAID) — xem docs/database.md §3.9.
  */
