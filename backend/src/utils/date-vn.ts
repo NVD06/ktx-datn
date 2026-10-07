@@ -20,6 +20,13 @@ export function endOfDayVN(date: Date): Date {
   return new Date(local.getTime() - VN_OFFSET_MS);
 }
 
+/** 00:00 giờ Việt Nam của ngày chứa `date` — một ngày theo lịch VN, ví dụ ngày kiểm tra vệ sinh. */
+export function startOfDayVN(date: Date): Date {
+  const local = toVN(date);
+  local.setUTCHours(0, 0, 0, 0);
+  return new Date(local.getTime() - VN_OFFSET_MS);
+}
+
 /** Năm hiện tại ở Việt Nam — 00:30 ngày 01/01 đã thuộc năm mới. */
 export function currentYearVN(): number {
   return toVN(new Date()).getUTCFullYear();

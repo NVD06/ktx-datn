@@ -13,3 +13,9 @@ export const INVOICE_DUE_DAYS = 14;
 
 /** Giao dịch VNPay hết hạn sau từng này phút (vnp_ExpireDate) — quá hạn thì SV không trả tiếp được nữa. */
 export const PAYMENT_EXPIRE_MINUTES = 15;
+
+/**
+ * Điểm vệ sinh dưới mức này là cảnh báo (US-05.5) — xét từng lần chấm, không xét "2 lần liên tiếp".
+ * Giữ khớp với HYGIENE_WARNING_SCORE ở frontend/src/lib/labels.ts.
+ */
+export const HYGIENE_WARNING_SCORE = 60;

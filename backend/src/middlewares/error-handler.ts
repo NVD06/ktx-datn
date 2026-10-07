@@ -49,6 +49,10 @@ const UNIQUE_INDEX_ERRORS: Record<string, { code: string; message: string }> = {
     code: 'BUILDING_HAS_MANAGER',
     message: 'Tòa nhà vừa được gán cho quản lý khác. Hãy tải lại để xem ai đang quản lý.',
   },
+  HygieneRecord_roomId_checkDate_key: {
+    code: 'HYGIENE_EXISTS',
+    message: 'Phòng vừa được chấm điểm vệ sinh ngày này ở nơi khác. Hãy tải lại trang rồi chấm lại.',
+  },
 };
 
 /** Tên unique index gây lỗi P2002 — qua driver adapter `pg` (Prisma 7) nằm ở đây. */

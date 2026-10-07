@@ -4,6 +4,7 @@ import { prisma } from '../src/config/prisma.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
 import * as contractService from '../src/modules/contracts/contract.service.js';
+import * as hygieneService from '../src/modules/hygiene/hygiene.service.js';
 import * as roomFeeService from '../src/modules/invoices/room-fee.service.js';
 import * as utilityService from '../src/modules/invoices/utility.service.js';
 import * as maintenanceService from '../src/modules/maintenance/maintenance.service.js';
@@ -19,7 +20,7 @@ import { dbTarget, isLocalDatabase } from './db-target.js';
  *   - 2 loại phòng (danh mục dùng chung)
  *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
  *   - Đơn, hợp đồng, hóa đơn tiền phòng + điện nước đủ các trạng thái để demo
- *   - Yêu cầu sửa chữa đủ các trạng thái
+ *   - Yêu cầu sửa chữa đủ các trạng thái, điểm vệ sinh hằng tuần có lần dưới 60 điểm
  *
  * Thống kê (US-06) dùng lại dữ liệu trên, bổ sung vào file này nếu cần.
  *
@@ -344,6 +345,23 @@ async function main() {
     assigneeNote: 'Không lắp thêm ổ cắm vì quy định phòng cháy; dùng ổ chung cạnh cửa ra vào.',
   });
 
+  // ── Vệ sinh (US-05) ────────────────────────────────────────────────────────
+  console.log('Chấm điểm vệ sinh...');
+
+  /** Mỗi tuần một đợt kiểm tra, đợt cuối là hôm nay — qua service để có người chấm như thật. */
+  async function hygiene(manager: typeof m1, building: { id: string }, room: string, weeks: [number, number, string?][]) {
+    const id = await roomId(building, room);
+    for (const [i, [score, deduction, note]] of weeks.entries()) {
+      await hygieneService.save(manager, {
+        buildingId: building.id,
+        checkDate: new Date(Date.now() - (weeks.length - 1 - i) * 7 * 24 * 60 * 60 * 1000),
+        records: [{ roomId: id, score, deduction, note: note ?? null }],
+      });
+    }
+  }
+  await hygiene(m1, b1, '103', [[85, 0], [55, 20, 'Để rác qua đêm, giày dép ngoài hành lang'], [72, 5, 'Còn để giày dép ngoài hành lang'], [90, 0]]);
+  await hygiene(m2, b2, '103', [[88, 0], [92, 0], [86, 0], [58, 15, 'Không đổ rác, nhà vệ sinh bẩn']]); // lần gần nhất dưới 60
+
   const [contractCount, roomFeeCount, utilityCount] = await Promise.all([
     prisma.contract.count(),
     prisma.invoice.count({ where: { type: 'ROOM_FEE' } }),
@@ -361,6 +379,7 @@ Seed xong (phạm vi US-00 → US-05):
   Hóa đơn    : ${roomFeeCount} tiền phòng (trả trước, từ đầu kỳ tới tháng này) + ${utilityCount} điện nước (1 quá hạn)
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
   Sửa chữa   : 6 yêu cầu đủ trạng thái (sv001, sv002 tòa ${b1.name}; sv003 tòa ${b2.name})
+  Vệ sinh    : 4 đợt hằng tuần phòng 103 mỗi tòa, 2 lần dưới 60 điểm (${b2.name}-103 ngay đợt hôm nay)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
   ${admin.email}       → ADMIN

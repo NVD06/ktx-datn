@@ -106,6 +106,7 @@ model User {
   registrations   Registration[]
   requests        MaintenanceRequest[] @relation("MaintenanceRequestedBy")
   handledRequests MaintenanceRequest[] @relation("MaintenanceHandledBy")
+  hygieneChecks   HygieneRecord[]
   endedContracts  Contract[]           @relation("ContractEndedBy")
 
   createdAt DateTime @default(now())
@@ -363,13 +364,17 @@ model HygieneRecord {
   id        String   @id @default(uuid())
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id])
-  checkDate DateTime
-  score     Int // 0-100
-  deduction Int      @default(0)
+  checkDate DateTime // 00:00 giờ Việt Nam của ngày kiểm tra
+  score     Int // 0-100, điểm cuối cùng — dưới 60 là cảnh báo
+  deduction Int      @default(0) // điểm bị trừ vì vi phạm nội quy, lý do ghi ở `note`
   note      String?
 
-  checkedById String
+  checkedById String // người chấm (lần gần nhất, nếu chấm lại)
+  checkedBy   User   @relation(fields: [checkedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Mỗi phòng một điểm mỗi ngày — chấm lại thì ghi đè.
+  @@unique([roomId, checkDate])
 }

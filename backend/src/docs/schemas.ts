@@ -437,3 +437,49 @@ export const maintenanceRequestSchema = z
     updatedAt: z.iso.datetime(),
   })
   .openapi('MaintenanceRequest');
+
+const hygieneScoreFields = {
+  score: z.int().openapi({ example: 85, description: 'Điểm cuối cùng 0–100, dưới 60 là cảnh báo' }),
+  deduction: z.int().openapi({ example: 5, description: 'Điểm bị trừ vì vi phạm nội quy' }),
+  note: z.string().nullable().openapi({ description: 'Lý do trừ điểm, nhận xét' }),
+};
+
+export const hygieneRecordSchema = z
+  .object({
+    id: z.uuid(),
+    roomId: z.uuid(),
+    checkDate: z.iso.datetime().openapi({ description: '00:00 giờ Việt Nam của ngày kiểm tra' }),
+    ...hygieneScoreFields,
+    checkedById: z.uuid(),
+    checkedBy: z.object({ id: z.uuid(), fullName: z.string() }).openapi({ description: 'Người chấm' }),
+    room: roomRefSchema,
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('HygieneRecord');
+
+export const hygieneSheetSchema = z
+  .object({
+    building: z.object({ id: z.uuid(), name: z.string() }),
+    checkDate: z.iso.datetime(),
+    rooms: z.array(
+      z.object({
+        id: z.uuid(),
+        code: z.string().openapi({ example: '101' }),
+        floor: z.int(),
+        residents: z.int().openapi({ description: 'Số SV đang ở ngày kiểm tra' }),
+        record: z
+          .object({ id: z.uuid(), ...hygieneScoreFields })
+          .nullable()
+          .openapi({ description: 'Điểm đã chấm ngày này — null: chưa chấm' }),
+      }),
+    ),
+  })
+  .openapi('HygieneSheet');
+
+export const saveHygieneResultSchema = z
+  .object({
+    roomCount: z.int().openapi({ description: 'Số phòng đã lưu điểm (chấm mới hoặc chấm lại)' }),
+    warningCount: z.int().openapi({ description: 'Số phòng dưới ngưỡng cảnh báo' }),
+  })
+  .openapi('SaveHygieneResult');
