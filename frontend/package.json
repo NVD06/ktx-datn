@@ -26,6 +26,7 @@
     "react-hook-form": "^7.87.0",
     "react-router-dom": "^7.18.3",
     "read-excel-file": "^9.3.10",
+    "recharts": "^3.8.0",
     "shadcn": "^4.20.1",
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.3",

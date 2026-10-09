@@ -4,16 +4,18 @@ import { cn } from '@/lib/utils'
 
 /**
  * Ô số liệu tóm tắt ở đầu trang. Truyền `onClick` thì ô thành nút lọc nhanh,
- * `active` đánh dấu ô đang được chọn.
+ * `active` đánh dấu ô đang được chọn. `hint` là dòng giải thích nhỏ dưới con số.
  */
 export function StatCard({
   label,
   children,
+  hint,
   active,
   onClick,
 }: {
   label: string
   children: ReactNode
+  hint?: ReactNode
   active?: boolean
   onClick?: () => void
 }) {
@@ -25,6 +27,7 @@ export function StatCard({
       <CardContent className="space-y-1">
         <p className="text-muted-foreground text-xs">{label}</p>
         <div className="text-base font-semibold">{children}</div>
+        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
       </CardContent>
     </Card>
   )

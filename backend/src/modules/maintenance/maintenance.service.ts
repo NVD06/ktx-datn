@@ -68,8 +68,7 @@ function requestScope(user: AuthUser): Prisma.MaintenanceRequestWhereInput {
  */
 export async function create(user: AuthUser, input: CreateMaintenanceInput) {
   const contract = await prisma.contract.findFirst({
-    // TẠM ĐỂ TEST: bỏ điều kiện đã tới ngày vào ở — trả lại `startDate: { lte: new Date() }` trước khi commit.
-    where: { status: 'ACTIVE', registration: { studentId: user.id } },
+    where: { status: 'ACTIVE', startDate: { lte: new Date() }, registration: { studentId: user.id } },
     orderBy: { startDate: 'desc' },
     select: { bed: { select: { roomId: true } } },
   });

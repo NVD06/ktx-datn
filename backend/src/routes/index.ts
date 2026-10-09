@@ -11,6 +11,7 @@ import { paymentRoutes } from '../modules/payments/payment.routes.js';
 import { profileRoutes } from '../modules/profile/profile.routes.js';
 import { registrationPeriodRoutes } from '../modules/registration-periods/registration-period.routes.js';
 import { registrationRoutes } from '../modules/registrations/registration.routes.js';
+import { reportRoutes } from '../modules/reports/report.routes.js';
 import { roomTypeRoutes } from '../modules/room-types/room-type.routes.js';
 import { roomRoutes } from '../modules/rooms/room.routes.js';
 import { userRoutes } from '../modules/users/user.routes.js';
@@ -50,6 +51,7 @@ for (const routes of [
   profileRoutes,
   maintenanceRoutes,
   hygieneRoutes,
+  reportRoutes,
 ]) {
   apiRouter.use(routes.prefix, routes.router);
 }

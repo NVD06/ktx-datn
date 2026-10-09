@@ -42,3 +42,20 @@ export function orDash(value: string | number | null | undefined): string {
 export function bedPlace(bed: { code: string; room: { code: string; building: { name: string } } }): string {
   return `giường ${bed.code} · phòng ${bed.room.code} · tòa ${bed.room.building.name}`
 }
+
+/** "2026-09" -> "09/2026" */
+export function formatMonth(month: string): string {
+  const [year, m] = month.split('-')
+  return `${m}/${year}`
+}
+
+/** 2500000 -> "2,5 Tr" — nhãn trục biểu đồ; số đầy đủ xem ở tooltip. */
+export function formatMoneyCompact(value: number): string {
+  return new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
+}
+
+/** (3, 200) -> "1,5%"; tổng bằng 0 -> "—" */
+export function formatPercent(part: number, total: number): string {
+  if (!total) return '—'
+  return `${((part / total) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%`
+}

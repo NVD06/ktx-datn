@@ -3,28 +3,16 @@ import type { ListParams } from '@/types/api'
 import type {
   BillUtilitiesInput,
   BillUtilitiesResult,
-  BuildingDebt,
   CancelUtilityInput,
   CancelUtilityResult,
   Invoice,
   InvoiceDetail,
-  InvoiceSummary,
   UtilitySheet,
 } from '@/types/invoice'
 
 /** ADMIN/MANAGER — backend tự giới hạn theo tòa. `status=OVERDUE` lọc hóa đơn quá hạn. */
 export function listInvoices(params: ListParams) {
   return getPaged<Invoice>('/invoices', params)
-}
-
-/** Tổng tiền theo cùng bộ lọc với bảng (bỏ qua phân trang). */
-export function getInvoiceSummary(params: ListParams) {
-  return apiGet<InvoiceSummary>('/invoices/summary', params)
-}
-
-/** Công nợ từng tòa — MANAGER chỉ nhận tòa mình. */
-export function getDebtByBuilding() {
-  return apiGet<BuildingDebt[]>('/invoices/debt-by-building')
 }
 
 /** Hóa đơn của sinh viên đang đăng nhập — chưa thanh toán lên đầu. */

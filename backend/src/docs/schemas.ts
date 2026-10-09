@@ -483,3 +483,24 @@ export const saveHygieneResultSchema = z
     warningCount: z.int().openapi({ description: 'Số phòng dưới ngưỡng cảnh báo' }),
   })
   .openapi('SaveHygieneResult');
+
+export const overviewReportSchema = z
+  .object({
+    beds: z
+      .object({ total: z.int(), occupied: z.int() })
+      .openapi({ description: 'Giường của phòng đang hoạt động — tỷ lệ lấp đầy = occupied / total' }),
+    residents: z.int().openapi({ description: 'Số SV đang ở: hợp đồng ACTIVE đã tới ngày vào ở' }),
+    expiringContracts: z.object({
+      count: z.int(),
+      withinDays: z.int().openapi({ example: 30, description: 'Hợp đồng đang ở hết hạn trong từng này ngày tới' }),
+    }),
+    invoices: z.object({ unpaid: moneyTotal, overdue: moneyTotal }),
+    requests: z.object({
+      open: z.int().openapi({ description: 'Chờ tiếp nhận + đã tiếp nhận' }),
+      byStatus: z.record(requestStatusSchema, z.int()),
+    }),
+    revenue: z
+      .array(z.object({ month: z.string().openapi({ example: '2026-09' }), roomFee: moneySchema, utility: moneySchema }))
+      .openapi({ description: '6 tháng gần nhất, cũ trước mới sau — giao dịch VNPay thành công theo tháng thanh toán' }),
+  })
+  .openapi('OverviewReport');

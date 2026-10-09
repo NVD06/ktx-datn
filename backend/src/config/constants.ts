@@ -19,3 +19,6 @@ export const PAYMENT_EXPIRE_MINUTES = 15;
  * Giữ khớp với HYGIENE_WARNING_SCORE ở frontend/src/lib/labels.ts.
  */
 export const HYGIENE_WARNING_SCORE = 60;
+
+/** Dashboard (US-06.1) đếm hợp đồng đang ở sẽ hết hạn trong từng này ngày tới. */
+export const CONTRACT_EXPIRING_DAYS = 30;

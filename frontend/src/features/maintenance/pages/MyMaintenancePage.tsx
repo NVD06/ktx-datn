@@ -16,9 +16,6 @@ import { MaintenanceFormDialog } from '../components/MaintenanceFormDialog'
 import { useConfirmMaintenanceRequest, useMyMaintenanceRequests } from '../hooks/useMaintenance'
 import { progressRows } from '../maintenance-steps'
 
-// TẠM ĐỂ TEST: true = cho gửi yêu cầu cả khi chưa tới ngày vào ở. Xóa cờ này trước khi commit.
-const SKIP_MOVE_IN_CHECK: boolean = true
-
 /**
  * Yêu cầu sửa chữa của sinh viên (US-05.1, US-05.3): gửi cho phòng đang ở, theo dõi tiến độ,
  * xác nhận khi ban quản lý báo đã sửa xong. Chưa hài lòng thì gửi yêu cầu mới.
@@ -32,7 +29,7 @@ export function MyMaintenancePage() {
 
   // Đang ở = hợp đồng đã tới ngày vào ở (kể cả quá hạn mà chưa trả phòng). Backend kiểm tra lại khi gửi.
   const contract = stay.data?.contract
-  const living = !!contract && (SKIP_MOVE_IN_CHECK || new Date(contract.startDate) <= new Date())
+  const living = !!contract && new Date(contract.startDate) <= new Date()
 
   return (
     <>

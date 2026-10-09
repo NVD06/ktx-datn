@@ -6,8 +6,6 @@ import type { ListParams } from '@/types/api'
 export const invoiceKeys = {
   all: ['invoices'] as const,
   list: (params: ListParams) => ['invoices', 'list', params] as const,
-  summary: (params: ListParams) => ['invoices', 'summary', params] as const,
-  debtByBuilding: ['invoices', 'debt-by-building'] as const,
   mine: ['invoices', 'mine'] as const,
   detail: (id: string) => ['invoices', 'detail', id] as const,
   utilitySheet: (buildingId: string, period: string) => ['invoices', 'utility-sheet', buildingId, period] as const,
@@ -18,32 +16,6 @@ export function useInvoices(params: ListParams) {
     queryKey: invoiceKeys.list(params),
     queryFn: () => invoicesApi.listInvoices(params),
     placeholderData: keepPreviousData,
-  })
-}
-
-/**
- * Tổng tiền theo bộ lọc — bỏ tham số phân trang/sắp xếp để đổi trang không gọi lại, và bỏ cả
- * `status`: các ô tổng là nút lọc nhanh theo trạng thái, bấm vào ô nào thì số trên các ô vẫn giữ nguyên.
- */
-export function useInvoiceSummary({
-  page: _page,
-  limit: _limit,
-  sortBy: _sortBy,
-  order: _order,
-  status: _status,
-  ...filters
-}: ListParams) {
-  return useQuery({
-    queryKey: invoiceKeys.summary(filters),
-    queryFn: () => invoicesApi.getInvoiceSummary(filters),
-    placeholderData: keepPreviousData,
-  })
-}
-
-export function useDebtByBuilding() {
-  return useQuery({
-    queryKey: invoiceKeys.debtByBuilding,
-    queryFn: invoicesApi.getDebtByBuilding,
   })
 }
 
