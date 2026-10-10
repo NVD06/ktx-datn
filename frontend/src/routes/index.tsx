@@ -20,6 +20,10 @@ import { MyMaintenancePage } from '@/features/maintenance/pages/MyMaintenancePag
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
 import { MyRegistrationsPage } from '@/features/registrations/pages/MyRegistrationsPage'
+import { FinanceReportPage } from '@/features/reports/pages/FinanceReportPage'
+import { MaintenanceReportPage } from '@/features/reports/pages/MaintenanceReportPage'
+import { OccupancyReportPage } from '@/features/reports/pages/OccupancyReportPage'
+import { ReportsPage } from '@/features/reports/pages/ReportsPage'
 import { RegistrationListPage } from '@/features/registrations/pages/RegistrationListPage'
 import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
 import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
@@ -66,6 +70,16 @@ export const router = createBrowserRouter([
           { path: 'maintenance', element: <MaintenanceListPage /> },
           { path: 'hygiene', element: <HygieneListPage /> },
           { path: 'hygiene/score', element: <HygieneScoringPage /> },
+          {
+            path: 'reports',
+            element: <ReportsPage />,
+            children: [
+              { index: true, element: <Navigate to="occupancy" replace /> },
+              { path: 'occupancy', element: <OccupancyReportPage /> },
+              { path: 'finance', element: <FinanceReportPage /> },
+              { path: 'maintenance', element: <MaintenanceReportPage /> },
+            ],
+          },
           // Chỉ ADMIN — Manager gõ thẳng URL thì sang trang 403 thay vì bảng lỗi.
           { element: <ProtectedRoute roles={['ADMIN']} />, children: [{ path: 'users', element: <UserListPage /> }] },
         ],

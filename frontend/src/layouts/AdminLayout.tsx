@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
   Building2,
   CalendarRange,
+  ChartColumn,
   ClipboardList,
   FileSignature,
   KeyRound,
@@ -30,7 +31,7 @@ interface NavItem {
 }
 
 // Phòng và giường không có mục riêng: vào qua Tòa nhà → chi tiết tòa → chi tiết phòng.
-// Sẽ bổ sung: Báo cáo (US-06).
+// "Báo cáo" sáng cho mọi tab /admin/reports/* (NavLink không đặt `end`).
 const NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/admin/buildings', label: 'Tòa nhà', icon: Building2 },
@@ -42,6 +43,7 @@ const NAV: NavItem[] = [
   { to: '/admin/utilities', label: 'Chốt điện nước', icon: Zap },
   { to: '/admin/maintenance', label: 'Sửa chữa', icon: Wrench },
   { to: '/admin/hygiene', label: 'Vệ sinh', icon: Sparkles },
+  { to: '/admin/reports', label: 'Báo cáo', icon: ChartColumn },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]
 
