@@ -1,10 +1,21 @@
 import { HYGIENE_WARNING_SCORE } from '@/lib/labels'
+import { RecentMonthsFilter } from '../components/RecentMonthsFilter'
 import { ReportPlaceholder, ReportSection } from '../components/ReportSection'
+import { useRecentMonths } from '../hooks/useRecentMonths'
 
-/** Báo cáo sửa chữa & vệ sinh (US-06.4): hai khối sửa chữa ở trên, hai khối vệ sinh ở dưới. */
+/**
+ * Báo cáo sửa chữa & vệ sinh (US-06.4): hai khối sửa chữa ở trên, hai khối vệ sinh ở dưới.
+ * Khoảng tháng (chốt 10/10) áp cho cả bốn khối nên đặt trên đầu trang: yêu cầu tính theo tháng
+ * gửi, điểm vệ sinh theo ngày chấm.
+ */
 export function MaintenanceReportPage() {
+  const range = useRecentMonths()
+
   return (
     <div className="space-y-4">
+      <div className="flex">
+        <RecentMonthsFilter range={range} />
+      </div>
       <div className="grid gap-4 xl:grid-cols-2">
         <ReportSection title="Yêu cầu sửa chữa" description="Số yêu cầu theo trạng thái và theo tháng gửi.">
           <ReportPlaceholder />

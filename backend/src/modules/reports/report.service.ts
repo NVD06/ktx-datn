@@ -4,9 +4,11 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import { RequestStatus, type InvoiceType } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { currentMonthVN, monthStartVN, nextMonthStartVN, shiftMonth } from '../../utils/date-vn.js';
-import { buildingScope } from '../../utils/scope.js';
+import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { contractScope } from '../contracts/contract.service.js';
 import * as invoiceService from '../invoices/invoice.service.js';
+import { BED_STATE_SELECT, summarizeBeds } from '../rooms/room-status.js';
+import type { OccupancyQuery } from './report.schema.js';
 
 /*
  * Thống kê & báo cáo (US-06) — chỉ đọc, tính thẳng từ dữ liệu nghiệp vụ bằng count / groupBy /
@@ -18,6 +20,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Biểu đồ doanh thu của dashboard: từng này tháng gần nhất, tính cả tháng này. */
 const REVENUE_MONTHS = 6;
+
+/**
+ * Phòng tính vào sức chứa: phòng đang hoạt động. Dashboard và báo cáo lấp đầy dùng chung,
+ * nên tổng các tòa ở báo cáo luôn bằng ô "Tỷ lệ lấp đầy".
+ */
+const COUNTED_ROOM = { isActive: true } as const satisfies Prisma.RoomWhereInput;
 
 /**
  * Doanh thu tháng `month` (giờ VN): tiền thật đã thu — giao dịch VNPay thành công có `paidAt`
@@ -61,7 +69,7 @@ async function requestsByStatus(user: AuthUser) {
 export async function overview(user: AuthUser) {
   const now = new Date();
   const contracts = contractScope(user);
-  const beds: Prisma.BedWhereInput = { room: { ...buildingScope(user), isActive: true } };
+  const beds: Prisma.BedWhereInput = { room: { ...buildingScope(user), ...COUNTED_ROOM } };
   const thisMonth = currentMonthVN();
 
   const [totalBeds, occupiedBeds, residents, expiring, invoices, requests, revenue] = await Promise.all([
@@ -91,4 +99,52 @@ export async function overview(user: AuthUser) {
     requests: { open: requests.PENDING + requests.RECEIVED, byStatus: requests },
     revenue,
   };
+}
+
+/** Số giường theo trạng thái của một nhóm phòng (tầng, tòa) — bỏ `status`, chỉ có nghĩa với từng phòng. */
+function bedCounts(beds: Parameters<typeof summarizeBeds>[0]) {
+  const { status: _status, ...counts } = summarizeBeds(beds);
+  return counts;
+}
+
+/**
+ * Báo cáo lấp đầy (US-06.2): tòa → tầng → phòng, mỗi cấp đếm giường có người / giữ chỗ / trống /
+ * bảo trì theo đúng quy tắc của trang phòng (room-status.ts). Một lần đọc mọi phòng trong phạm vi
+ * rồi gom ở đây — KTX chỉ vài trăm phòng nên không cần groupBy theo từng cấp.
+ */
+export async function occupancy(user: AuthUser, { buildingId }: OccupancyQuery) {
+  const [buildings, rooms] = await Promise.all([
+    prisma.building.findMany({
+      where: { AND: [ownBuildingScope(user), buildingId ? { id: buildingId } : {}] },
+      select: { id: true, name: true, gender: true, isActive: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.room.findMany({
+      where: { AND: [buildingScope(user), COUNTED_ROOM, buildingId ? { buildingId } : {}] },
+      select: {
+        id: true,
+        code: true,
+        floor: true,
+        buildingId: true,
+        roomType: { select: { name: true, capacity: true } },
+        beds: { select: BED_STATE_SELECT },
+      },
+      orderBy: [{ floor: 'asc' }, { code: 'asc' }],
+    }),
+  ]);
+  if (buildingId && buildings.length === 0) throw outOfScope(user, 'Không tìm thấy tòa nhà');
+
+  return buildings.map((building) => {
+    const own = rooms.filter((room) => room.buildingId === building.id);
+    // Phòng đã sắp theo tầng nên các tầng ra đúng thứ tự; tầng không có phòng nào thì bỏ qua.
+    const floors = [...new Set(own.map((room) => room.floor))].map((floor) => {
+      const onFloor = own.filter((room) => room.floor === floor);
+      return {
+        floor,
+        ...bedCounts(onFloor.flatMap((room) => room.beds)),
+        rooms: onFloor.map(({ beds, buildingId: _buildingId, ...room }) => ({ ...room, ...summarizeBeds(beds) })),
+      };
+    });
+    return { building, ...bedCounts(own.flatMap((room) => room.beds)), floors };
+  });
 }

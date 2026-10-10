@@ -93,14 +93,15 @@ export const bedSchema = z
   })
   .openapi('Bed');
 
-const bedSummary = {
+const bedCounts = {
   bedCount: z.int(),
   availableBeds: z.int().openapi({ description: 'Giường trống thật sự — không tính giường đang giữ chỗ' }),
   heldBeds: z.int().openapi({ description: 'Giường còn trống nhưng đã có hợp đồng chờ ký giữ chỗ' }),
   occupiedBeds: z.int(),
   maintenanceBeds: z.int(),
-  status: roomStatusSchema,
 };
+
+const bedSummary = { ...bedCounts, status: roomStatusSchema };
 
 export const roomSchema = z
   .object({
@@ -504,3 +505,27 @@ export const overviewReportSchema = z
       .openapi({ description: '6 tháng gần nhất, cũ trước mới sau — giao dịch VNPay thành công theo tháng thanh toán' }),
   })
   .openapi('OverviewReport');
+
+export const occupancyReportSchema = z
+  .array(
+    z.object({
+      building: buildingRefSchema.extend({ isActive: z.boolean() }),
+      ...bedCounts,
+      floors: z.array(
+        z.object({
+          floor: z.int().openapi({ example: 1 }),
+          ...bedCounts,
+          rooms: z.array(
+            z.object({
+              id: z.uuid(),
+              code: z.string().openapi({ example: '103' }),
+              floor: z.int(),
+              roomType: z.object({ name: z.string(), capacity: z.int() }),
+              ...bedSummary,
+            }),
+          ),
+        }),
+      ),
+    }),
+  )
+  .openapi('OccupancyReport', { description: 'Tòa sắp theo tên, tầng tăng dần, chỉ phòng đang hoạt động' });

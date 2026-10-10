@@ -3,6 +3,7 @@
  * Chép từ response của backend (backend/src/docs/schemas.ts) — sửa bên đó thì sửa cả ở đây.
  */
 
+import type { BuildingRef, RoomStatus } from './facility'
 import type { MoneyTotal } from './invoice'
 import type { RequestStatus } from './maintenance'
 
@@ -24,4 +25,33 @@ export interface OverviewReport {
   requests: { open: number; byStatus: Record<RequestStatus, number> }
   /** 6 tháng gần nhất, cũ trước mới sau. */
   revenue: RevenueMonth[]
+}
+
+/** Số giường theo trạng thái — cùng quy tắc với trang phòng (giữ chỗ = hợp đồng chờ ký). */
+export interface BedCounts {
+  bedCount: number
+  occupiedBeds: number
+  heldBeds: number
+  /** Trống thật sự, không tính giường đang giữ chỗ. */
+  availableBeds: number
+  maintenanceBeds: number
+}
+
+export interface OccupancyRoom extends BedCounts {
+  id: string
+  code: string
+  floor: number
+  roomType: { name: string; capacity: number }
+  status: RoomStatus
+}
+
+export interface OccupancyFloor extends BedCounts {
+  floor: number
+  rooms: OccupancyRoom[]
+}
+
+/** GET /reports/occupancy — một mục mỗi tòa, chỉ tính phòng đang hoạt động. */
+export interface OccupancyBuilding extends BedCounts {
+  building: BuildingRef & { isActive: boolean }
+  floors: OccupancyFloor[]
 }

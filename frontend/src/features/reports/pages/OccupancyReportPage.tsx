@@ -1,18 +1,22 @@
 import { FilterSelect } from '@/components/shared/FilterSelect'
+import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useBuildings } from '@/features/buildings/hooks/useBuildings'
 import { useListParams } from '@/hooks/useListParams'
-import { ReportPlaceholder, ReportSection } from '../components/ReportSection'
+import { BuildingOccupancy } from '../components/BuildingOccupancy'
+import { useOccupancyReport } from '../hooks/useReports'
 
 const BUILDING_PARAMS = { limit: 100, sortBy: 'name', order: 'asc' } as const
 
 /**
- * Báo cáo lấp đầy (US-06.2): tòa → tầng → phòng. Admin lọc theo tòa (lưu trên URL); Manager chỉ
- * có tòa mình nên không có bộ lọc.
+ * Báo cáo lấp đầy (US-06.2): mỗi tòa một khối, chia theo tầng → phòng. Chỉ tính phòng đang hoạt
+ * động, nên tổng các tòa bằng ô "Tỷ lệ lấp đầy" ở Tổng quan. Admin lọc theo tòa (lưu trên URL);
+ * Manager chỉ có tòa mình nên không có bộ lọc.
  */
 export function OccupancyReportPage() {
   const { user } = useAuth()
   const list = useListParams(['buildingId'] as const)
+  const report = useOccupancyReport(list.filters.buildingId)
   const buildings = useBuildings(BUILDING_PARAMS)
   const buildingOptions = (buildings.data?.data ?? []).map((b) => ({ value: b.id, label: `Tòa ${b.name}` }))
 
@@ -28,12 +32,12 @@ export function OccupancyReportPage() {
           />
         </div>
       )}
-      <ReportSection
-        title="Lấp đầy theo tòa, tầng, phòng"
-        description="Tỷ lệ giường có người của từng tòa, từng tầng; số giường còn trống của từng phòng."
-      >
-        <ReportPlaceholder />
-      </ReportSection>
+      {report.isPending && <LoadingState />}
+      {report.isError && <ErrorState error={report.error} />}
+      {report.data?.length === 0 && <EmptyState description="Chưa có tòa nhà nào." />}
+      {report.data?.map((item) => (
+        <BuildingOccupancy key={item.building.id} report={item} />
+      ))}
     </div>
   )
 }
