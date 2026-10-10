@@ -1,25 +1,28 @@
 import 'dotenv/config';
+import { randomUUID } from 'node:crypto';
 import { env } from '../src/config/env.js';
 import { prisma } from '../src/config/prisma.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
 import * as contractService from '../src/modules/contracts/contract.service.js';
 import * as hygieneService from '../src/modules/hygiene/hygiene.service.js';
+import { invoiceDueDate } from '../src/modules/invoices/invoice-rules.js';
 import * as roomFeeService from '../src/modules/invoices/room-fee.service.js';
 import * as utilityService from '../src/modules/invoices/utility.service.js';
 import * as maintenanceService from '../src/modules/maintenance/maintenance.service.js';
 import * as registrationService from '../src/modules/registrations/registration.service.js';
-import { currentMonthVN } from '../src/utils/date-vn.js';
+import { currentMonthVN, monthStartVN } from '../src/utils/date-vn.js';
 import { dbTarget, isLocalDatabase } from './db-target.js';
 
 /**
- * Dữ liệu mẫu — phạm vi US-00 → US-05.
+ * Dữ liệu mẫu — phạm vi US-00 → US-06.
  *
  *   - 3 vai trò để test điều hướng sau login
  *   - 2 tòa nhà để test buildingScope() (Manager tòa B1 không đọc được B2)
  *   - 2 loại phòng (danh mục dùng chung)
  *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
  *   - Đơn, hợp đồng, hóa đơn tiền phòng + điện nước đủ các trạng thái để demo
+ *   - Giao dịch VNPay thành công / thất bại — doanh thu trên dashboard có số kể cả khi sandbox lỗi
  *   - Yêu cầu sửa chữa đủ các trạng thái, điểm vệ sinh hằng tuần có lần dưới 60 điểm
  *
  * Thống kê (US-06) dùng lại dữ liệu trên, bổ sung vào file này nếu cần.
@@ -262,7 +265,7 @@ async function main() {
   console.log('Tạo đơn, hợp đồng, hóa đơn...');
 
   const users = await prisma.user.findMany({
-    select: { id: true, fullName: true, email: true, role: true, buildingId: true },
+    select: { id: true, fullName: true, email: true, role: true, buildingId: true, mustChangePassword: true },
   });
   const as = (email: string) => users.find((u) => u.email === email)!;
   const sv = (code: string) => as(`sv${code}@ktx.edu.vn`);
@@ -290,7 +293,7 @@ async function main() {
   const anContract = await house('001', m1, b1, '103', 'G1', true); // đang ở
   await house('002', m1, b1, '103', 'G2', true); // đang ở, cùng phòng
   await house('005', m1, b1, '103', 'G3', false); // đã duyệt, chờ ký → giường "Giữ chỗ"
-  await house('003', m2, b2, '103', 'G1', true);
+  const cucContract = await house('003', m2, b2, '103', 'G1', true);
   // Seed chạy giữa kỳ: coi như SV đã ký từ ngày đầu kỳ. Lúc ký mới có hóa đơn tháng này; lập bù
   // những tháng đã ở từ đầu kỳ tới giờ, như server tự làm lúc khởi động.
   await prisma.contract.updateMany({ where: { status: 'ACTIVE' }, data: { signedAt: openPeriod.stayStartAt } });
@@ -321,7 +324,73 @@ async function main() {
     data: { dueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
   });
 
-  // ── Sửa chữa (US-05) ───────────────────────────────────────────────────────
+  // ── Thanh toán (US-04.5, cho dashboard US-06) ─────────────────────────────
+  // Doanh thu chỉ tính giao dịch VNPay thành công theo tháng thanh toán, nên cần Payment SUCCESS chứ
+  // không chỉ đổi hóa đơn sang PAID. Ghi thẳng DB: payment.confirm() đòi chữ ký VNPay và luôn lấy
+  // giờ hiện tại làm ngày thanh toán, không trả bù được cho các tháng trước.
+  console.log('Tạo giao dịch thanh toán...');
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  // Tiền phòng vừa lập bù ở trên mang ngày lập hôm nay — lùi về đúng lúc server lập (đầu tháng,
+  // tháng đầu là ngày ký) để ngày lập → hạn → ngày thanh toán đi đúng thứ tự.
+  const roomFees = await prisma.invoice.findMany({
+    where: { type: 'ROOM_FEE' },
+    select: { id: true, period: true, contract: { select: { signedAt: true } } },
+  });
+  for (const { id, period: month, contract } of roomFees) {
+    const billedAt = new Date(Math.max(monthStartVN(month).getTime(), contract.signedAt!.getTime()));
+    await prisma.invoice.update({ where: { id }, data: { createdAt: billedAt, dueDate: invoiceDueDate(billedAt) } });
+  }
+
+  // Đã trả: tiền phòng các tháng trước của mọi SV; tháng này sv001 chưa trả (còn nợ cùng hóa đơn
+  // điện nước quá hạn), sv002 chưa trả điện nước, sv003 trả hết — có cả tiền phòng lẫn điện nước.
+  const paidInvoices = await prisma.invoice.findMany({
+    where: {
+      OR: [
+        { type: 'ROOM_FEE', period: { lt: period } },
+        { type: 'ROOM_FEE', period, contractId: { not: anContract.id } },
+        { type: 'UTILITY', contractId: cucContract.id },
+      ],
+    },
+    select: { id: true, amount: true, createdAt: true },
+  });
+  let transactionNo = 14_600_000;
+  for (const invoice of paidInvoices) {
+    // Trả sau khi lập 2 ngày, không vượt quá hiện tại (hóa đơn điện nước vừa lập thì trả ngay).
+    const paidAt = new Date(Math.min(invoice.createdAt.getTime() + 2 * DAY_MS, Date.now()));
+    await prisma.payment.create({
+      data: {
+        invoiceId: invoice.id,
+        amount: invoice.amount,
+        status: 'SUCCESS',
+        txnRef: randomUUID().replaceAll('-', ''),
+        vnpTransactionNo: String(transactionNo++),
+        vnpResponseCode: '00',
+        paidAt,
+        createdAt: paidAt,
+      },
+    });
+  }
+  await prisma.invoice.updateMany({ where: { id: { in: paidInvoices.map((i) => i.id) } }, data: { status: 'PAID' } });
+
+  // sv001 bấm thanh toán tiền phòng tháng này rồi hủy ở cổng VNPay (mã 24): hiện trong lịch sử
+  // giao dịch của hóa đơn nhưng không tính vào doanh thu.
+  const anRoomFee = await prisma.invoice.findFirstOrThrow({
+    where: { contractId: anContract.id, type: 'ROOM_FEE', period },
+    select: { id: true, amount: true, createdAt: true },
+  });
+  await prisma.payment.create({
+    data: {
+      invoiceId: anRoomFee.id,
+      amount: anRoomFee.amount,
+      status: 'FAILED',
+      txnRef: randomUUID().replaceAll('-', ''),
+      vnpResponseCode: '24',
+      createdAt: new Date(Math.min(anRoomFee.createdAt.getTime() + DAY_MS, Date.now())),
+    },
+  });
+
+  // ── Sửa chữa (US-05)───────────────────────────────────────────────────────
   console.log('Tạo yêu cầu sửa chữa...');
 
   /** Gửi yêu cầu rồi đi lần lượt tới `until` qua service — có mốc thời gian, người xử lý như thật. */
@@ -362,14 +431,15 @@ async function main() {
   await hygiene(m1, b1, '103', [[85, 0], [55, 20, 'Để rác qua đêm, giày dép ngoài hành lang'], [72, 5, 'Còn để giày dép ngoài hành lang'], [90, 0]]);
   await hygiene(m2, b2, '103', [[88, 0], [92, 0], [86, 0], [58, 15, 'Không đổ rác, nhà vệ sinh bẩn']]); // lần gần nhất dưới 60
 
-  const [contractCount, roomFeeCount, utilityCount] = await Promise.all([
+  const [contractCount, roomFeeCount, utilityCount, revenue] = await Promise.all([
     prisma.contract.count(),
     prisma.invoice.count({ where: { type: 'ROOM_FEE' } }),
     prisma.invoice.count({ where: { type: 'UTILITY' } }),
+    prisma.payment.aggregate({ where: { status: 'SUCCESS' }, _sum: { amount: true } }),
   ]);
 
   console.log(`
-Seed xong (phạm vi US-00 → US-05):
+Seed xong (phạm vi US-00 → US-06):
   Tòa nhà    : 2  (${b1.name} nam, ${b2.name} nữ)
   Loại phòng : ${roomTypes.length}  (${roomTypes.map((t) => t.name).join(', ')})
   Phòng      : ${roomCount}  (${bedCount} giường)
@@ -377,6 +447,7 @@ Seed xong (phạm vi US-00 → US-05):
   Tài khoản  : ${3 + studentSeed.length}  (1 admin, 2 manager, ${studentSeed.length} sinh viên)
   Hợp đồng   : ${contractCount}  (3 đang ở, 1 chờ ký)
   Hóa đơn    : ${roomFeeCount} tiền phòng (trả trước, từ đầu kỳ tới tháng này) + ${utilityCount} điện nước (1 quá hạn)
+  Thanh toán : ${paidInvoices.length} giao dịch thành công, tổng ${Number(revenue._sum.amount ?? 0).toLocaleString('vi-VN')} đ + 1 thất bại (sv001 hủy)
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
   Sửa chữa   : 6 yêu cầu đủ trạng thái (sv001, sv002 tòa ${b1.name}; sv003 tòa ${b2.name})
   Vệ sinh    : 4 đợt hằng tuần phòng 103 mỗi tòa, 2 lần dưới 60 điểm (${b2.name}-103 ngay đợt hôm nay)
