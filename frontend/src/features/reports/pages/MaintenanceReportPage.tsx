@@ -1,43 +1,43 @@
+import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { HYGIENE_WARNING_SCORE } from '@/lib/labels'
+import { LowScoreTable, RequestMonthTable } from '../components/MaintenanceTables'
 import { RecentMonthsFilter } from '../components/RecentMonthsFilter'
-import { ReportPlaceholder, ReportSection } from '../components/ReportSection'
+import { ReportSection } from '../components/ReportSection'
 import { useRecentMonths } from '../hooks/useRecentMonths'
-
-/**
- * Báo cáo sửa chữa & vệ sinh (US-06.4): hai khối sửa chữa ở trên, hai khối vệ sinh ở dưới.
- * Khoảng tháng (chốt 10/10) áp cho cả bốn khối nên đặt trên đầu trang: yêu cầu tính theo tháng
- * gửi, điểm vệ sinh theo ngày chấm.
- */
+import { useMaintenanceReport } from '../hooks/useReports'
 export function MaintenanceReportPage() {
   const range = useRecentMonths()
-
+  const report = useMaintenanceReport(range.from, range.to)
+  const data = report.data
   return (
     <div className="space-y-4">
       <div className="flex">
         <RecentMonthsFilter range={range} />
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ReportSection title="Yêu cầu sửa chữa" description="Số yêu cầu theo trạng thái và theo tháng gửi.">
-          <ReportPlaceholder />
-        </ReportSection>
-        <ReportSection
-          title="Thời gian xử lý trung bình"
-          description="Từ lúc gửi tới lúc sửa xong, tính trên các yêu cầu đã xong hoặc đã xác nhận."
-        >
-          <ReportPlaceholder />
-        </ReportSection>
-      </div>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ReportSection title="Điểm vệ sinh trung bình theo tòa" description="Trung bình các lần chấm của từng tòa.">
-          <ReportPlaceholder />
-        </ReportSection>
-        <ReportSection
-          title={`Phòng dưới ${HYGIENE_WARNING_SCORE} điểm`}
-          description="Các phòng có lần chấm dưới ngưỡng cảnh báo."
-        >
-          <ReportPlaceholder />
-        </ReportSection>
-      </div>
+      {report.isPending && <LoadingState />}
+      {report.isError && <ErrorState error={report.error} />}
+      {data && (
+        <div className="grid items-start gap-4 xl:grid-cols-5">
+          <ReportSection
+            title="Yêu cầu sửa chữa"
+            description="Số yêu cầu theo trạng thái hiện tại, chia theo tháng gửi."
+            className="xl:col-span-3"
+          >
+            <RequestMonthTable requests={data.requests} />
+          </ReportSection>
+          <ReportSection
+            title={`Phòng dưới ${HYGIENE_WARNING_SCORE} điểm`}
+            description="Các lần chấm dưới ngưỡng cảnh báo, mới nhất trước."
+            className="xl:col-span-2"
+          >
+            {data.lowScores.length === 0 ? (
+              <EmptyState title={`Không có lần chấm nào dưới ${HYGIENE_WARNING_SCORE} điểm`} />
+            ) : (
+              <LowScoreTable rows={data.lowScores} />
+            )}
+          </ReportSection>
+        </div>
+      )}
     </div>
   )
 }

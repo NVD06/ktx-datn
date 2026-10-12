@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { EmptyState } from '@/components/shared/QueryState'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 /**
@@ -29,9 +28,4 @@ export function ReportSection({
       <CardContent>{children}</CardContent>
     </Card>
   )
-}
-
-/** Chỗ dành sẵn cho số liệu chưa làm — khung báo cáo dựng trước, từng story điền dần. */
-export function ReportPlaceholder() {
-  return <EmptyState title="Chưa có số liệu" />
 }

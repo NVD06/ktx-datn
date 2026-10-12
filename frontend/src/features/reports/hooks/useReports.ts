@@ -9,6 +9,7 @@ export const reportKeys = {
   revenue: (from: string, to: string) => ['reports', 'revenue', from, to] as const,
   debt: ['reports', 'debt'] as const,
   debtors: (params: ListParams) => ['reports', 'debtors', params] as const,
+  maintenance: (from: string, to: string) => ['reports', 'maintenance', from, to] as const,
 }
 
 /** Số liệu tổng hợp không cần tươi từng giây — giữ 1 phút (us-06.md, ghi chú kỹ thuật). */
@@ -37,6 +38,14 @@ export function useDebtors(params: ListParams) {
   return useQuery({
     queryKey: reportKeys.debtors(params),
     queryFn: () => reportsApi.listDebtors(params),
+    staleTime: REPORT_STALE_TIME,
+    placeholderData: keepPreviousData,
+  })
+}
+export function useMaintenanceReport(from: string, to: string) {
+  return useQuery({
+    queryKey: reportKeys.maintenance(from, to),
+    queryFn: () => reportsApi.getMaintenanceReport(from, to),
     staleTime: REPORT_STALE_TIME,
     placeholderData: keepPreviousData,
   })

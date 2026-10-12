@@ -1,6 +1,13 @@
 import { apiGet, getPaged } from './client'
 import type { ListParams } from '@/types/api'
-import type { BuildingDebt, Debtor, OccupancyBuilding, OverviewReport, RevenueReport } from '@/types/report'
+import type {
+  BuildingDebt,
+  Debtor,
+  MaintenanceReport,
+  OccupancyBuilding,
+  OverviewReport,
+  RevenueReport,
+} from '@/types/report'
 
 /** Số liệu dashboard — ADMIN/MANAGER, backend tự giới hạn MANAGER theo tòa mình. */
 export function getOverviewReport() {
@@ -19,4 +26,7 @@ export function getDebtReport() {
 }
 export function listDebtors(params: ListParams) {
   return getPaged<Debtor>('/reports/debt/students', params)
+}
+export function getMaintenanceReport(from: string, to: string) {
+  return apiGet<MaintenanceReport>('/reports/maintenance', { from, to })
 }

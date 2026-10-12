@@ -71,3 +71,7 @@ export interface Debtor extends ContractStudent {
   unpaid: MoneyTotal
   overdue: MoneyTotal
 }
+export interface MaintenanceReport {
+  requests: { months: { month: string; byStatus: Record<RequestStatus, number> }[]; total: Record<RequestStatus, number> }
+  lowScores: { id: string; checkDate: string; score: number; note: string | null; room: RoomRef }[]
+}
