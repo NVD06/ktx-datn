@@ -4,7 +4,6 @@ import {
   cancelUtilityResultSchema,
   invoiceDetailSchema,
   invoiceSchema,
-  invoiceSummarySchema,
   utilitySheetSchema,
 } from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
@@ -34,20 +33,7 @@ invoiceRoutes.get(
   ctrl.list,
 );
 
-// Các đường dẫn cố định khai báo TRƯỚC '/:id', nếu không Express hiểu "summary"/"me" là một id.
-invoiceRoutes.get(
-  '/summary',
-  {
-    summary: 'Tổng tiền theo bộ lọc (ADMIN, MANAGER)',
-    description: 'Cùng tham số lọc với GET /invoices. Trả số hóa đơn và tổng tiền: tất cả / chưa thanh toán / quá hạn.',
-    query: invoiceListQuerySchema,
-    data: invoiceSummarySchema,
-    errors: [400, 401, 403],
-  },
-  staff,
-  ctrl.summary,
-);
-
+// Các đường dẫn cố định khai báo TRƯỚC '/:id', nếu không Express hiểu "me" là một id.
 invoiceRoutes.get(
   '/utility-sheet',
   {

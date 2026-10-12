@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   buildingDebtSchema,
   debtorSchema,
+  maintenanceReportSchema,
   occupancyReportSchema,
   overviewReportSchema,
   revenueReportSchema,
@@ -9,7 +10,7 @@ import {
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './report.controller.js';
-import { debtorQuerySchema, occupancyQuerySchema, revenueQuerySchema } from './report.schema.js';
+import { debtorQuerySchema, monthRangeQuerySchema, occupancyQuerySchema } from './report.schema.js';
 
 // Chỉ ADMIN/MANAGER. MANAGER tự động chỉ thấy số liệu tòa mình — service lọc theo scope.
 export const reportRoutes = defineRoutes('/reports', 'Reports', requireAuth, requireRole('ADMIN', 'MANAGER'));
@@ -50,7 +51,7 @@ reportRoutes.get(
     description:
       'Từng tháng từ `from` tới `to` (giờ VN, tính cả hai đầu, tối đa 24 tháng) và tổng cả khoảng. Doanh thu là ' +
       'giao dịch VNPay thành công theo tháng thanh toán, tách tiền phòng / điện nước — cùng cách tính với dashboard.',
-    query: revenueQuerySchema,
+    query: monthRangeQuerySchema,
     data: revenueReportSchema,
     errors: [400, 401, 403],
   },
@@ -80,4 +81,17 @@ reportRoutes.get(
     errors: [400, 401, 403],
   },
   ctrl.debtors,
+);
+reportRoutes.get(
+  '/maintenance',
+  {
+    summary: 'Báo cáo sửa chữa & vệ sinh (ADMIN, MANAGER)',
+    description:
+      'Từ `from` tới `to` (giờ VN, tối đa 24 tháng): số yêu cầu sửa chữa theo trạng thái từng tháng gửi và các ' +
+      'lần chấm vệ sinh dưới 60 điểm theo ngày chấm.',
+    query: monthRangeQuerySchema,
+    data: maintenanceReportSchema,
+    errors: [400, 401, 403],
+  },
+  ctrl.maintenance,
 );

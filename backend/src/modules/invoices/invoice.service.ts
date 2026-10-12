@@ -82,15 +82,14 @@ async function total(where: Prisma.InvoiceWhereInput) {
   return { count: r._count._all, amount: String(r._sum.amount ?? 0) };
 }
 
-/** Tổng tiền theo đúng bộ lọc của bảng: tất cả / chưa thu / quá hạn. */
-export async function summary(user: AuthUser, query: InvoiceListQuery) {
-  const where = listWhere(user, query);
-  const [all, unpaid, overdue] = await Promise.all([
-    total(where),
+/** Tổng tiền chưa thu / quá hạn trong phạm vi — ô công nợ của dashboard (US-06.1). */
+export async function summary(user: AuthUser) {
+  const where = invoiceScope(user);
+  const [unpaid, overdue] = await Promise.all([
     total({ AND: [where, { status: 'UNPAID' }] }),
     total({ AND: [where, overdueWhere(new Date())] }),
   ]);
-  return { all, unpaid, overdue };
+  return { unpaid, overdue };
 }
 
 /**

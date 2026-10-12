@@ -1,4 +1,4 @@
-import { CONTRACT_EXPIRING_DAYS } from '../../config/constants.js';
+import { CONTRACT_EXPIRING_DAYS, HYGIENE_WARNING_SCORE } from '../../config/constants.js';
 import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { RequestStatus, type InvoiceType } from '../../generated/prisma/enums.js';
@@ -10,7 +10,7 @@ import * as invoiceService from '../invoices/invoice.service.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { BED_STATE_SELECT, summarizeBeds } from '../rooms/room-status.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
-import type { DebtorQuery, OccupancyQuery, RevenueQuery } from './report.schema.js';
+import type { DebtorQuery, MonthRangeQuery, OccupancyQuery } from './report.schema.js';
 
 /*
  * Thống kê & báo cáo (US-06) — chỉ đọc, tính thẳng từ dữ liệu nghiệp vụ bằng count / groupBy /
@@ -54,10 +54,10 @@ function revenueByMonth(user: AuthUser, from: string, to: string) {
 }
 
 /** Số yêu cầu sửa chữa theo trạng thái — đủ mọi trạng thái, không có thì 0. */
-async function requestsByStatus(user: AuthUser) {
+async function requestsByStatus(user: AuthUser, where: Prisma.MaintenanceRequestWhereInput = {}) {
   const groups = await prisma.maintenanceRequest.groupBy({
     by: ['status'],
-    where: { room: buildingScope(user) },
+    where: { AND: [{ room: buildingScope(user) }, where] },
     _count: { _all: true },
   });
   return Object.fromEntries(
@@ -70,7 +70,7 @@ async function requestsByStatus(user: AuthUser) {
  *   - Lấp đầy: giường OCCUPIED / tổng giường của phòng đang hoạt động.
  *   - SV đang ở: cùng quy tắc với chỗ ở hiện tại (contract.service.ts → currentStay) — hợp đồng
  *     ACTIVE đã tới ngày vào ở, kể cả quá ngày kết thúc mà chưa trả phòng.
- *   - Công nợ: dùng lại tổng của trang Hóa đơn, hai nơi luôn cùng một số.
+ *   - Công nợ: dùng lại hàm tổng của module hóa đơn, cùng phạm vi với trang Hóa đơn.
  */
 export async function overview(user: AuthUser) {
   const now = new Date();
@@ -90,7 +90,7 @@ export async function overview(user: AuthUser) {
         AND: [contracts, { status: 'ACTIVE', endDate: { gte: now, lte: new Date(now.getTime() + CONTRACT_EXPIRING_DAYS * DAY_MS) } }],
       },
     }),
-    invoiceService.summary(user, {}),
+    invoiceService.summary(user),
     requestsByStatus(user),
     revenueByMonth(user, shiftMonth(thisMonth, 1 - REVENUE_MONTHS), thisMonth),
   ]);
@@ -99,7 +99,7 @@ export async function overview(user: AuthUser) {
     beds: { total: totalBeds, occupied: occupiedBeds },
     residents,
     expiringContracts: { count: expiring, withinDays: CONTRACT_EXPIRING_DAYS },
-    invoices: { unpaid: invoices.unpaid, overdue: invoices.overdue },
+    invoices,
     requests: { open: requests.PENDING + requests.RECEIVED, byStatus: requests },
     revenue,
   };
@@ -152,7 +152,7 @@ export async function occupancy(user: AuthUser, { buildingId }: OccupancyQuery) 
     return { building, ...bedCounts(own.flatMap((room) => room.beds)), floors };
   });
 }
-export async function revenue(user: AuthUser, { from, to }: RevenueQuery) {
+export async function revenue(user: AuthUser, { from, to }: MonthRangeQuery) {
   const [months, total] = await Promise.all([
     revenueByMonth(user, from, to),
     revenueBetween(user, monthStartVN(from), nextMonthStartVN(to)),
@@ -223,4 +223,25 @@ export async function debtors(user: AuthUser, { search, page = 1, limit = 20 }: 
       .map(({ student, room, unpaid, overdue }) => ({ ...student, room, unpaid: money(unpaid), overdue: money(overdue) })),
     meta: { page, limit, total: rows.length },
   };
+}
+function monthRange(from: string, to: string) {
+  return { gte: monthStartVN(from), lt: nextMonthStartVN(to) };
+}
+export async function maintenance(user: AuthUser, { from, to }: MonthRangeQuery) {
+  const range = monthRange(from, to);
+  const [months, total, lowScores] = await Promise.all([
+    Promise.all(
+      Array.from({ length: monthCount(from, to) }, async (_, i) => {
+        const month = shiftMonth(from, i);
+        return { month, byStatus: await requestsByStatus(user, { createdAt: monthRange(month, month) }) };
+      }),
+    ),
+    requestsByStatus(user, { createdAt: range }),
+    prisma.hygieneRecord.findMany({
+      where: { room: buildingScope(user), checkDate: range, score: { lt: HYGIENE_WARNING_SCORE } },
+      select: { id: true, checkDate: true, score: true, note: true, room: { select: ROOM_REF_SELECT } },
+      orderBy: [{ checkDate: 'desc' }, { score: 'asc' }],
+    }),
+  ]);
+  return { requests: { months, total }, lowScores };
 }

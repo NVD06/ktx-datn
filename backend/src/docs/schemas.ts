@@ -396,9 +396,6 @@ export const cancelUtilityResultSchema = z
   .openapi('CancelUtilityResult');
 
 const moneyTotal = z.object({ count: z.int(), amount: moneySchema });
-export const invoiceSummarySchema = z
-  .object({ all: moneyTotal, unpaid: moneyTotal, overdue: moneyTotal })
-  .openapi('InvoiceSummary');
 
 export const buildingDebtSchema = z
   .object({ building: buildingRefSchema, unpaid: moneyTotal, overdue: moneyTotal })
@@ -549,3 +546,22 @@ export const debtorSchema = contractSchema.shape.student
     overdue: moneyTotal.openapi({ description: 'Trong đó đã qua hạn' }),
   })
   .openapi('Debtor');
+export const maintenanceReportSchema = z
+  .object({
+    requests: z.object({
+      months: z.array(
+        z.object({ month: z.string().openapi({ example: '2026-09' }), byStatus: z.record(requestStatusSchema, z.int()) }),
+      ),
+      total: z.record(requestStatusSchema, z.int()).openapi({ description: 'Cả khoảng' }),
+    }),
+    lowScores: z.array(
+      z.object({
+        id: z.uuid(),
+        checkDate: z.iso.datetime(),
+        score: z.int(),
+        note: z.string().nullable(),
+        room: roomRefSchema,
+      }),
+    ),
+  })
+  .openapi('MaintenanceReport');

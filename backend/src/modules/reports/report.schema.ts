@@ -11,19 +11,19 @@ export const occupancyQuerySchema = z.object({
 });
 
 export type OccupancyQuery = z.infer<typeof occupancyQuerySchema>;
-export const REVENUE_MAX_MONTHS = 24;
+const REPORT_MAX_MONTHS = 24;
 const month = z.string('Tháng không hợp lệ').regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Tháng không hợp lệ (dạng 2026-09)');
-export const revenueQuerySchema = z
+export const monthRangeQuerySchema = z
   .object({
     from: month.openapi({ example: '2026-05', description: 'Tháng đầu (giờ VN), tính cả tháng này' }),
     to: month.openapi({ example: '2026-10', description: 'Tháng cuối (giờ VN), tính cả tháng này' }),
   })
   .refine(({ from, to }) => from <= to, { path: ['to'], message: 'Tháng cuối không được trước tháng đầu' })
-  .refine(({ from, to }) => monthCount(from, to) <= REVENUE_MAX_MONTHS, {
+  .refine(({ from, to }) => monthCount(from, to) <= REPORT_MAX_MONTHS, {
     path: ['from'],
-    message: `Chỉ xem được tối đa ${REVENUE_MAX_MONTHS} tháng một lần`,
+    message: `Chỉ xem được tối đa ${REPORT_MAX_MONTHS} tháng một lần`,
   });
-export type RevenueQuery = z.infer<typeof revenueQuerySchema>;
+export type MonthRangeQuery = z.infer<typeof monthRangeQuerySchema>;
 export const debtorQuerySchema = listQuerySchema.pick({ page: true, limit: true }).extend({
   search: listQuerySchema.shape.search.openapi({ description: 'Tên, email hoặc mã SV' }),
 });

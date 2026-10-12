@@ -13,11 +13,6 @@ export async function list(req: Request, res: Response) {
   res.json(ok(data, meta));
 }
 
-/** GET /api/v1/invoices/summary */
-export async function summary(req: Request, res: Response) {
-  res.json(ok(await invoiceService.summary(currentUser(req), invoiceListQuerySchema.parse(req.query))));
-}
-
 /** GET /api/v1/invoices/utility-sheet */
 export async function utilitySheet(req: Request, res: Response) {
   res.json(ok(await utilityService.sheet(currentUser(req), utilitySheetQuerySchema.parse(req.query))));
