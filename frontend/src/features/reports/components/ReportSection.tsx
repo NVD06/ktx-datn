@@ -10,15 +10,17 @@ export function ReportSection({
   title,
   description,
   action,
+  className,
   children,
 }: {
   title: string
   description?: string
   action?: ReactNode
+  className?: string
   children: ReactNode
 }) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}

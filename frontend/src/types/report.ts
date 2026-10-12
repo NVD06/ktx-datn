@@ -3,7 +3,8 @@
  * Chép từ response của backend (backend/src/docs/schemas.ts) — sửa bên đó thì sửa cả ở đây.
  */
 
-import type { BuildingRef, RoomStatus } from './facility'
+import type { Contract } from './contract'
+import type { BuildingRef, RoomRef, RoomStatus } from './facility'
 import type { MoneyTotal } from './invoice'
 import type { RequestStatus } from './maintenance'
 
@@ -54,4 +55,19 @@ export interface OccupancyFloor extends BedCounts {
 export interface OccupancyBuilding extends BedCounts {
   building: BuildingRef & { isActive: boolean }
   floors: OccupancyFloor[]
+}
+export interface RevenueReport {
+  months: RevenueMonth[]
+  total: { roomFee: string; utility: string }
+}
+export interface BuildingDebt {
+  building: BuildingRef
+  unpaid: MoneyTotal
+  overdue: MoneyTotal
+}
+type ContractStudent = Contract['student']
+export interface Debtor extends ContractStudent {
+  room: RoomRef
+  unpaid: MoneyTotal
+  overdue: MoneyTotal
 }
