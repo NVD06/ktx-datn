@@ -18,11 +18,6 @@ export async function summary(req: Request, res: Response) {
   res.json(ok(await invoiceService.summary(currentUser(req), invoiceListQuerySchema.parse(req.query))));
 }
 
-/** GET /api/v1/invoices/debt-by-building */
-export async function debtByBuilding(req: Request, res: Response) {
-  res.json(ok(await invoiceService.debtByBuilding(currentUser(req))));
-}
-
 /** GET /api/v1/invoices/utility-sheet */
 export async function utilitySheet(req: Request, res: Response) {
   res.json(ok(await utilityService.sheet(currentUser(req), utilitySheetQuerySchema.parse(req.query))));

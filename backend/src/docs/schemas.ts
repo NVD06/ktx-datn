@@ -485,6 +485,11 @@ export const saveHygieneResultSchema = z
   })
   .openapi('SaveHygieneResult');
 
+const revenueMonthSchema = z.object({
+  month: z.string().openapi({ example: '2026-09' }),
+  roomFee: moneySchema,
+  utility: moneySchema,
+});
 export const overviewReportSchema = z
   .object({
     beds: z
@@ -501,7 +506,7 @@ export const overviewReportSchema = z
       byStatus: z.record(requestStatusSchema, z.int()),
     }),
     revenue: z
-      .array(z.object({ month: z.string().openapi({ example: '2026-09' }), roomFee: moneySchema, utility: moneySchema }))
+      .array(revenueMonthSchema)
       .openapi({ description: '6 tháng gần nhất, cũ trước mới sau — giao dịch VNPay thành công theo tháng thanh toán' }),
   })
   .openapi('OverviewReport');
@@ -529,3 +534,18 @@ export const occupancyReportSchema = z
     }),
   )
   .openapi('OccupancyReport', { description: 'Tòa sắp theo tên, tầng tăng dần, chỉ phòng đang hoạt động' });
+export const revenueReportSchema = z
+  .object({
+    months: z
+      .array(revenueMonthSchema)
+      .openapi({ description: 'Đủ mọi tháng trong khoảng, cũ trước mới sau; tháng không thu được gì là 0' }),
+    total: z.object({ roomFee: moneySchema, utility: moneySchema }).openapi({ description: 'Tổng cả khoảng' }),
+  })
+  .openapi('RevenueReport', { description: 'Giao dịch VNPay thành công, chia tháng theo ngày thanh toán (giờ VN)' });
+export const debtorSchema = contractSchema.shape.student
+  .extend({
+    room: roomRefSchema.openapi({ description: 'Phòng của hợp đồng gần nhất có hóa đơn chưa thanh toán' }),
+    unpaid: moneyTotal.openapi({ description: 'Mọi hóa đơn chưa thanh toán, gồm cả quá hạn' }),
+    overdue: moneyTotal.openapi({ description: 'Trong đó đã qua hạn' }),
+  })
+  .openapi('Debtor');

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import {
   billUtilitiesResultSchema,
-  buildingDebtSchema,
   cancelUtilityResultSchema,
   invoiceDetailSchema,
   invoiceSchema,
@@ -47,20 +46,6 @@ invoiceRoutes.get(
   },
   staff,
   ctrl.summary,
-);
-
-invoiceRoutes.get(
-  '/debt-by-building',
-  {
-    summary: 'Công nợ theo tòa (ADMIN, MANAGER)',
-    description:
-      'Mỗi tòa trong phạm vi (MANAGER: tòa mình) kèm số hóa đơn và tổng tiền chưa thanh toán / quá hạn. ' +
-      'Sắp theo tên tòa, tòa không nợ vẫn có mặt với số 0.',
-    data: z.array(buildingDebtSchema),
-    errors: [401, 403],
-  },
-  staff,
-  ctrl.debtByBuilding,
 );
 
 invoiceRoutes.get(

@@ -3,12 +3,14 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { RequestStatus, type InvoiceType } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
-import { currentMonthVN, monthStartVN, nextMonthStartVN, shiftMonth } from '../../utils/date-vn.js';
+import { currentMonthVN, monthCount, monthStartVN, nextMonthStartVN, shiftMonth } from '../../utils/date-vn.js';
 import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
-import { contractScope } from '../contracts/contract.service.js';
+import { CONTRACT_STUDENT_SELECT, contractScope } from '../contracts/contract.service.js';
 import * as invoiceService from '../invoices/invoice.service.js';
+import { studentSearch } from '../profile/profile.service.js';
 import { BED_STATE_SELECT, summarizeBeds } from '../rooms/room-status.js';
-import type { OccupancyQuery } from './report.schema.js';
+import { ROOM_REF_SELECT } from '../rooms/room.service.js';
+import type { DebtorQuery, OccupancyQuery, RevenueQuery } from './report.schema.js';
 
 /*
  * Thống kê & báo cáo (US-06) — chỉ đọc, tính thẳng từ dữ liệu nghiệp vụ bằng count / groupBy /
@@ -28,23 +30,27 @@ const REVENUE_MONTHS = 6;
 const COUNTED_ROOM = { isActive: true } as const satisfies Prisma.RoomWhereInput;
 
 /**
- * Doanh thu tháng `month` (giờ VN): tiền thật đã thu — giao dịch VNPay thành công có `paidAt`
- * trong tháng, không phải hóa đơn đã lập. Tách tiền phòng / điện nước theo loại hóa đơn.
+ * Doanh thu trong [gte, lt): tiền thật đã thu — giao dịch VNPay thành công có `paidAt` trong
+ * khoảng, không phải hóa đơn đã lập. Tách tiền phòng / điện nước theo loại hóa đơn.
  */
-async function revenueOf(user: AuthUser, month: string) {
+async function revenueBetween(user: AuthUser, gte: Date, lt: Date) {
   const sum = async (type: InvoiceType) => {
     const { _sum } = await prisma.payment.aggregate({
-      where: {
-        status: 'SUCCESS',
-        paidAt: { gte: monthStartVN(month), lt: nextMonthStartVN(month) },
-        invoice: { type, contract: contractScope(user) },
-      },
+      where: { status: 'SUCCESS', paidAt: { gte, lt }, invoice: { type, contract: contractScope(user) } },
       _sum: { amount: true },
     });
     return String(_sum.amount ?? 0);
   };
   const [roomFee, utility] = await Promise.all([sum('ROOM_FEE'), sum('UTILITY')]);
-  return { month, roomFee, utility };
+  return { roomFee, utility };
+}
+function revenueByMonth(user: AuthUser, from: string, to: string) {
+  return Promise.all(
+    Array.from({ length: monthCount(from, to) }, async (_, i) => {
+      const month = shiftMonth(from, i);
+      return { month, ...(await revenueBetween(user, monthStartVN(month), nextMonthStartVN(month))) };
+    }),
+  );
 }
 
 /** Số yêu cầu sửa chữa theo trạng thái — đủ mọi trạng thái, không có thì 0. */
@@ -86,9 +92,7 @@ export async function overview(user: AuthUser) {
     }),
     invoiceService.summary(user, {}),
     requestsByStatus(user),
-    Promise.all(
-      Array.from({ length: REVENUE_MONTHS }, (_, i) => revenueOf(user, shiftMonth(thisMonth, i - (REVENUE_MONTHS - 1)))),
-    ),
+    revenueByMonth(user, shiftMonth(thisMonth, 1 - REVENUE_MONTHS), thisMonth),
   ]);
 
   return {
@@ -147,4 +151,76 @@ export async function occupancy(user: AuthUser, { buildingId }: OccupancyQuery) 
     });
     return { building, ...bedCounts(own.flatMap((room) => room.beds)), floors };
   });
+}
+export async function revenue(user: AuthUser, { from, to }: RevenueQuery) {
+  const [months, total] = await Promise.all([
+    revenueByMonth(user, from, to),
+    revenueBetween(user, monthStartVN(from), nextMonthStartVN(to)),
+  ]);
+  return { months, total };
+}
+export function debt(user: AuthUser) {
+  return invoiceService.debtByBuilding(user);
+}
+const DEBTOR_INVOICE_SELECT = {
+  amount: true,
+  dueDate: true,
+  contract: {
+    select: {
+      bed: { select: { room: { select: ROOM_REF_SELECT } } },
+      registration: { select: { student: { select: CONTRACT_STUDENT_SELECT } } },
+    },
+  },
+} as const satisfies Prisma.InvoiceSelect;
+type DebtorContract = Prisma.InvoiceGetPayload<{ select: typeof DEBTOR_INVOICE_SELECT }>['contract'];
+interface Debtor {
+  student: DebtorContract['registration']['student'];
+  room: DebtorContract['bed']['room'];
+  unpaid: { count: number; amount: number };
+  overdue: { count: number; amount: number };
+}
+export async function debtors(user: AuthUser, { search, page = 1, limit = 20 }: DebtorQuery) {
+  const now = new Date();
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      AND: [
+        { contract: contractScope(user) },
+        { status: 'UNPAID' },
+        search ? { contract: { registration: { student: studentSearch(search) } } } : {},
+      ],
+    },
+    select: DEBTOR_INVOICE_SELECT,
+    orderBy: { dueDate: 'asc' },
+  });
+  const byStudent = new Map<string, Debtor>();
+  for (const { amount, dueDate, contract } of invoices) {
+    const { student } = contract.registration;
+    const row = byStudent.get(student.id) ?? {
+      student,
+      room: contract.bed.room,
+      unpaid: { count: 0, amount: 0 },
+      overdue: { count: 0, amount: 0 },
+    };
+    row.room = contract.bed.room;
+    row.unpaid.count++;
+    row.unpaid.amount += Number(amount);
+    if (dueDate < now) {
+      row.overdue.count++;
+      row.overdue.amount += Number(amount);
+    }
+    byStudent.set(student.id, row);
+  }
+  const rows = [...byStudent.values()].sort(
+    (a, b) =>
+      b.overdue.amount - a.overdue.amount ||
+      b.unpaid.amount - a.unpaid.amount ||
+      a.student.fullName.localeCompare(b.student.fullName, 'vi'),
+  );
+  const money = ({ count, amount }: Debtor['unpaid']) => ({ count, amount: String(amount) });
+  return {
+    data: rows
+      .slice((page - 1) * limit, page * limit)
+      .map(({ student, room, unpaid, overdue }) => ({ ...student, room, unpaid: money(unpaid), overdue: money(overdue) })),
+    meta: { page, limit, total: rows.length },
+  };
 }

@@ -54,6 +54,13 @@ export function shiftMonth(period: string, n: number): string {
   return new Date(Date.UTC(year, month - 1 + n, 1)).toISOString().slice(0, 7);
 }
 
+export function monthCount(from: string, to: string): number {
+  const index = (period: string) => {
+    const [year, month] = period.split('-').map(Number) as [number, number];
+    return year * 12 + month;
+  };
+  return index(to) - index(from) + 1;
+}
 /** Số ngày theo lịch Việt Nam từ `from` tới `to`, tính cả hai đầu — 22/09 tới 30/09 là 9 ngày. */
 export function calendarDaysVN(from: Date, to: Date): number {
   const day = (date: Date) => Math.floor(toVN(date).getTime() / DAY_MS);
