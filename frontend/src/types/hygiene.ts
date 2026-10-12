@@ -44,7 +44,7 @@ export interface SaveHygieneInput {
   buildingId: string
   /** "2026-10-07" — ngày ở Việt Nam, không sau hôm nay. */
   checkDate: string
-  records: { roomId: string; score: number; deduction: number; note: string | null }[]
+  records: { roomId: string; baseScore: number; deduction: number; note: string | null }[]
 }
 
 export interface SaveHygieneResult {

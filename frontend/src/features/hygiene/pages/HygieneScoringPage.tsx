@@ -18,7 +18,7 @@ import type { HygieneSheet } from '@/types/hygiene'
 import { useHygieneSheet, useSaveHygiene } from '../hooks/useHygiene'
 
 const BUILDING_PARAMS = { limit: 100, sortBy: 'name', order: 'asc' } as const
-const FIELDS = ['score', 'deduction', 'note'] as const
+const FIELDS = ['baseScore', 'deduction', 'note'] as const
 
 type Field = (typeof FIELDS)[number]
 type SheetRoom = HygieneSheet['rooms'][number]
@@ -73,11 +73,17 @@ export function HygieneScoringPage() {
 
 /** Giá trị đã lưu của một ô — điền sẵn để chấm lại. */
 function saved(room: SheetRoom, field: Field): string {
-  const value = room.record?.[field]
-  return value === null || value === undefined ? '' : String(value)
+  if (!room.record) return ''
+  const value = field === 'baseScore' ? room.record.score + room.record.deduction : room.record[field]
+  return value === null ? '' : String(value)
 }
 
 const isScore = (n: number) => Number.isInteger(n) && n >= 0 && n <= 100
+function scoreError(baseText: string, baseScore: number, deductionText: string, deduction: number, note: string) {
+  if (baseText === '') return deductionText !== '' || note !== '' ? 'Chưa nhập điểm vệ sinh' : null
+  if (!isScore(baseScore) || !isScore(deduction)) return 'Điểm phải là số nguyên 0–100'
+  return deduction > baseScore ? 'Điểm trừ lớn hơn điểm vệ sinh' : null
+}
 
 function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneSheet; checkDate: string }) {
   const save = useSaveHygiene()
@@ -88,15 +94,15 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
     .filter((room) => room.residents > 0 || room.record)
     .map((room) => {
       const value = (f: Field) => edits[room.id]?.[f] ?? saved(room, f)
-      const [scoreText, deductionText, note] = [value('score'), value('deduction'), value('note').trim()]
-      const score = Number(scoreText)
+      const [baseText, deductionText, note] = [value('baseScore'), value('deduction'), value('note').trim()]
+      const baseScore = Number(baseText)
       const deduction = deductionText === '' ? 0 : Number(deductionText)
-      // Chưa nhập điểm mà đã ghi điểm trừ / ghi chú thì nhắc nhập điểm.
-      const invalid = scoreText === '' ? deductionText !== '' || note !== '' : !isScore(score) || !isScore(deduction)
-      const record = scoreText !== '' && !invalid ? { roomId: room.id, score, deduction, note: note || null } : null
+      const error = scoreError(baseText, baseScore, deductionText, deduction, note)
+      const final = baseText !== '' && !error ? baseScore - deduction : null
+      const record = final !== null ? { roomId: room.id, baseScore, deduction, note: note || null } : null
       // Chỉ lưu phòng có sửa — lưu lại phòng không đổi gì sẽ ghi đè người chấm.
       const changed = FIELDS.some((f) => value(f) !== saved(room, f))
-      return { room, value, invalid, record: changed ? record : null }
+      return { room, value, error, final, record: changed ? record : null }
     })
   const ready = rows.filter((r) => r.record)
   const emptyRooms = rooms.length - rows.length
@@ -136,14 +142,15 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
               <TableRow>
                 <TableHead>Phòng</TableHead>
                 <TableHead className="text-right">Số SV</TableHead>
-                <TableHead>Điểm (0–100)</TableHead>
+                <TableHead>Điểm vệ sinh (0–100)</TableHead>
                 <TableHead>Điểm trừ</TableHead>
+                <TableHead>Điểm cuối</TableHead>
                 <TableHead>Ghi chú vi phạm</TableHead>
                 <TableHead className="text-right">Đã lưu</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map(({ room, value, invalid }) => (
+              {rows.map(({ room, value, error, final }) => (
                 <TableRow key={room.id}>
                   <TableCell className="font-medium">
                     {room.code} <span className="text-muted-foreground text-xs">· tầng {room.floor}</span>
@@ -154,10 +161,10 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
                       type="number"
                       min={0}
                       max={100}
-                      value={value('score')}
-                      onChange={(e) => edit(room.id, 'score', e.target.value)}
-                      aria-label={`Điểm phòng ${room.code}`}
-                      aria-invalid={invalid}
+                      value={value('baseScore')}
+                      onChange={(e) => edit(room.id, 'baseScore', e.target.value)}
+                      aria-label={`Điểm vệ sinh phòng ${room.code}`}
+                      aria-invalid={!!error}
                       className="h-8 w-20"
                     />
                   </TableCell>
@@ -170,9 +177,16 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
                       value={value('deduction')}
                       onChange={(e) => edit(room.id, 'deduction', e.target.value)}
                       aria-label={`Điểm trừ phòng ${room.code}`}
-                      aria-invalid={invalid}
+                      aria-invalid={!!error}
                       className="h-8 w-20"
                     />
+                  </TableCell>
+                  <TableCell>
+                    {error ? (
+                      <span className="text-destructive text-xs">{error}</span>
+                    ) : (
+                      <span className="font-medium tabular-nums">{final ?? '—'}</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Input
@@ -185,13 +199,7 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
                     />
                   </TableCell>
                   <TableCell className="text-right">
-                    {invalid ? (
-                      <span className="text-destructive text-xs">Điểm phải là số nguyên 0–100</span>
-                    ) : room.record ? (
-                      <StatusBadge {...hygieneScore(room.record.score)} />
-                    ) : (
-                      '—'
-                    )}
+                    {room.record ? <StatusBadge {...hygieneScore(room.record.score)} /> : '—'}
                   </TableCell>
                 </TableRow>
               ))}
@@ -202,10 +210,11 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground text-sm">
-          Dưới {HYGIENE_WARNING_SCORE} điểm là cảnh báo. Phòng bỏ trống ô điểm sẽ không được lưu.
+          Điểm cuối = điểm vệ sinh − điểm trừ, dưới {HYGIENE_WARNING_SCORE} điểm là cảnh báo. Phòng bỏ trống ô điểm
+          vệ sinh sẽ không được lưu.
           {emptyRooms > 0 && ` ${emptyRooms} phòng không có sinh viên ở không cần chấm.`}
         </p>
-        <Button onClick={submit} disabled={save.isPending || rows.some((r) => r.invalid) || ready.length === 0}>
+        <Button onClick={submit} disabled={save.isPending || rows.some((r) => r.error) || ready.length === 0}>
           {save.isPending ? 'Đang lưu…' : `Lưu điểm ${ready.length} phòng`}
         </Button>
       </div>

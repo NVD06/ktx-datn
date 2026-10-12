@@ -424,7 +424,7 @@ async function main() {
       await hygieneService.save(manager, {
         buildingId: building.id,
         checkDate: new Date(Date.now() - (weeks.length - 1 - i) * 7 * 24 * 60 * 60 * 1000),
-        records: [{ roomId: id, score, deduction, note: note ?? null }],
+        records: [{ roomId: id, baseScore: score + deduction, deduction, note: note ?? null }],
       });
     }
   }

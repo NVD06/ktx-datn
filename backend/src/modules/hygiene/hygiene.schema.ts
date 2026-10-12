@@ -23,14 +23,22 @@ export const saveHygieneSchema = z
     checkDate,
     records: z
       .array(
-        z.object({
-          roomId: z.uuid('Phòng không hợp lệ'),
-          score: score('Điểm').openapi({ example: 85, description: 'Điểm cuối cùng — dưới 60 là cảnh báo' }),
-          deduction: score('Điểm trừ')
-            .default(0)
-            .openapi({ example: 5, description: 'Điểm bị trừ vì vi phạm nội quy, lý do ghi ở `note`' }),
-          note: optionalText('Ghi chú', 500).exactOptional().openapi({ example: 'Để rác qua đêm' }),
-        }),
+        z
+          .object({
+            roomId: z.uuid('Phòng không hợp lệ'),
+            baseScore: score('Điểm vệ sinh').openapi({
+              example: 90,
+              description: 'Điểm vệ sinh trước khi trừ — điểm lưu = baseScore − deduction, dưới 60 là cảnh báo',
+            }),
+            deduction: score('Điểm trừ')
+              .default(0)
+              .openapi({ example: 5, description: 'Điểm bị trừ vì vi phạm nội quy, lý do ghi ở `note`' }),
+            note: optionalText('Ghi chú', 500).exactOptional().openapi({ example: 'Để rác qua đêm' }),
+          })
+          .refine((r) => r.deduction <= r.baseScore, {
+            path: ['deduction'],
+            message: 'Điểm trừ không được lớn hơn điểm vệ sinh',
+          }),
       )
       .min(1, 'Chưa nhập điểm phòng nào')
       .max(500)

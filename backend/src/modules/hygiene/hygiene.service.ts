@@ -87,8 +87,8 @@ export async function save(user: AuthUser, { buildingId, checkDate, records }: S
     const unknown = records.findIndex((r) => !known.has(r.roomId));
     if (unknown >= 0) throw ApiError.validation({ [`records.${unknown}.roomId`]: ['Phòng không thuộc tòa này'] });
 
-    for (const { roomId, ...score } of records) {
-      const data = { ...score, checkedById: user.id };
+    for (const { roomId, baseScore, ...rest } of records) {
+      const data = { ...rest, score: baseScore - rest.deduction, checkedById: user.id };
       await tx.hygieneRecord.upsert({
         where: { roomId_checkDate: { roomId, checkDate: day } },
         create: { roomId, checkDate: day, ...data },
@@ -98,7 +98,7 @@ export async function save(user: AuthUser, { buildingId, checkDate, records }: S
 
     return {
       roomCount: records.length,
-      warningCount: records.filter((r) => r.score < HYGIENE_WARNING_SCORE).length,
+      warningCount: records.filter((r) => r.baseScore - r.deduction < HYGIENE_WARNING_SCORE).length,
     };
   });
 }
