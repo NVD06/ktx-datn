@@ -7,6 +7,8 @@ import { queryClient } from '@/lib/queryClient'
 import { router } from '@/routes'
 import '@/styles/globals.css'
 
+window.addEventListener('vite:preloadError', () => window.location.reload())
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

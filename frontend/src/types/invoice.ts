@@ -9,7 +9,7 @@ import type { Contract } from './contract'
 export type InvoiceStatus = 'UNPAID' | 'PAID'
 export type InvoiceType = 'ROOM_FEE' | 'UTILITY'
 export type InvoiceItemType = 'ROOM_FEE' | 'ELECTRIC' | 'WATER'
-export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED'
+export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'DUPLICATE'
 
 /** Phần chung của hóa đơn — dạng rút gọn đi kèm hợp đồng (Contract.invoices). */
 export interface InvoiceRef {

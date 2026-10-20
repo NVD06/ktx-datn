@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { PAYMENT_EXPIRE_MINUTES } from '../../config/constants.js';
 import { env } from '../../config/env.js';
 import { prisma } from '../../config/prisma.js';
+import type { PaymentStatus } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { buildPayUrl, verifySignature, vnpDate } from '../../utils/vnpay.js';
@@ -72,11 +73,17 @@ export async function pay(user: AuthUser, invoiceId: string, ipAddr: string) {
  * SV còn có thể F5 trang kết quả, nên phải idempotent. Kiểm tra theo thứ tự của VNPay:
  * chữ ký (97) → giao dịch có thật (01) → đúng số tiền (04) → chưa xác nhận (02).
  * Hai lời gọi tới cùng lúc: điều kiện PENDING nằm ngay trong lệnh ghi nên chỉ một bên
- * ghi được, hóa đơn chuyển PAID đúng một lần.
+ * ghi được, hóa đơn chuyển PAID đúng một lần. SV mở hai tab và trả cả hai: giao dịch
+ * tới sau ghi DUPLICATE (không tính doanh thu), ban quản lý hoàn tiền thủ công.
  */
 export async function confirm(query: Record<string, unknown>) {
   const q = query as Record<string, string | undefined>;
-  const result = (rspCode: RspCode, paid = false, invoiceCode: string | null = null) => ({ rspCode, paid, invoiceCode });
+  const result = (rspCode: RspCode, status: PaymentStatus | null = null, invoiceCode: string | null = null) => ({
+    rspCode,
+    paid: status === 'SUCCESS' || status === 'DUPLICATE',
+    duplicate: status === 'DUPLICATE',
+    invoiceCode,
+  });
 
   if (!env.VNP_HASH_SECRET || !verifySignature(query, env.VNP_HASH_SECRET)) return result('97');
   const payment = await prisma.payment.findUnique({
@@ -85,11 +92,11 @@ export async function confirm(query: Record<string, unknown>) {
   });
   if (!payment) return result('01');
   const { code } = payment.invoice;
-  if (Number(q.vnp_Amount) !== Number(payment.amount) * 100) return result('04', false, code);
-  if (payment.status !== 'PENDING') return result('02', payment.status === 'SUCCESS', code);
+  if (Number(q.vnp_Amount) !== Number(payment.amount) * 100) return result('04', null, code);
+  if (payment.status !== 'PENDING') return result('02', payment.status, code);
 
   const paid = q.vnp_ResponseCode === '00' && (q.vnp_TransactionStatus ?? '00') === '00';
-  const written = await prisma.$transaction(async (tx) => {
+  const written = await prisma.$transaction(async (tx): Promise<PaymentStatus | null> => {
     const { count } = await tx.payment.updateMany({
       where: { id: payment.id, status: 'PENDING' },
       data: {
@@ -99,14 +106,19 @@ export async function confirm(query: Record<string, unknown>) {
         paidAt: paid ? new Date() : null,
       },
     });
-    if (count > 0 && paid) {
-      await tx.invoice.updateMany({ where: { id: payment.invoiceId, status: 'UNPAID' }, data: { status: 'PAID' } });
-    }
-    return count > 0;
+    if (count === 0) return null;
+    if (!paid) return 'FAILED';
+    const invoice = await tx.invoice.updateMany({
+      where: { id: payment.invoiceId, status: 'UNPAID' },
+      data: { status: 'PAID' },
+    });
+    if (invoice.count > 0) return 'SUCCESS';
+    await tx.payment.update({ where: { id: payment.id }, data: { status: 'DUPLICATE' } });
+    return 'DUPLICATE';
   });
-  if (written) return result('00', paid, code);
+  if (written) return result('00', written, code);
 
   // Bên kia vừa ghi xong — đọc lại để trả đúng kết quả.
   const latest = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id }, select: { status: true } });
-  return result('02', latest.status === 'SUCCESS', code);
+  return result('02', latest.status, code);
 }

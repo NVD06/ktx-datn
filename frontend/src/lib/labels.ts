@@ -152,6 +152,7 @@ export const PAYMENT_STATUS = def({
   PENDING: { label: 'Đang xử lý', tone: 'warning' },
   SUCCESS: { label: 'Thành công', tone: 'success' },
   FAILED: { label: 'Thất bại', tone: 'danger' },
+  DUPLICATE: { label: 'Trả trùng – cần hoàn tiền', tone: 'warning' },
 })
 
 export const REQUEST_STATUS = def({

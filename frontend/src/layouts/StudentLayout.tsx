@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
   BedDouble,
@@ -13,6 +13,7 @@ import {
   UserRound,
   Wrench,
 } from 'lucide-react'
+import { LoadingState } from '@/components/shared/QueryState'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
@@ -65,7 +66,9 @@ export function StudentLayout() {
         </header>
 
         <main className="mx-auto w-full max-w-5xl flex-1 p-4 sm:p-6">
-          <Outlet />
+          <Suspense fallback={<LoadingState />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 

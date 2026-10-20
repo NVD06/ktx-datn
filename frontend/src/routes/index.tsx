@@ -1,34 +1,7 @@
+import { lazy, type ComponentType } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { ChangePasswordPage } from '@/features/auth/pages/ChangePasswordPage'
-import { BuildingDetailPage } from '@/features/buildings/pages/BuildingDetailPage'
-import { BuildingListPage } from '@/features/buildings/pages/BuildingListPage'
-import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
-import { ContractListPage } from '@/features/contracts/pages/ContractListPage'
-import { MyContractsPage } from '@/features/contracts/pages/MyContractsPage'
-import { StudentHomePage } from '@/features/contracts/pages/StudentHomePage'
-import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
-import { HygieneListPage } from '@/features/hygiene/pages/HygieneListPage'
-import { HygieneScoringPage } from '@/features/hygiene/pages/HygieneScoringPage'
-import { MyHygienePage } from '@/features/hygiene/pages/MyHygienePage'
-import { InvoiceListPage } from '@/features/invoices/pages/InvoiceListPage'
-import { MyInvoicesPage } from '@/features/invoices/pages/MyInvoicesPage'
-import { PaymentResultPage } from '@/features/invoices/pages/PaymentResultPage'
-import { UtilityBillingPage } from '@/features/invoices/pages/UtilityBillingPage'
-import { MaintenanceListPage } from '@/features/maintenance/pages/MaintenanceListPage'
-import { MyMaintenancePage } from '@/features/maintenance/pages/MyMaintenancePage'
-import { ProfilePage } from '@/features/profile/pages/ProfilePage'
-import { RegistrationPeriodListPage } from '@/features/registration-periods/pages/RegistrationPeriodListPage'
-import { MyRegistrationsPage } from '@/features/registrations/pages/MyRegistrationsPage'
-import { FinanceReportPage } from '@/features/reports/pages/FinanceReportPage'
-import { MaintenanceReportPage } from '@/features/reports/pages/MaintenanceReportPage'
-import { OccupancyReportPage } from '@/features/reports/pages/OccupancyReportPage'
-import { ReportsPage } from '@/features/reports/pages/ReportsPage'
-import { RegistrationListPage } from '@/features/registrations/pages/RegistrationListPage'
-import { RoomTypeListPage } from '@/features/room-types/pages/RoomTypeListPage'
-import { AvailableRoomsPage } from '@/features/rooms/pages/AvailableRoomsPage'
-import { RoomDetailPage } from '@/features/rooms/pages/RoomDetailPage'
-import { UserListPage } from '@/features/users/pages/UserListPage'
 import { ForbiddenPage } from '@/features/system/pages/ForbiddenPage'
 import { HomeRedirect } from '@/features/system/pages/HomeRedirect'
 import { NotFoundPage } from '@/features/system/pages/NotFoundPage'
@@ -36,6 +9,38 @@ import { AdminLayout } from '@/layouts/AdminLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { CHANGE_PASSWORD_PATH } from './paths'
+
+function page<K extends string>(load: () => Promise<Record<NoInfer<K>, ComponentType>>, name: K) {
+  return lazy(() => load().then((m) => ({ default: m[name] })))
+}
+const BuildingDetailPage = page(() => import('@/features/buildings/pages/BuildingDetailPage'), 'BuildingDetailPage')
+const BuildingListPage = page(() => import('@/features/buildings/pages/BuildingListPage'), 'BuildingListPage')
+const ContractDetailPage = page(() => import('@/features/contracts/pages/ContractDetailPage'), 'ContractDetailPage')
+const ContractListPage = page(() => import('@/features/contracts/pages/ContractListPage'), 'ContractListPage')
+const MyContractsPage = page(() => import('@/features/contracts/pages/MyContractsPage'), 'MyContractsPage')
+const StudentHomePage = page(() => import('@/features/contracts/pages/StudentHomePage'), 'StudentHomePage')
+const DashboardPage = page(() => import('@/features/dashboard/pages/DashboardPage'), 'DashboardPage')
+const HygieneListPage = page(() => import('@/features/hygiene/pages/HygieneListPage'), 'HygieneListPage')
+const HygieneScoringPage = page(() => import('@/features/hygiene/pages/HygieneScoringPage'), 'HygieneScoringPage')
+const MyHygienePage = page(() => import('@/features/hygiene/pages/MyHygienePage'), 'MyHygienePage')
+const InvoiceListPage = page(() => import('@/features/invoices/pages/InvoiceListPage'), 'InvoiceListPage')
+const MyInvoicesPage = page(() => import('@/features/invoices/pages/MyInvoicesPage'), 'MyInvoicesPage')
+const PaymentResultPage = page(() => import('@/features/invoices/pages/PaymentResultPage'), 'PaymentResultPage')
+const UtilityBillingPage = page(() => import('@/features/invoices/pages/UtilityBillingPage'), 'UtilityBillingPage')
+const MaintenanceListPage = page(() => import('@/features/maintenance/pages/MaintenanceListPage'), 'MaintenanceListPage')
+const MyMaintenancePage = page(() => import('@/features/maintenance/pages/MyMaintenancePage'), 'MyMaintenancePage')
+const ProfilePage = page(() => import('@/features/profile/pages/ProfilePage'), 'ProfilePage')
+const RegistrationPeriodListPage = page(() => import('@/features/registration-periods/pages/RegistrationPeriodListPage'), 'RegistrationPeriodListPage')
+const MyRegistrationsPage = page(() => import('@/features/registrations/pages/MyRegistrationsPage'), 'MyRegistrationsPage')
+const FinanceReportPage = page(() => import('@/features/reports/pages/FinanceReportPage'), 'FinanceReportPage')
+const MaintenanceReportPage = page(() => import('@/features/reports/pages/MaintenanceReportPage'), 'MaintenanceReportPage')
+const OccupancyReportPage = page(() => import('@/features/reports/pages/OccupancyReportPage'), 'OccupancyReportPage')
+const ReportsPage = page(() => import('@/features/reports/pages/ReportsPage'), 'ReportsPage')
+const RegistrationListPage = page(() => import('@/features/registrations/pages/RegistrationListPage'), 'RegistrationListPage')
+const RoomTypeListPage = page(() => import('@/features/room-types/pages/RoomTypeListPage'), 'RoomTypeListPage')
+const AvailableRoomsPage = page(() => import('@/features/rooms/pages/AvailableRoomsPage'), 'AvailableRoomsPage')
+const RoomDetailPage = page(() => import('@/features/rooms/pages/RoomDetailPage'), 'RoomDetailPage')
+const UserListPage = page(() => import('@/features/users/pages/UserListPage'), 'UserListPage')
 
 export const router = createBrowserRouter([
   // Công khai. Không có trang đăng ký: tài khoản sinh viên do Admin cấp.

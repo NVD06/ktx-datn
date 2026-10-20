@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import {
   Building2,
@@ -16,6 +16,7 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react'
+import { LoadingState } from '@/components/shared/QueryState'
 import { Button } from '@/components/ui/button'
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
 import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
@@ -117,7 +118,9 @@ export function AdminLayout() {
       {/* Không đặt overflow ở đây: overflow biến <main> thành khung cuộn riêng, đầu trang (PageHeader)
           sẽ dính theo khung đó thay vì theo trang. Bảng rộng tự cuộn ngang trong khung của bảng (min-w-0). */}
       <main className="min-w-0 flex-1 p-6">
-        <Outlet />
+        <Suspense fallback={<LoadingState />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />

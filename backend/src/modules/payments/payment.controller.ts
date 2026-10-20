@@ -3,8 +3,9 @@ import * as paymentService from './payment.service.js';
 
 /** GET /api/v1/payments/vnpay-return — VNPay đưa trình duyệt SV về đây, chuyển tiếp sang trang kết quả. */
 export async function vnpayReturn(req: Request, res: Response) {
-  const { rspCode, paid, invoiceCode } = await paymentService.confirm(req.query);
-  const status = rspCode === '00' || rspCode === '02' ? (paid ? 'success' : 'failed') : 'invalid';
+  const { rspCode, paid, duplicate, invoiceCode } = await paymentService.confirm(req.query);
+  const status =
+    rspCode === '00' || rspCode === '02' ? (duplicate ? 'duplicate' : paid ? 'success' : 'failed') : 'invalid';
   const params = new URLSearchParams({ status, ...(invoiceCode ? { invoice: invoiceCode } : {}) });
   // Đường dẫn tương đối: FE và API chung một địa chỉ (khi dev thì đi qua Vite proxy).
   res.redirect(`/student/payment-result?${params}`);

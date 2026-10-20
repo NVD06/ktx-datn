@@ -314,7 +314,7 @@ export const userSchema = z
   .openapi('User');
 
 export const invoiceItemTypeSchema = z.enum(['ROOM_FEE', 'ELECTRIC', 'WATER']).openapi('InvoiceItemType');
-export const paymentStatusSchema = z.enum(['PENDING', 'SUCCESS', 'FAILED']).openapi('PaymentStatus');
+export const paymentStatusSchema = z.enum(['PENDING', 'SUCCESS', 'FAILED', 'DUPLICATE']).openapi('PaymentStatus');
 
 export const invoiceSchema = invoiceRefSchema
   .extend({

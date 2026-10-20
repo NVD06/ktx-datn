@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX, ShieldAlert } from 'lucide-react'
+import { CircleAlert, CircleCheck, CircleX, ShieldAlert } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,13 @@ const RESULT = {
     title: 'Thanh toán không thành công',
     text: (code: string) => `Giao dịch cho hóa đơn ${code} đã bị hủy hoặc lỗi. Bạn có thể thanh toán lại.`,
   },
+  duplicate: {
+    icon: CircleAlert,
+    tone: 'warning',
+    title: 'Hóa đơn đã được thanh toán trước đó',
+    text: (code: string) =>
+      `Hóa đơn ${code} đã được trả bằng một giao dịch khác, khoản vừa trả là trùng. Hãy liên hệ ban quản lý để được hoàn tiền.`,
+  },
   invalid: {
     icon: ShieldAlert,
     tone: 'warning',
@@ -34,7 +41,7 @@ const RESULT = {
 export function PaymentResultPage() {
   const [params] = useSearchParams()
   const status = params.get('status')
-  const result = RESULT[status === 'success' || status === 'failed' ? status : 'invalid']
+  const result = RESULT[status === 'success' || status === 'failed' || status === 'duplicate' ? status : 'invalid']
   const Icon = result.icon
 
   return (

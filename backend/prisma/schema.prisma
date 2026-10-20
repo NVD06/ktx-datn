@@ -75,6 +75,7 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+  DUPLICATE
 }
 
 enum RequestStatus {
