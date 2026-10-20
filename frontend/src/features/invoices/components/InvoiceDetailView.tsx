@@ -37,6 +37,7 @@ export function InvoiceDetailView({ invoice: i }: { invoice: InvoiceDetail }) {
             ['Chỗ ở', `Giường ${bed.code} · Phòng ${bed.room.code} · Tòa ${bed.room.building.name}`],
             ['Hợp đồng', i.contract.code],
             ['Ngày lập', formatDateTime(i.createdAt)],
+            ['Người lập', i.createdBy?.fullName ?? (i.type === 'ROOM_FEE' ? 'Hệ thống tự lập' : '—')],
           ]}
         />
       </DetailSection>

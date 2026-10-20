@@ -7,7 +7,7 @@ import { authHandler } from './config/auth.js';
 import { env } from './config/env.js';
 import { buildOpenApiDoc } from './config/openapi.js';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
-import { loginLimiter } from './middlewares/rate-limit.js';
+import { loginIpLimiter, loginLimiter } from './middlewares/rate-limit.js';
 import { apiRouter } from './routes/index.js';
 
 export const app = express();
@@ -22,7 +22,7 @@ app.set('trust proxy', 1);
 // nếu không express.json() nuốt mất body và authorize() nhận undefined.
 app.use(express.urlencoded({ extended: true }));
 
-app.post('/auth/callback/credentials', loginLimiter);
+app.post('/auth/callback/credentials', loginIpLimiter, loginLimiter);
 app.use('/auth', authHandler);
 
 app.use(express.json());

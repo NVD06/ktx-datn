@@ -24,4 +24,5 @@ export const HYGIENE_WARNING_SCORE = 60;
 export const CONTRACT_EXPIRING_DAYS = 30;
 
 export const LOGIN_LIMIT = 5;
+export const LOGIN_IP_LIMIT = 30;
 export const LOGIN_LIMIT_MINUTES = 15;

@@ -349,6 +349,10 @@ export const invoiceDetailSchema = invoiceSchema
         createdAt: z.iso.datetime(),
       }),
     ),
+    createdBy: z
+      .object({ fullName: z.string() })
+      .nullable()
+      .openapi({ description: 'Người chốt điện nước; tiền phòng do hệ thống tự lập nên là null' }),
   })
   .openapi('InvoiceDetail');
 

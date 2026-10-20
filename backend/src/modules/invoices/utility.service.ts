@@ -143,6 +143,7 @@ export async function bill(user: AuthUser, { buildingId, period, readings }: Bil
           period,
           dueDate,
           amount: items.reduce((sum, item) => sum + item.amount, 0),
+          createdById: user.id,
         })),
         select: { id: true, contractId: true },
       });

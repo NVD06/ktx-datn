@@ -256,7 +256,7 @@ export async function update(actor: AuthUser, id: string, input: UpdateUserInput
 /**
  * Xóa hẳn một tài khoản — chỉ tài khoản chưa có lịch sử nghiệp vụ, ví dụ cấp nhầm hoặc nhập
  * Excel sai. Đã có đơn đăng ký (kéo theo hợp đồng, hóa đơn, thanh toán), yêu cầu sửa chữa, hay
- * từng duyệt đơn / chấm dứt hợp đồng / xử lý sửa chữa / chấm vệ sinh thì không xóa để giữ lịch
+ * từng duyệt đơn / chấm dứt hợp đồng / xử lý sửa chữa / chấm vệ sinh / lập hóa đơn thì không xóa để giữ lịch
  * sử — khóa tài khoản thay vì xóa. Hồ sơ sinh viên xóa theo (onDelete: Cascade); quản lý đang
  * gán tòa thì tòa trống quản lý (khóa nằm ở User.buildingId).
  */
@@ -266,7 +266,7 @@ export async function remove(actor: AuthUser, id: string) {
     select: {
       role: true,
       fullName: true,
-      _count: { select: { registrations: true, requests: true, endedContracts: true } },
+      _count: { select: { registrations: true, requests: true, endedContracts: true, createdInvoices: true } },
     },
   });
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng');
@@ -288,6 +288,7 @@ export async function remove(actor: AuthUser, id: string) {
     user._count.endedContracts > 0 && 'hợp đồng đã chấm dứt',
     handled > 0 && 'yêu cầu sửa chữa đã xử lý',
     checked > 0 && 'lượt chấm vệ sinh',
+    user._count.createdInvoices > 0 && 'hóa đơn đã lập',
   ].filter(Boolean);
   if (history.length > 0) {
     const message =

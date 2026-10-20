@@ -110,6 +110,7 @@ model User {
   handledRequests MaintenanceRequest[] @relation("MaintenanceHandledBy")
   hygieneChecks   HygieneRecord[]
   endedContracts  Contract[]           @relation("ContractEndedBy")
+  createdInvoices Invoice[]            @relation("InvoiceCreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -292,6 +293,9 @@ model Invoice {
   // Số sinh viên chia hóa đơn tại thời điểm chốt — chỉ dùng khi type = UTILITY.
   // Lưu lại để về sau vẫn giải thích được con số đã tính.
   splitCount Int?
+
+  createdById String?
+  createdBy   User?   @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
 
   items    InvoiceItem[]
   payments Payment[]

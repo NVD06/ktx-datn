@@ -60,6 +60,7 @@ export interface InvoicePayment {
 export interface InvoiceDetail extends Invoice {
   items: InvoiceItem[]
   payments: InvoicePayment[]
+  createdBy: { fullName: string } | null
 }
 
 /** Số hóa đơn và tổng tiền — dashboard (US-06.1). */
