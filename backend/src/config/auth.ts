@@ -6,6 +6,12 @@ import bcrypt from 'bcrypt';
 import { env } from './env.js';
 import { prisma } from './prisma.js';
 
+declare module '@auth/core/types' {
+  interface Session {
+    loginAt?: number;
+  }
+}
+
 /**
  * FILE DUY NHẤT được phép import từ '@auth/express'.
  *
@@ -76,11 +82,15 @@ export const authConfig: ExpressAuthConfig = {
 
   callbacks: {
     jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
+      if (user?.id) {
+        token.sub = user.id;
+        token.loginAt = Date.now();
+      }
       return token;
     },
     session({ session, token }) {
       if (session.user && token.sub) session.user.id = token.sub;
+      if (typeof token.loginAt === 'number') session.loginAt = token.loginAt;
       return session;
     },
   },
@@ -91,10 +101,11 @@ export const authHandler = ExpressAuth(authConfig);
 
 /**
  * Ranh giới giữa Auth.js và phần còn lại của ứng dụng.
- * Chỉ trả về userId; mọi thông tin khác (role, buildingId) do requireAuth
+ * Chỉ trả về userId và lúc đăng nhập; mọi thông tin khác (role, buildingId) do requireAuth
  * đọc từ database.
  */
-export async function getUserIdFromRequest(req: Request): Promise<string | null> {
+export async function getSessionFromRequest(req: Request): Promise<{ userId: string; loginAt: number } | null> {
   const session = await getSession(req, authConfig);
-  return session?.user?.id ?? null;
+  const userId = session?.user?.id;
+  return userId ? { userId, loginAt: session.loginAt ?? 0 } : null;
 }

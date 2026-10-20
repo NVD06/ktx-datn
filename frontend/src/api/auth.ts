@@ -67,9 +67,11 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Đổi mật khẩu — trả người dùng hiện tại, `mustChangePassword` đã về false. Không có
- * đăng ký: tài khoản sinh viên do Admin cấp (api/users.ts).
+ * Đổi mật khẩu — trả người dùng hiện tại, `mustChangePassword` đã về false. Đổi xong backend
+ * hủy mọi phiên đăng nhập trước đó, kể cả phiên này, nên đăng nhập lại ngay bằng mật khẩu mới.
+ * Không có đăng ký: tài khoản sinh viên do Admin cấp (api/users.ts).
  */
-export function changePassword(input: ChangePasswordInput): Promise<AuthUser> {
-  return apiPost<AuthUser>('/auth/change-password', input)
+export async function changePassword(input: ChangePasswordInput): Promise<AuthUser> {
+  const { email } = await apiPost<AuthUser>('/auth/change-password', input)
+  return login(email, input.newPassword)
 }

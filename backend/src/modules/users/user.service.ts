@@ -210,7 +210,11 @@ export async function resetStudentPassword(id: string) {
   }
   return prisma.user.update({
     where: { id },
-    data: { passwordHash: await hashPassword(user.profile.studentCode), mustChangePassword: true },
+    data: {
+      passwordHash: await hashPassword(user.profile.studentCode),
+      mustChangePassword: true,
+      passwordChangedAt: new Date(),
+    },
     select: SELECT,
   });
 }

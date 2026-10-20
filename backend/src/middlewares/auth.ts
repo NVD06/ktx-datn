@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { getUserIdFromRequest } from '../config/auth.js';
+import { getSessionFromRequest } from '../config/auth.js';
 import { prisma } from '../config/prisma.js';
 import type { Role } from '../generated/prisma/enums.js';
 import type { AuthUser } from '../types/auth-user.js';
@@ -33,11 +33,11 @@ export async function requireSession(req: Request, _res: Response, next: NextFun
 }
 
 async function loadUser(req: Request): Promise<AuthUser> {
-  const userId = await getUserIdFromRequest(req);
-  if (!userId) throw ApiError.unauthorized();
+  const session = await getSessionFromRequest(req);
+  if (!session) throw ApiError.unauthorized();
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: session.userId },
     select: {
       id: true,
       fullName: true,
@@ -46,13 +46,15 @@ async function loadUser(req: Request): Promise<AuthUser> {
       isActive: true,
       buildingId: true,
       mustChangePassword: true,
+      passwordChangedAt: true,
     },
   });
 
-  // Tài khoản bị xóa hoặc bị khóa sau khi đã đăng nhập -> phiên mất hiệu lực ngay.
+  // Tài khoản bị xóa, bị khóa hoặc đổi mật khẩu sau khi đã đăng nhập -> phiên mất hiệu lực ngay.
   if (!user || !user.isActive) throw ApiError.unauthorized();
+  if (user.passwordChangedAt && user.passwordChangedAt.getTime() > session.loginAt) throw ApiError.unauthorized();
 
-  const { isActive: _isActive, ...authUser } = user;
+  const { isActive: _isActive, passwordChangedAt: _passwordChangedAt, ...authUser } = user;
   req.user = authUser satisfies AuthUser;
   return authUser;
 }
