@@ -45,9 +45,15 @@ async function main() {
   }
 
   await prisma.user.create({
-    data: { email: email.data, fullName: fullName.data, role: 'ADMIN', passwordHash: await hashPassword(PASSWORD) },
+    data: {
+      email: email.data,
+      fullName: fullName.data,
+      role: 'ADMIN',
+      passwordHash: await hashPassword(PASSWORD),
+      mustChangePassword: true,
+    },
   });
-  console.log(`Đã tạo Admin ${fullName.data} <${email.data}>, mật khẩu "${PASSWORD}".`);
+  console.log(`Đã tạo Admin ${fullName.data} <${email.data}>, mật khẩu "${PASSWORD}" — phải đổi ở lần đăng nhập đầu.`);
 }
 
 main()

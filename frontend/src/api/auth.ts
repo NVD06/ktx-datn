@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { apiGet, apiPost } from './client'
+import type { ErrorResponse } from '@/types/api'
 import type { AuthUser, ChangePasswordInput } from '@/types/auth'
 
 /**
@@ -39,13 +40,14 @@ export async function getMe(): Promise<AuthUser | null> {
 export async function login(email: string, password: string): Promise<AuthUser> {
   const csrfToken = await getCsrfToken()
 
-  await fetch(`${AUTH_BASE}/callback/credentials`, {
+  const res = await fetch(`${AUTH_BASE}/callback/credentials`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ csrfToken, email, password }),
     credentials: 'include',
     redirect: 'manual', // đừng đi theo 302 của Auth.js
   })
+  if (res.status === 429) throw new Error(((await res.json()) as ErrorResponse).error.message)
 
   const user = await getMe()
   if (!user) throw new Error('Email hoặc mật khẩu không đúng')

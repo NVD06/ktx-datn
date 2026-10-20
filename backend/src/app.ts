@@ -1,13 +1,17 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import express from 'express';
+import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { authHandler } from './config/auth.js';
+import { env } from './config/env.js';
 import { buildOpenApiDoc } from './config/openapi.js';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
+import { loginLimiter } from './middlewares/rate-limit.js';
 import { apiRouter } from './routes/index.js';
 
 export const app = express();
+app.use(helmet());
 
 // Trên Render/Railway, HTTPS dừng ở proxy của nền tảng rồi mới chuyển sang đây bằng http.
 // Tin proxy đó để req.protocol là https — Auth.js đặt cookie bảo mật theo giá trị này.
@@ -18,6 +22,7 @@ app.set('trust proxy', 1);
 // nếu không express.json() nuốt mất body và authorize() nhận undefined.
 app.use(express.urlencoded({ extended: true }));
 
+app.post('/auth/callback/credentials', loginLimiter);
 app.use('/auth', authHandler);
 
 app.use(express.json());
@@ -25,9 +30,11 @@ app.use('/api/v1', apiRouter);
 
 // Tài liệu API. Phải đứng SAU dòng mount apiRouter: khi đó mọi file routes đã
 // được import và registry mới có đủ path để sinh tài liệu.
-const openApiDoc = buildOpenApiDoc();
-app.get('/docs.json', (_req, res) => res.json(openApiDoc));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+if (env.NODE_ENV !== 'production') {
+  const openApiDoc = buildOpenApiDoc();
+  app.get('/docs.json', (_req, res) => res.json(openApiDoc));
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+}
 
 // Production: Express phục vụ luôn bản build của FE — cùng origin nên cookie Auth.js
 // được gửi kèm (khi dev thì Vite proxy làm việc này). Mọi đường dẫn không phải
