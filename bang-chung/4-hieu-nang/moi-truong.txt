@@ -1,0 +1,7 @@
+Môi trường chạy kiểm thử và đo hiệu năng (đọc ngày 30/10/2026)
+Máy: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz, RAM 15,8 GB (16 GB)
+Hệ điều hành: Microsoft Windows 11 Home Single Language
+Node.js: v24.16.0
+PostgreSQL: 17.11
+Trình duyệt: Google Chrome 156.0.8078.48
+Mã nguồn: nhánh main, commit 4caf28b (2026-10-20 11:10:14 +0700), cây làm việc sạch

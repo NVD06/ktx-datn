@@ -1,0 +1,20 @@
+-- CSDL ktx_demo (localhost), truy vấn lúc 15:35:43 30/10/2026
+SELECT i.code AS hoa_don, i.status AS trang_thai_hd,
+       left(p."txnRef", 8) || '…' AS ma_gd,
+       p.status AS trang_thai_gd, p."vnpResponseCode" AS ma_phan_hoi,
+       '…' || right(p."vnpTransactionNo", 4) AS ma_gd_vnpay,
+       p.amount AS so_tien,
+       to_char(p."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'DD/MM/YYYY HH24:MI:SS') AS tao_luc,
+       to_char(p."paidAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh', 'DD/MM/YYYY HH24:MI:SS') AS tra_luc
+FROM "Payment" p JOIN "Invoice" i ON i.id = p."invoiceId"
+WHERE i.code = 'INV-2026-0010'
+ORDER BY p."createdAt"
+
+hoa_don       | trang_thai_hd | ma_gd     | trang_thai_gd | ma_phan_hoi | ma_gd_vnpay | so_tien | tao_luc             | tra_luc            
+--------------+---------------+-----------+---------------+-------------+-------------+---------+---------------------+--------------------
+INV-2026-0010 | PAID          | 8a6e714e… | PENDING       |             |             | 250000  | 30/10/2026 15:18:00 |                    
+INV-2026-0010 | PAID          | c81f0412… | PENDING       |             |             | 250000  | 30/10/2026 15:18:38 |                    
+INV-2026-0010 | PAID          | 6cc68feb… | PENDING       |             |             | 250000  | 30/10/2026 15:18:53 |                    
+INV-2026-0010 | PAID          | 0ab8dcd0… | PENDING       |             |             | 250000  | 30/10/2026 15:32:21 |                    
+INV-2026-0010 | PAID          | 6ad3ccc2… | PENDING       |             |             | 250000  | 30/10/2026 15:33:07 |                    
+INV-2026-0010 | PAID          | aabd3e4d… | SUCCESS       | 00          | …0318       | 250000  | 30/10/2026 15:34:50 | 30/10/2026 15:35:07

@@ -1,0 +1,2 @@
+Lượng dữ liệu CSDL ktx lúc đo hiệu năng (psql, 30/10/2026)
+phong=39; giuong=204; tai_khoan=23; don=3; hop_dong=3; hoa_don=3; giao_dich=1; sua_chua=6

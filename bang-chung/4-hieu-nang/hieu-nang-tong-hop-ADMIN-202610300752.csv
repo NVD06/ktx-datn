@@ -1,0 +1,8 @@
+﻿"Chức năng","API","Số lần","Nhỏ nhất","Trung bình","Trung vị","P95","Lớn nhất","Lỗi (≠200)"
+"Danh sách phòng tòa B1 (20 dòng)","/buildings/9f077a60-4686-4fc9-ac6a-f4857ad5ea72/rooms?limit=20","30","10.5","11.7","11.5","14.1","14.3","0"
+"Danh sách đơn đăng ký","/registrations?limit=20","30","10.1","10.9","10.8","12","12.3","0"
+"Danh sách hợp đồng","/contracts?limit=20","30","10.6","12.5","11.8","15.3","17.7","0"
+"Danh sách hóa đơn","/invoices?limit=20","30","10.7","11.6","11.6","12.7","12.8","0"
+"Danh sách yêu cầu sửa chữa","/maintenance-requests?limit=20","30","9.8","10.8","10.6","13.4","14.2","0"
+"Tổng quan (dashboard)","/reports/overview","30","11.6","12.6","12.6","13.7","14.2","0"
+"Báo cáo lấp đầy","/reports/occupancy","30","10","11.2","11","12.9","13.1","0"

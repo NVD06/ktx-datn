@@ -1,0 +1,98 @@
+{
+  "steps": [
+    {
+      "url": "https://sandbox.vnpayment.vn/paymentv2/Ncb/Transaction/Index.html",
+      "text": "Quay lại\nVi\nGiao dịch hết hạn sau\n15\n:\n06\nThông tin đơn hàng (Test)\nSố tiền thanh toán\n250.000VND\nGiá trị đơn hàng\n250.000VND\nPhí giao dịch\n0VND\nMã đơn hàng\naabd3e4d92f24bf5b3910a30c103af66\nNhà cung cấp\nhttps://vnshop.vn/\nThanh toán qua Ngân hàng NCB\nThẻ nội địa\nSố thẻ\nTên chủ thẻ\nNgày phát hành \nMã khuyến mại\nChọn hoặc nhập mã\nĐiều kiện sử dụng dịch vụ\nHủy thanh toán\nTiếp tục\nhotrovnpay@vnpay.vn\nPhát triển bởi VNPAY © 2026\nĐiều khoản sử dụng\n\n(Người dùng đang thực hiện giao dịch trên môi trường kiểm thử của VNPAY, vui lòng không sử dụng ngoài mục đích kiểm thử và tự chịu trách nhiệm trong trường hợp Nhà cung cấp không giao hàng hóa, dịch vụ khi thanh toán thành công).\n\nQuý khách hàng đang sử dụng Dịch vụ Cổng thanh toán VNPAY được cung cấp bởi Công ty Cổ phần Giải pháp Thanh toán Việt Nam (VNPAY).\n\nCác dữ liệu cá nhân liên quan tới dịch vụ gồm: thông tin thẻ/tài khoản(*) và các dữ liệu cá nhân khác mà Quý khách hàng cung cấp sẽ được VNPAY chuyển tới Ngân hàng phát hành/ Tổ chức chuyển mạch và Đơn vị bán hàng tương ứng cho mục đích cung cấp dịch vụ Cổng thanh toán VNPAY, bao gồm: Xử lý giao dịch thanh toán và cung ứng hàng hóa, dịch vụ; Quản lý rủi ro; Tra soát khiếu nại; Triển k",
+      "inputs": [
+        "A#backButton type= txt=Quay lại",
+        "INPUT#card_number_mask type=text txt=***************2198",
+        "INPUT#cardHolder type=text txt=NGUYEN VAN A",
+        "INPUT#cardDate type=text txt=07/15",
+        "A#btnShowPromoModal type= txt=Chọn hoặc nhập mã",
+        "A#btnContinue type= txt=Tiếp tục",
+        "A#btnAgree type= txt=Đồng ý & Tiếp tục"
+      ]
+    },
+    {
+      "url": "https://sandbox.vnpayment.vn/paymentv2/Ncb/Transaction/Confirm.html",
+      "text": "Vi\nGiao dịch hết hạn sau\n15\n:\n01\nThông tin đơn hàng (Test)\nSố tiền thanh toán\n250.000VND\nGiá trị đơn hàng\n250.000VND\nPhí giao dịch\n0VND\nMã đơn hàng\naabd3e4d92f24bf5b3910a30c103af66\nNhà cung cấp\nhttps://vnshop.vn/\nXác thực OTP\nOTP đã được gửi về số điện thoại đăng ký. Quý khách vui lòng nhập OTP để tiếp tục thực hiện giao dịch.\nHủy\nThanh toán\nhotrovnpay@vnpay.vn\nPhát triển bởi VNPAY © 2026",
+      "inputs": [
+        "INPUT#otpvalue type=text txt=",
+        "BUTTON#btnConfirm type=submit txt=Thanh toán"
+      ]
+    }
+  ],
+  "invoice": {
+    "code": "INV-2026-0010",
+    "amount": "250000",
+    "statusBefore": "UNPAID",
+    "statusAfter": "PAID"
+  },
+  "startedAt": "15:34:50 30/10/2026",
+  "pay": {
+    "status": 201,
+    "host": "sandbox.vnpayment.vn",
+    "vnp_Amount": "25000000",
+    "txnRef": "aabd3e4d…"
+  },
+  "net": [
+    "200 POST https://sandbox.vnpayment.vn/paymentv2/notify/connect",
+    "200 GET https://sandbox.vnpayment.vn/paymentv2/notify/start",
+    "404 GET paymentv2/media/icons-color/default2/default/24x24-close.svg",
+    "200 POST ://sandbox.vnpayment.vn/paymentv2/Ncb/Transaction/Index.html",
+    "200 GET /sandbox.vnpayment.vn/paymentv2/Ncb/Transaction/Confirm.html",
+    "200 GET .vn/paymentv2/Styles/vendors/bootstrap/bootstrap.bundles.css",
+    "200 GET ment.vn/paymentv2/Styles/vendors/select2/select2.bundles.css",
+    "200 GET yles/vendors/datetimepicker/bootstrap-datetimepicker.min.css",
+    "200 GET https://sandbox.vnpayment.vn/paymentv2/Styles/style.css",
+    "200 GET s://sandbox.vnpayment.vn/paymentv2/Styles/custom.bundles.css",
+    "200 GET tps://sandbox.vnpayment.vn/paymentv2/images/img/flags/vi.svg",
+    "200 GET andbox.vnpayment.vn/images/mc_development/mh3b_vikkibank.svg",
+    "200 GET dbox.vnpayment.vn/paymentv2/Images/brands/logomark-vnpay.svg",
+    "200 GET ttps://sandbox.vnpayment.vn/paymentv2/Images/brands/logo.svg",
+    "200 GET tv2/Images/icons-color/primary/default/24x24-chevrondown.svg",
+    "200 GET box.vnpayment.vn/paymentv2/images/img/logos/bank/big/ncb.svg",
+    "200 GET /paymentv2/Images/icons-color/danger/default/24x24-alert.svg",
+    "200 GET aymentv2/images/icons-color/default2/default/24x24-email.svg",
+    "200 GET dbox.vnpayment.vn/paymentv2/images/img/logos/global-sign.svg",
+    "200 GET //sandbox.vnpayment.vn/paymentv2/images/img/logos/pcidss.svg",
+    "200 GET paymentv2/images/icons-color/default/default/24x24-email.svg",
+    "200 GET ayment.vn/paymentv2/Scripts/vendors/jquery/jquery.bundles.js",
+    "200 GET vnpayment.vn/paymentv2/Scripts/vendors/jquery/jquery.init.js",
+    "200 GET .vn/paymentv2/Scripts/vendors/bootstrap/bootstrap.bundles.js",
+    "200 GET ent.vn/paymentv2/Scripts/vendors/bootstrap/bootstrap.init.js",
+    "200 GET ment.vn/paymentv2/Scripts/vendors/select2/select2.bundles.js",
+    "200 GET payment.vn/paymentv2/Scripts/vendors/select2/select2.init.js",
+    "200 GET ment.vn/paymentv2/Scripts/vendors/parsley/parsley.bundles.js",
+    "200 GET payment.vn/paymentv2/Scripts/vendors/parsley/parsley.init.js",
+    "200 GET ayment.vn/paymentv2/Scripts/vendors/cleave/cleave.bundles.js",
+    "200 GET vnpayment.vn/paymentv2/Scripts/vendors/cleave/cleave.init.js",
+    "200 GET nt.vn/paymentv2/Scripts/vendors/autosize/autosize.bundles.js",
+    "200 GET yment.vn/paymentv2/Scripts/vendors/autosize/autosize.init.js",
+    "200 GET ayment.vn/paymentv2/Scripts/vendors/datetimepicker/moment.js",
+    "200 GET ripts/vendors/datetimepicker/bootstrap-datetimepicker.min.js",
+    "200 GET ps://sandbox.vnpayment.vn/paymentv2/Scripts/ua-parser.min.js",
+    "200 GET ntv2/images/icons-color/default/default/24x24-key-circle.svg",
+    "200 GET https://sandbox.vnpayment.vn/paymentv2/Scripts/custom.min.js",
+    "404 GET paymentv2/media/icons-color/default2/default/24x24-close.svg",
+    "200 POST dbox.vnpayment.vn/paymentv2/Ncb/Transaction/AjaxConfirm.html"
+  ],
+  "agreeShown": true,
+  "otpButton": "#btnConfirm",
+  "returnedTo": "http://localhost:3100/student/payment-result",
+  "returnQuery": {
+    "status": "success",
+    "invoice": "INV-2026-0010"
+  },
+  "resultText": "Ký túc xá\n\nSinh viên\n\nTrang cá nhân\nChỗ trống\nĐơn của tôi\nHợp đồng\nHóa đơn\nSửa chữa\nVệ sinh\nHồ sơ\n\nVũ Đức Hải\n\nsv005@ktx.edu.vn\n\nĐổi mật khẩu\nĐăng xuất\nKết quả thanh toán\n\nThanh toán thành công\n\nHóa đơn INV-2026-0010 đã được ghi nhận thanh toán.\n\nVề hóa đơn của tôi",
+  "payments": [
+    {
+      "status": "SUCCESS",
+      "amount": "250000",
+      "vnpTransactionNo": "…0318",
+      "paidAt": "2026-10-30T08:35:07.932Z",
+      "createdAt": "2026-10-30T08:34:50.773Z"
+    }
+  ],
+  "finishedAt": "15:35:13 30/10/2026"
+}
