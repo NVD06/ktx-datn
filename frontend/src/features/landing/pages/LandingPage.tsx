@@ -9,9 +9,7 @@ import {
   FileSignature,
   KeyRound,
   LampDesk,
-  Mail,
   MapPin,
-  Phone,
   Snowflake,
   UserRoundCheck,
   Wifi,
@@ -30,8 +28,8 @@ const SECTIONS = [
 const SECTION_IDS = SECTIONS.map((s) => s.id)
 
 const HIGHLIGHTS = [
-  { title: 'An ninh 24/7', description: 'Kiểm soát thẻ & FaceID' },
-  { title: 'Trang bị đầy đủ', description: 'Máy lạnh, wifi, bàn học' },
+  { title: 'Trực tuyến', description: 'Đăng ký, ký hợp đồng, thanh toán VNPay' },
+  { title: 'Trang bị đầy đủ', description: 'Giường riêng, bàn học, wifi' },
   { title: 'Tiết kiệm', description: 'Chi phí hợp lý cho sinh viên' },
 ]
 
@@ -55,16 +53,13 @@ const AMENITIES = [
   { icon: BedDouble, label: 'Giường riêng' },
 ]
 
-// TODO: thay bằng thông tin thật của ban quản lý ký túc xá.
 const CONTACTS = [
   { icon: MapPin, label: 'Văn phòng', value: 'Ban quản lý Ký túc xá' },
-  { icon: Phone, label: 'Điện thoại', value: '0123 456 789' },
-  { icon: Mail, label: 'Email', value: 'ktx@ktx.edu.vn' },
   { icon: Clock, label: 'Giờ làm việc', value: 'Thứ 2 – Thứ 6, 7:30 – 17:00' },
 ]
 
 /** Ảnh minh họa ở khối đầu trang. Chưa có ảnh thì khung vẫn hiện nền navy kèm biểu tượng. */
-const HERO_IMAGE = '/images/landing-room.jpg'
+const HERO_IMAGE = '/images/landing-building.jpg'
 
 /**
  * Trang giới thiệu công khai ở '/', cho khách chưa đăng nhập.
@@ -127,7 +122,7 @@ export function LandingPage() {
               <Button asChild size="lg" className="shadow-primary/25 mt-8 h-12 px-6 text-base shadow-lg">
                 <Link to="/login">
                   <ClipboardPen data-icon="inline-start" className="size-5" />
-                  Đăng nhập ngay để đkys phòng
+                  Đăng nhập ngay để đăng ký phòng
                 </Link>
               </Button>
 
@@ -198,7 +193,7 @@ export function LandingPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-semibold">Tiện nghi trong phòng</CardTitle>
-                  <CardDescription>Phòng nào cũng được trang bị sẵn.</CardDescription>
+                  <CardDescription>Trang bị tùy theo loại phòng.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="grid grid-cols-2 gap-3">
@@ -270,7 +265,7 @@ function SectionHeading({ title, description }: { title: string; description: st
 }
 
 /**
- * Ảnh phòng ở, lớp phủ navy phía dưới để chữ trắng đọc được.
+ * Ảnh khu ký túc xá, lớp phủ navy phía dưới để chữ trắng đọc được.
  *
  * Ảnh đặt làm nền CSS thay vì <img>: thiếu tệp thì không hiện biểu tượng ảnh vỡ,
  * chỉ còn nền navy và biểu tượng giường ở lớp dưới.
