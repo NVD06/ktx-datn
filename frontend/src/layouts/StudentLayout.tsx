@@ -1,12 +1,10 @@
 import { Suspense, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import {
   BedDouble,
   ClipboardList,
   FileSignature,
   House,
-  KeyRound,
-  LogOut,
   Menu,
   Receipt,
   Sparkles,
@@ -17,7 +15,8 @@ import { LoadingState } from '@/components/shared/QueryState'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
-import { useAuth, useLogout } from '@/features/auth/hooks/useAuth'
+import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
+import { SidebarContent } from '@/layouts/SidebarContent'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -39,14 +38,26 @@ const NAV = [
  */
 export function StudentLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [collapsed, toggleCollapsed] = useSidebarCollapsed()
   const [changingPassword, setChangingPassword] = useState(false)
-  const changePassword = () => setChangingPassword(true)
+  const sidebar = {
+    homeTo: '/student',
+    title: 'Ký túc xá',
+    subtitle: 'Sinh viên',
+    items: NAV,
+    onChangePassword: () => setChangingPassword(true),
+  }
 
   return (
     <div className="flex min-h-svh">
       {/* sticky + h-svh: trang dài cuộn thì sidebar vẫn đứng yên, nút Đăng xuất luôn ở đáy màn hình. */}
-      <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r md:flex">
-        <SidebarContent onChangePassword={changePassword} />
+      <aside
+        className={cn(
+          'bg-sidebar text-sidebar-foreground border-sidebar-border sticky top-0 z-20 hidden h-svh shrink-0 flex-col overflow-hidden border-r transition-[width] md:flex',
+          collapsed ? 'w-16' : 'w-60',
+        )}
+      >
+        <SidebarContent {...sidebar} collapsed={collapsed} onToggle={toggleCollapsed} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -80,80 +91,12 @@ export function StudentLayout() {
         >
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">Các trang của khu sinh viên</SheetDescription>
-          <SidebarContent onNavigate={() => setMenuOpen(false)} onChangePassword={changePassword} />
+          <SidebarContent {...sidebar} onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Nằm ngoài Sheet: bấm từ menu trượt thì menu đóng lại mà hộp thoại vẫn mở. */}
       <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
     </div>
-  )
-}
-
-function SidebarContent({ onNavigate, onChangePassword }: { onNavigate?: () => void; onChangePassword: () => void }) {
-  const { user } = useAuth()
-  const logout = useLogout()
-
-  return (
-    <>
-      <div className="border-sidebar-border border-b px-4 py-4">
-        <Link to="/student" className="text-sidebar-accent-foreground font-semibold" onClick={onNavigate}>
-          Ký túc xá
-        </Link>
-        <p className="text-sidebar-foreground/60 mt-0.5 text-xs">Sinh viên</p>
-      </div>
-
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {NAV.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            // '/student' là tiền tố của mọi trang sinh viên — thiếu `end` thì nó luôn sáng.
-            end={to === '/student'}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
-                isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-primary border-l-2 font-medium'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground border-l-2 border-transparent',
-              )
-            }
-          >
-            <Icon className="size-4" />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="border-sidebar-border space-y-2 border-t p-3">
-        <div className="px-1">
-          <p className="text-sidebar-accent-foreground truncate text-sm font-medium">{user?.fullName}</p>
-          <p className="text-sidebar-foreground/60 truncate text-xs">{user?.email}</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full bg-transparent"
-          onClick={() => {
-            onNavigate?.()
-            onChangePassword()
-          }}
-        >
-          <KeyRound className="size-4" />
-          Đổi mật khẩu
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full bg-transparent"
-          disabled={logout.isPending}
-          onClick={() => logout.mutate()}
-        >
-          <LogOut className="size-4" />
-          Đăng xuất
-        </Button>
-      </div>
-    </>
   )
 }
