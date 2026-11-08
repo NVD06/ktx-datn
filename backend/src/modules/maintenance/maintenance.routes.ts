@@ -1,11 +1,12 @@
 import { z } from 'zod';
-import { maintenanceRequestSchema } from '../../docs/schemas.js';
+import { maintenanceRequestSchema, maintenanceStatsSchema } from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './maintenance.controller.js';
 import {
   createMaintenanceSchema,
   maintenanceListQuerySchema,
+  maintenanceStatsQuerySchema,
   updateMaintenanceStatusSchema,
 } from './maintenance.schema.js';
 
@@ -21,13 +22,28 @@ maintenanceRoutes.get(
     summary: 'Danh sách yêu cầu sửa chữa (ADMIN, MANAGER)',
     description:
       'MANAGER chỉ thấy yêu cầu của phòng thuộc tòa mình. `search` tìm theo tiêu đề, mã phòng, tên / email / ' +
-      'mã SV. Sắp xếp: createdAt, status. Mặc định createdAt giảm dần.',
+      'mã SV. `status=OPEN` lấy yêu cầu chưa sửa xong. Sắp xếp: createdAt, status. Mặc định createdAt giảm dần.',
     query: maintenanceListQuerySchema,
     paged: maintenanceRequestSchema,
     errors: [400, 401, 403],
   },
   staff,
   ctrl.list,
+);
+
+maintenanceRoutes.get(
+  '/stats',
+  {
+    summary: 'Số liệu yêu cầu sửa chữa (ADMIN, MANAGER)',
+    description:
+      'Đếm theo trạng thái, yêu cầu gửi trong tháng này theo tòa (theo tầng khi chọn `buildingId` hoặc là MANAGER), ' +
+      'thời gian trung bình từ lúc gửi tới lúc sửa xong của các yêu cầu xong trong tháng.',
+    query: maintenanceStatsQuerySchema,
+    data: maintenanceStatsSchema,
+    errors: [400, 401, 403],
+  },
+  staff,
+  ctrl.stats,
 );
 
 // Khai báo TRƯỚC các route '/:id', nếu không Express hiểu "me" là một id.

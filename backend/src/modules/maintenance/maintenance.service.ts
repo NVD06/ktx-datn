@@ -7,9 +7,11 @@ import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
+import { currentMonthVN, monthStartVN, nextMonthStartVN } from '../../utils/date-vn.js';
 import type {
   CreateMaintenanceInput,
   MaintenanceListQuery,
+  MaintenanceStatsQuery,
   UpdateMaintenanceStatusInput,
 } from './maintenance.schema.js';
 
@@ -106,7 +108,8 @@ export function list(user: AuthUser, query: MaintenanceListQuery) {
     AND: [
       requestScope(user),
       query.search ? searchWhere(query.search) : {},
-      query.status ? { status: query.status } : {},
+      query.status === 'OPEN' ? { status: { in: ['PENDING', 'RECEIVED'] } } : query.status ? { status: query.status } : {},
+      query.buildingId ? { room: { buildingId: query.buildingId } } : {},
     ],
   };
 
@@ -116,6 +119,40 @@ export function list(user: AuthUser, query: MaintenanceListQuery) {
     (page) => prisma.maintenanceRequest.findMany({ where, ...page, include: INCLUDE }),
     () => prisma.maintenanceRequest.count({ where }),
   );
+}
+
+/** Số liệu đầu trang Sửa chữa: đếm theo trạng thái, yêu cầu tháng này theo tòa (hoặc theo tầng khi đã chọn một tòa), thời gian từ lúc gửi tới lúc sửa xong. */
+export async function stats(user: AuthUser, { buildingId }: MaintenanceStatsQuery) {
+  const month = currentMonthVN();
+  const range = { gte: monthStartVN(month), lt: nextMonthStartVN(month) };
+  const scope: Prisma.MaintenanceRequestWhereInput = { AND: [requestScope(user), buildingId ? { room: { buildingId } } : {}] };
+  const byFloor = user.role === 'MANAGER' || !!buildingId;
+  const [statuses, created, finished] = await Promise.all([
+    prisma.maintenanceRequest.groupBy({ by: ['status'], where: scope, _count: { _all: true } }),
+    prisma.maintenanceRequest.findMany({
+      where: { AND: [scope, { createdAt: range }] },
+      select: { room: { select: { floor: true, building: { select: { name: true } } } } },
+    }),
+    prisma.maintenanceRequest.findMany({ where: { AND: [scope, { doneAt: range }] }, select: { createdAt: true, doneAt: true } }),
+  ]);
+  const count = (status: RequestStatus) => statuses.find((g) => g.status === status)?._count._all ?? 0;
+  const tally = new Map<string, number>();
+  for (const { room } of created) {
+    const label = byFloor ? `Tầng ${room.floor}` : `Tòa ${room.building.name}`;
+    tally.set(label, (tally.get(label) ?? 0) + 1);
+  }
+  const hours = finished.map((r) => ((r.doneAt ?? r.createdAt).getTime() - r.createdAt.getTime()) / 3_600_000);
+  return {
+    month,
+    pending: count('PENDING'),
+    received: count('RECEIVED'),
+    done: count('DONE'),
+    createdThisMonth: created.length,
+    finishedThisMonth: finished.length,
+    groupBy: byFloor ? ('FLOOR' as const) : ('BUILDING' as const),
+    groups: [...tally].map(([label, total]) => ({ label, count: total })).sort((a, b) => b.count - a.count),
+    avgHours: hours.length ? Math.round((hours.reduce((sum, h) => sum + h, 0) / hours.length) * 10) / 10 : null,
+  };
 }
 
 /**

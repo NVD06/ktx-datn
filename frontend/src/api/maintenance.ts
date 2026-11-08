@@ -1,10 +1,19 @@
 import { apiGet, apiPatch, apiPost, getPaged } from './client'
 import type { ListParams } from '@/types/api'
-import type { MaintenanceInput, MaintenanceRequest, UpdateMaintenanceStatusInput } from '@/types/maintenance'
+import type {
+  MaintenanceInput,
+  MaintenanceRequest,
+  MaintenanceStats,
+  UpdateMaintenanceStatusInput,
+} from '@/types/maintenance'
 
 /** ADMIN/MANAGER — backend tự giới hạn theo tòa. `status=OPEN` lấy các yêu cầu chưa sửa xong. */
 export function listMaintenanceRequests(params: ListParams) {
   return getPaged<MaintenanceRequest>('/maintenance-requests', params)
+}
+
+export function getMaintenanceStats(buildingId?: string) {
+  return apiGet<MaintenanceStats>('/maintenance-requests/stats', { buildingId })
 }
 
 /** Yêu cầu của sinh viên đang đăng nhập, mới nhất trước. */

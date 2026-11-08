@@ -27,9 +27,16 @@ export const updateMaintenanceStatusSchema = z
   .openapi('UpdateMaintenanceStatusInput');
 
 export const maintenanceListQuerySchema = listQuerySchema.extend({
-  status: z.enum(['PENDING', 'RECEIVED', 'DONE', 'CONFIRMED', 'REJECTED']).optional(),
+  status: z
+    .enum(['OPEN', 'PENDING', 'RECEIVED', 'DONE', 'CONFIRMED', 'REJECTED'])
+    .optional()
+    .openapi({ description: 'OPEN = chưa sửa xong (PENDING hoặc RECEIVED)' }),
+  buildingId: z.uuid().optional(),
 });
+
+export const maintenanceStatsQuerySchema = z.object({ buildingId: z.uuid().optional() });
 
 export type CreateMaintenanceInput = z.infer<typeof createMaintenanceSchema>;
 export type UpdateMaintenanceStatusInput = z.infer<typeof updateMaintenanceStatusSchema>;
 export type MaintenanceListQuery = z.infer<typeof maintenanceListQuerySchema>;
+export type MaintenanceStatsQuery = z.infer<typeof maintenanceStatsQuerySchema>;

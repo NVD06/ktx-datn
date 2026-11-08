@@ -8,12 +8,21 @@ export const maintenanceKeys = {
   all: ['maintenance'] as const,
   list: (params: ListParams) => ['maintenance', 'list', params] as const,
   mine: ['maintenance', 'mine'] as const,
+  stats: (buildingId: string) => ['maintenance', 'stats', buildingId] as const,
 }
 
 export function useMaintenanceRequests(params: ListParams) {
   return useQuery({
     queryKey: maintenanceKeys.list(params),
     queryFn: () => maintenanceApi.listMaintenanceRequests(params),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useMaintenanceStats(buildingId: string) {
+  return useQuery({
+    queryKey: maintenanceKeys.stats(buildingId),
+    queryFn: () => maintenanceApi.getMaintenanceStats(buildingId || undefined),
     placeholderData: keepPreviousData,
   })
 }

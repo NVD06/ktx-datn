@@ -48,3 +48,15 @@ export interface UpdateMaintenanceStatusInput {
   /** Lý do — bắt buộc khi từ chối. */
   assigneeNote?: string
 }
+
+export interface MaintenanceStats {
+  month: string
+  pending: number
+  received: number
+  done: number
+  createdThisMonth: number
+  finishedThisMonth: number
+  groupBy: 'BUILDING' | 'FLOOR'
+  groups: { label: string; count: number }[]
+  avgHours: number | null
+}

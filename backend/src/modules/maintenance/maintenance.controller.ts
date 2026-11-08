@@ -4,6 +4,7 @@ import { currentUser, param } from '../../utils/request.js';
 import {
   type CreateMaintenanceInput,
   maintenanceListQuerySchema,
+  maintenanceStatsQuerySchema,
   type UpdateMaintenanceStatusInput,
 } from './maintenance.schema.js';
 import * as maintenanceService from './maintenance.service.js';
@@ -12,6 +13,11 @@ import * as maintenanceService from './maintenance.service.js';
 export async function list(req: Request, res: Response) {
   const { data, meta } = await maintenanceService.list(currentUser(req), maintenanceListQuerySchema.parse(req.query));
   res.json(ok(data, meta));
+}
+
+/** GET /api/v1/maintenance-requests/stats */
+export async function stats(req: Request, res: Response) {
+  res.json(ok(await maintenanceService.stats(currentUser(req), maintenanceStatsQuerySchema.parse(req.query))));
 }
 
 /** GET /api/v1/maintenance-requests/me */
