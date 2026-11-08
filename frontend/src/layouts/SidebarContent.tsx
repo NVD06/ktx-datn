@@ -8,7 +8,7 @@ interface Props {
   homeTo: string
   title: string
   subtitle: string
-  items: { to: string; label: string; icon: LucideIcon }[]
+  items: { to: string; label: string; icon: LucideIcon; badge?: number }[]
   collapsed?: boolean
   onToggle?: () => void
   onNavigate?: () => void
@@ -62,7 +62,7 @@ export function SidebarContent({ homeTo, title, subtitle, items, collapsed = fal
         )}
       </div>
       <nav className={cn('flex-1 space-y-1 overflow-x-hidden overflow-y-auto p-2', collapsed && '[scrollbar-width:none]')}>
-        {items.map(({ to, label, icon: Icon }) => (
+        {items.map(({ to, label, icon: Icon, badge }) => (
           <NavLink
             key={to}
             to={to}
@@ -72,7 +72,7 @@ export function SidebarContent({ homeTo, title, subtitle, items, collapsed = fal
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-2 rounded-md py-2 text-sm whitespace-nowrap transition-colors',
+                'relative flex items-center gap-2 rounded-md py-2 text-sm whitespace-nowrap transition-colors',
                 collapsed ? 'justify-center' : 'px-3',
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-primary border-l-2 font-medium'
@@ -83,6 +83,14 @@ export function SidebarContent({ homeTo, title, subtitle, items, collapsed = fal
           >
             <Icon className="size-4 shrink-0" />
             {collapsed ? <Flyout label={label} /> : label}
+            {!!badge &&
+              (collapsed ? (
+                <span className="bg-primary absolute top-1.5 right-3 size-2 rounded-full" />
+              ) : (
+                <span className="bg-primary text-primary-foreground ml-auto rounded-full px-1.5 text-xs font-semibold">
+                  {badge}
+                </span>
+              ))}
           </NavLink>
         ))}
       </nav>

@@ -9,6 +9,7 @@ import {
   FileSignature,
   Layers,
   LayoutDashboard,
+  Megaphone,
   Menu,
   Receipt,
   Sparkles,
@@ -48,6 +49,7 @@ const NAV: NavItem[] = [
   { to: '/admin/utilities', label: 'Chốt điện nước', icon: Zap },
   { to: '/admin/maintenance', label: 'Sửa chữa', icon: Wrench },
   { to: '/admin/hygiene', label: 'Vệ sinh', icon: Sparkles },
+  { to: '/admin/announcements', label: 'Thông báo', icon: Megaphone },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartColumn },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]

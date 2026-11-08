@@ -13,6 +13,8 @@ import { CHANGE_PASSWORD_PATH } from './paths'
 function page<K extends string>(load: () => Promise<Record<NoInfer<K>, ComponentType>>, name: K) {
   return lazy(() => load().then((m) => ({ default: m[name] })))
 }
+const AnnouncementListPage = page(() => import('@/features/announcements/pages/AnnouncementListPage'), 'AnnouncementListPage')
+const MyAnnouncementsPage = page(() => import('@/features/announcements/pages/MyAnnouncementsPage'), 'MyAnnouncementsPage')
 const BuildingDetailPage = page(() => import('@/features/buildings/pages/BuildingDetailPage'), 'BuildingDetailPage')
 const BuildingListPage = page(() => import('@/features/buildings/pages/BuildingListPage'), 'BuildingListPage')
 const ContractDetailPage = page(() => import('@/features/contracts/pages/ContractDetailPage'), 'ContractDetailPage')
@@ -75,6 +77,7 @@ export const router = createBrowserRouter([
           { path: 'maintenance', element: <MaintenanceListPage /> },
           { path: 'hygiene', element: <HygieneListPage /> },
           { path: 'hygiene/score', element: <HygieneScoringPage /> },
+          { path: 'announcements', element: <AnnouncementListPage /> },
           {
             path: 'reports',
             element: <ReportsPage />,
@@ -109,6 +112,7 @@ export const router = createBrowserRouter([
           { path: 'payment-result', element: <PaymentResultPage /> },
           { path: 'maintenance', element: <MyMaintenancePage /> },
           { path: 'hygiene', element: <MyHygienePage /> },
+          { path: 'announcements', element: <MyAnnouncementsPage /> },
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

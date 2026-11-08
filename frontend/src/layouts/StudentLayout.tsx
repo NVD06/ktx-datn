@@ -2,6 +2,7 @@ import { Suspense, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import {
   BedDouble,
+  Bell,
   ClipboardList,
   FileSignature,
   House,
@@ -14,6 +15,7 @@ import {
 import { LoadingState } from '@/components/shared/QueryState'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
+import { useMyAnnouncements } from '@/features/announcements/hooks/useAnnouncements'
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
 import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
 import { SidebarContent } from '@/layouts/SidebarContent'
@@ -21,6 +23,7 @@ import { cn } from '@/lib/utils'
 
 const NAV = [
   { to: '/student', label: 'Trang cá nhân', icon: House },
+  { to: '/student/announcements', label: 'Thông báo', icon: Bell },
   { to: '/student/rooms', label: 'Chỗ trống', icon: BedDouble },
   { to: '/student/registrations', label: 'Đơn của tôi', icon: ClipboardList },
   { to: '/student/contracts', label: 'Hợp đồng', icon: FileSignature },
@@ -40,11 +43,12 @@ export function StudentLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, toggleCollapsed] = useSidebarCollapsed()
   const [changingPassword, setChangingPassword] = useState(false)
+  const unread = useMyAnnouncements().data?.filter((a) => !a.readAt).length ?? 0
   const sidebar = {
     homeTo: '/student',
     title: 'Ký túc xá',
     subtitle: 'Sinh viên',
-    items: NAV,
+    items: NAV.map((i) => (i.to === '/student/announcements' ? { ...i, badge: unread } : i)),
     onChangePassword: () => setChangingPassword(true),
   }
 

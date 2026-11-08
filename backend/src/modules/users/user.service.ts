@@ -266,7 +266,7 @@ export async function remove(actor: AuthUser, id: string) {
     select: {
       role: true,
       fullName: true,
-      _count: { select: { registrations: true, requests: true, endedContracts: true, createdInvoices: true } },
+      _count: { select: { registrations: true, requests: true, endedContracts: true, createdInvoices: true, announcements: true } },
     },
   });
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng');
@@ -289,6 +289,7 @@ export async function remove(actor: AuthUser, id: string) {
     handled > 0 && 'yêu cầu sửa chữa đã xử lý',
     checked > 0 && 'lượt chấm vệ sinh',
     user._count.createdInvoices > 0 && 'hóa đơn đã lập',
+    user._count.announcements > 0 && 'thông báo đã đăng',
   ].filter(Boolean);
   if (history.length > 0) {
     const message =

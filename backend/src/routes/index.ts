@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { announcementRoutes } from '../modules/announcements/announcement.routes.js';
 import { authRoutes } from '../modules/auth/auth.routes.js';
 import { bedRoutes } from '../modules/beds/bed.routes.js';
 import { buildingRoutes } from '../modules/buildings/building.routes.js';
@@ -52,6 +53,7 @@ for (const routes of [
   maintenanceRoutes,
   hygieneRoutes,
   reportRoutes,
+  announcementRoutes,
 ]) {
   apiRouter.use(routes.prefix, routes.router);
 }
