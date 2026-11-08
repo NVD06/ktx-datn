@@ -1,47 +1,64 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart'
-import { formatMoney, formatMoneyCompact, formatMonth } from '@/lib/format'
+import { Bar, BarChart, Cell, LabelList, XAxis } from 'recharts'
+import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart'
+import { formatMoney, formatMonth } from '@/lib/format'
 import { INVOICE_TYPE } from '@/lib/labels'
 import type { RevenueMonth } from '@/types/report'
 
-const CONFIG = {
-  roomFee: { label: INVOICE_TYPE.ROOM_FEE.label, color: 'var(--chart-2)' },
-  utility: { label: INVOICE_TYPE.UTILITY.label, color: 'var(--chart-1)' },
-} satisfies ChartConfig
+const CONFIG = { total: { label: 'Đã thu', color: 'var(--chart-2)' } } satisfies ChartConfig
 
-/** Doanh thu theo tháng — cột chồng tiền phòng + điện nước. */
+const millions = (value: number) => (value / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })
+
+/** Doanh thu đã thu theo tháng (triệu đồng) — tháng này còn dở nên tô nhạt; di chuột để xem tiền phòng / điện nước. */
 export function RevenueChart({ data }: { data: RevenueMonth[] }) {
-  const rows = data.map((m) => ({ month: formatMonth(m.month), roomFee: Number(m.roomFee), utility: Number(m.utility) }))
+  const rows = data.map((m, i) => ({
+    month: m.month,
+    tick: `T${Number(m.month.slice(5))}`,
+    roomFee: Number(m.roomFee),
+    utility: Number(m.utility),
+    total: Number(m.roomFee) + Number(m.utility),
+    current: i === data.length - 1,
+  }))
 
   return (
     <ChartContainer config={CONFIG} className="aspect-auto h-64 w-full">
-      <BarChart data={rows} accessibilityLayer>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis tickLine={false} axisLine={false} width={48} tickCount={4} tickFormatter={formatMoneyCompact} />
+      <BarChart data={rows} margin={{ top: 24 }} accessibilityLayer>
+        <XAxis dataKey="tick" tickLine={false} axisLine={false} tickMargin={8} />
         <ChartTooltip
-          content={
-            <ChartTooltipContent
-              formatter={(value, name) => (
-                <>
-                  <span className="size-2.5 shrink-0 rounded-[2px]" style={{ background: `var(--color-${name})` }} />
-                  <span className="text-muted-foreground">{CONFIG[name as keyof typeof CONFIG].label}</span>
-                  <span className="ml-auto font-medium">{formatMoney(Number(value))}</span>
-                </>
-              )}
-            />
-          }
+          cursor={false}
+          content={({ active, payload }) => {
+            const row = active ? (payload?.[0]?.payload as (typeof rows)[number] | undefined) : undefined
+            if (!row) return null
+            return (
+              <div className="bg-background grid gap-1 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl">
+                <p className="font-medium">Tháng {formatMonth(row.month)}</p>
+                <p className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{INVOICE_TYPE.ROOM_FEE.label}</span>
+                  {formatMoney(row.roomFee)}
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{INVOICE_TYPE.UTILITY.label}</span>
+                  {formatMoney(row.utility)}
+                </p>
+                <p className="flex justify-between gap-4 font-medium">
+                  <span>Tổng</span>
+                  {formatMoney(row.total)}
+                </p>
+              </div>
+            )
+          }}
         />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="roomFee" stackId="revenue" fill="var(--color-roomFee)" maxBarSize={24} />
-        <Bar dataKey="utility" stackId="revenue" fill="var(--color-utility)" maxBarSize={24} radius={[4, 4, 0, 0]} />
+        <Bar dataKey="total" fill="var(--color-total)" radius={[6, 6, 0, 0]} maxBarSize={56}>
+          <LabelList
+            dataKey="total"
+            position="top"
+            offset={8}
+            className="fill-foreground text-xs font-semibold"
+            formatter={(value) => millions(Number(value))}
+          />
+          {rows.map((r) => (
+            <Cell key={r.month} fillOpacity={r.current ? 0.35 : 1} />
+          ))}
+        </Bar>
       </BarChart>
     </ChartContainer>
   )

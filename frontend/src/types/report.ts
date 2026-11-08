@@ -3,8 +3,9 @@
  * Chép từ response của backend (backend/src/docs/schemas.ts) — sửa bên đó thì sửa cả ở đây.
  */
 
+import type { Role } from './auth'
 import type { Contract } from './contract'
-import type { BuildingRef, RoomRef, RoomStatus } from './facility'
+import type { BuildingRef, Gender, RoomRef, RoomStatus } from './facility'
 import type { MoneyTotal } from './invoice'
 import type { RequestStatus } from './maintenance'
 
@@ -26,6 +27,35 @@ export interface OverviewReport {
   requests: { open: number; byStatus: Record<RequestStatus, number> }
   /** 6 tháng gần nhất, cũ trước mới sau. */
   revenue: RevenueMonth[]
+  todo: {
+    registrations: number
+    unsignedContracts: number
+    extensionRequests: number
+    unbilledRooms: number
+    newRequests: number
+    lowHygieneRooms: number
+  }
+  buildings: BuildingStats[]
+  openPeriod: { id: string; name: string; pending: number } | null
+  /** 5 tài khoản tạo gần nhất — chỉ ADMIN, MANAGER nhận mảng rỗng. */
+  recentUsers: { id: string; fullName: string; email: string; role: Role; createdAt: string }[]
+}
+
+export interface BuildingStats {
+  id: string
+  name: string
+  gender: Gender
+  floors: number
+  isActive: boolean
+  manager: { id: string; fullName: string } | null
+  /** Phòng đang hoạt động. */
+  rooms: number
+  beds: { total: number; occupied: number }
+  overdue: MoneyTotal
+  openRequests: number
+  /** Trung bình điểm gần nhất trong tháng của các phòng — null: tháng này chưa chấm. */
+  hygieneAverage: number | null
+  lowHygieneRooms: number
 }
 
 /** Số giường theo trạng thái — cùng quy tắc với trang phòng (giữ chỗ = hợp đồng chờ ký). */

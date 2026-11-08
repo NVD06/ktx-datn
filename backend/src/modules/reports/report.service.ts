@@ -8,6 +8,7 @@ import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.j
 import { CONTRACT_STUDENT_SELECT, contractScope } from '../contracts/contract.service.js';
 import * as invoiceService from '../invoices/invoice.service.js';
 import { studentSearch } from '../profile/profile.service.js';
+import { reviewerScope } from '../registrations/registration.service.js';
 import { BED_STATE_SELECT, summarizeBeds } from '../rooms/room-status.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
 import type { DebtorQuery, MonthRangeQuery, OccupancyQuery } from './report.schema.js';
@@ -78,22 +79,27 @@ export async function overview(user: AuthUser) {
   const beds: Prisma.BedWhereInput = { room: { ...buildingScope(user), ...COUNTED_ROOM } };
   const thisMonth = currentMonthVN();
 
-  const [totalBeds, occupiedBeds, residents, expiring, invoices, requests, revenue] = await Promise.all([
-    prisma.bed.count({ where: beds }),
-    prisma.bed.count({ where: { ...beds, status: 'OCCUPIED' } }),
-    // Đếm sinh viên chứ không đếm hợp đồng: SV quá hạn chưa trả phòng mà đã vào ở kỳ mới có hai hợp đồng ACTIVE.
-    prisma.user.count({
-      where: { registrations: { some: { contract: { is: { AND: [contracts, { status: 'ACTIVE', startDate: { lte: now } }] } } } } },
-    }),
-    prisma.contract.count({
-      where: {
-        AND: [contracts, { status: 'ACTIVE', endDate: { gte: now, lte: new Date(now.getTime() + CONTRACT_EXPIRING_DAYS * DAY_MS) } }],
-      },
-    }),
-    invoiceService.summary(user),
-    requestsByStatus(user),
-    revenueByMonth(user, shiftMonth(thisMonth, 1 - REVENUE_MONTHS), thisMonth),
-  ]);
+  const [totalBeds, occupiedBeds, residents, expiring, invoices, requests, revenue, todo, buildings, openPeriod, recentUsers] =
+    await Promise.all([
+      prisma.bed.count({ where: beds }),
+      prisma.bed.count({ where: { ...beds, status: 'OCCUPIED' } }),
+      // Đếm sinh viên chứ không đếm hợp đồng: SV quá hạn chưa trả phòng mà đã vào ở kỳ mới có hai hợp đồng ACTIVE.
+      prisma.user.count({
+        where: { registrations: { some: { contract: { is: { AND: [contracts, { status: 'ACTIVE', startDate: { lte: now } }] } } } } },
+      }),
+      prisma.contract.count({
+        where: {
+          AND: [contracts, { status: 'ACTIVE', endDate: { gte: now, lte: new Date(now.getTime() + CONTRACT_EXPIRING_DAYS * DAY_MS) } }],
+        },
+      }),
+      invoiceService.summary(user),
+      requestsByStatus(user),
+      revenueByMonth(user, shiftMonth(thisMonth, 1 - REVENUE_MONTHS), thisMonth),
+      pendingWork(user, thisMonth),
+      buildingStats(user, thisMonth),
+      openPeriodStats(user),
+      latestUsers(user),
+    ]);
 
   return {
     beds: { total: totalBeds, occupied: occupiedBeds },
@@ -102,7 +108,94 @@ export async function overview(user: AuthUser) {
     invoices,
     requests: { open: requests.PENDING + requests.RECEIVED, byStatus: requests },
     revenue,
+    todo: { ...todo, newRequests: requests.PENDING, lowHygieneRooms: buildings.reduce((sum, b) => sum + b.lowHygieneRooms, 0) },
+    buildings,
+    openPeriod,
+    recentUsers,
   };
+}
+
+function latestUsers(user: AuthUser) {
+  if (user.role !== 'ADMIN') return [];
+  return prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: { id: true, fullName: true, email: true, role: true, createdAt: true },
+  });
+}
+
+async function pendingWork(user: AuthUser, month: string) {
+  const contracts = contractScope(user);
+  const [registrations, unsignedContracts, extensionRequests, unbilledRooms] = await Promise.all([
+    prisma.registration.count({ where: { AND: [await reviewerScope(user), { status: 'PENDING' }] } }),
+    prisma.contract.count({ where: { AND: [contracts, { status: 'DRAFT' }] } }),
+    prisma.contract.count({ where: { AND: [contracts, { status: 'ACTIVE', extensionRequestedTo: { not: null } }] } }),
+    prisma.room.count({
+      where: {
+        ...buildingScope(user),
+        beds: { some: { contracts: { some: { status: 'ACTIVE', startDate: { lt: nextMonthStartVN(month) } } } } },
+        NOT: { beds: { some: { contracts: { some: { invoices: { some: { type: 'UTILITY', period: month } } } } } } },
+      },
+    }),
+  ]);
+  return { registrations, unsignedContracts, extensionRequests, unbilledRooms };
+}
+
+async function buildingStats(user: AuthUser, month: string) {
+  const [buildings, debts, rooms, requests, hygiene] = await Promise.all([
+    prisma.building.findMany({
+      where: ownBuildingScope(user),
+      select: {
+        id: true,
+        name: true,
+        gender: true,
+        floors: true,
+        isActive: true,
+        manager: { select: { id: true, fullName: true } },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    invoiceService.debtByBuilding(user),
+    prisma.room.findMany({
+      where: { ...buildingScope(user), ...COUNTED_ROOM },
+      select: { buildingId: true, beds: { select: { status: true } } },
+    }),
+    prisma.maintenanceRequest.findMany({
+      where: { room: buildingScope(user), status: { in: ['PENDING', 'RECEIVED'] } },
+      select: { room: { select: { buildingId: true } } },
+    }),
+    prisma.hygieneRecord.findMany({
+      where: { room: buildingScope(user), checkDate: { gte: monthStartVN(month), lt: nextMonthStartVN(month) } },
+      orderBy: { checkDate: 'desc' },
+      select: { roomId: true, score: true, room: { select: { buildingId: true } } },
+    }),
+  ]);
+  const latest = new Map<string, (typeof hygiene)[number]>();
+  for (const record of hygiene) if (!latest.has(record.roomId)) latest.set(record.roomId, record);
+
+  return buildings.map((building) => {
+    const own = rooms.filter((r) => r.buildingId === building.id);
+    const beds = own.flatMap((r) => r.beds);
+    const scores = [...latest.values()].filter((r) => r.room.buildingId === building.id).map((r) => r.score);
+    return {
+      ...building,
+      rooms: own.length,
+      beds: { total: beds.length, occupied: beds.filter((b) => b.status === 'OCCUPIED').length },
+      overdue: debts.find((d) => d.building.id === building.id)!.overdue,
+      openRequests: requests.filter((r) => r.room.buildingId === building.id).length,
+      hygieneAverage: scores.length ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null,
+      lowHygieneRooms: scores.filter((s) => s < HYGIENE_WARNING_SCORE).length,
+    };
+  });
+}
+
+async function openPeriodStats(user: AuthUser) {
+  const period = await prisma.registrationPeriod.findFirst({ where: { isOpen: true }, select: { id: true, name: true } });
+  if (!period) return null;
+  const pending = await prisma.registration.count({
+    where: { AND: [await reviewerScope(user), { periodId: period.id, status: 'PENDING' }] },
+  });
+  return { ...period, pending };
 }
 
 /** Số giường theo trạng thái của một nhóm phòng (tầng, tòa) — bỏ `status`, chỉ có nghĩa với từng phòng. */

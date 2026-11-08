@@ -89,7 +89,7 @@ function findOverlappingContract(
  * duyệt trước thì nhận. Nhờ vậy đơn nào cũng có tòa
  * nhìn thấy, không có đơn mồ côi; còn đơn đã chọn tòa khác thì không lộ ra.
  */
-async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereInput> {
+export async function reviewerScope(user: AuthUser): Promise<Prisma.RegistrationWhereInput> {
   const { buildingId } = buildingScope(user);
   if (!buildingId) return {};
 
