@@ -21,6 +21,7 @@ export const contractListQuerySchema = listQuerySchema.extend({
   // Trạng thái THỰC TẾ (EXPIRED tính theo ngày kết thúc), khớp với cột trạng thái trên bảng.
   status: z.enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED', 'CANCELLED']).optional(),
   periodId: z.uuid().optional(),
+  extension: z.enum(['PENDING']).optional().openapi({ description: 'PENDING: chỉ hợp đồng có yêu cầu gia hạn chờ duyệt' }),
 });
 
 export type ContractReasonInput = z.infer<typeof contractReasonSchema>;

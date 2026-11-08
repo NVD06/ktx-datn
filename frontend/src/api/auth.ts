@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { apiGet, apiPost } from './client'
+import { apiGet, apiPost, setSessionUser } from './client'
 import type { ErrorResponse } from '@/types/api'
 import type { AuthUser, ChangePasswordInput } from '@/types/auth'
 
@@ -23,14 +23,21 @@ async function getCsrfToken(): Promise<string> {
 /** Người dùng hiện tại, hoặc null nếu chưa đăng nhập. */
 export async function getMe(): Promise<AuthUser | null> {
   try {
-    return await apiGet<AuthUser>('/auth/me')
+    const user = await apiGet<AuthUser>('/auth/me')
+    setSessionUser(user.id)
+    return user
   } catch (error) {
     // 401 là trạng thái hợp lệ: chưa đăng nhập. Lỗi mạng / 500 thì ném tiếp để giao
     // diện báo lỗi và cho thử lại, thay vì coi như đã đăng xuất.
-    if (error instanceof AxiosError && error.response?.status === 401) return null
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      setSessionUser(null)
+      return null
+    }
     throw error
   }
 }
+const authChannel = new BroadcastChannel('ktx-auth')
+authChannel.onmessage = () => window.location.replace('/')
 
 /**
  * Đăng nhập. Auth.js không trả JSON mà trả 302 kèm Set-Cookie, nên không đọc
@@ -51,6 +58,7 @@ export async function login(email: string, password: string): Promise<AuthUser> 
 
   const user = await getMe()
   if (!user) throw new Error('Email hoặc mật khẩu không đúng')
+  authChannel.postMessage('login')
   return user
 }
 
@@ -64,6 +72,8 @@ export async function logout(): Promise<void> {
     credentials: 'include',
     redirect: 'manual',
   })
+  setSessionUser(null)
+  authChannel.postMessage('logout')
 }
 
 /**

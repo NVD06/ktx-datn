@@ -20,6 +20,7 @@ declare module '@auth/core/types' {
  * đúng file này — xem docs/convention.md §4.1.
  */
 
+const DUMMY_HASH = bcrypt.hashSync('dummy-password', 10);
 export const authConfig: ExpressAuthConfig = {
   secret: env.AUTH_SECRET,
   trustHost: true,
@@ -67,10 +68,8 @@ export const authConfig: ExpressAuthConfig = {
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase().trim() },
         });
-        if (!user || !user.isActive) return null;
-
-        const matched = await bcrypt.compare(password, user.passwordHash);
-        if (!matched) return null;
+        const matched = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
+        if (!user || !user.isActive || !matched) return null;
 
         // Chỉ đưa những trường tối thiểu vào token. Vai trò (role) cố ý KHÔNG nằm
         // ở đây — nó được đọc lại từ DB mỗi request, để Admin đổi quyền hoặc khóa

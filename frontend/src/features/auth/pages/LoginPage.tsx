@@ -1,94 +1,129 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { Navigate, useLocation } from 'react-router-dom'
-import { z } from 'zod'
-import { getErrorMessage } from '@/api/client'
-import { BackLink } from '@/components/shared/BackLink'
-import { FormField } from '@/components/shared/FormField'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { useAuth, useLogin } from '@/features/auth/hooks/useAuth'
-import { redirectAfterLogin } from '@/routes/paths'
-
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
+import { z } from "zod";
+import { getErrorMessage } from "@/api/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth, useLogin } from "@/features/auth/hooks/useAuth";
+import { redirectAfterLogin } from "@/routes/paths";
 const loginSchema = z.object({
-  email: z.email('Email không hợp lệ'),
-  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
-})
-
-type LoginForm = z.infer<typeof loginSchema>
-
+  email: z.email("Email không hợp lệ"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+});
+type LoginForm = z.infer<typeof loginSchema>;
 export function LoginPage() {
-  const { user, isLoading } = useAuth()
-  const login = useLogin()
-  const location = useLocation()
-
+  const { user, isLoading } = useAuth();
+  const login = useLogin();
+  const location = useLocation();
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-  })
-
-  // Đã đăng nhập rồi thì không cho ở lại trang này. Nếu bị ProtectedRoute đẩy
-  // tới đây thì quay lại đúng trang cũ, không thì về trang chủ theo vai trò.
+    defaultValues: { email: "", password: "" },
+  });
   if (!isLoading && user) {
-    const from = (location.state as { from?: string } | null)?.from
-    return <Navigate to={redirectAfterLogin(user.role, from)} replace />
+    const from = (location.state as { from?: string } | null)?.from;
+    return <Navigate to={redirectAfterLogin(user.role, from)} replace />;
   }
-
-  const err = form.formState.errors
-
-  function onSubmit(values: LoginForm) {
-    login.mutate(values)
-  }
-
+  const err = form.formState.errors;
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <BackLink to="/">Về trang chủ</BackLink>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Đăng nhập</CardTitle>
-            <CardDescription>Hệ thống quản lý ký túc xá sinh viên</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              <FormField label="Email" htmlFor="email" error={err.email?.message}>
+    <main className="bg-card min-h-svh">
+      <div className="mx-auto flex min-h-svh max-w-6xl flex-col px-4 py-4 sm:px-6">
+        <div className="mt-3 grid flex-1 gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
+          <img
+            src="/images/landing-building.jpg"
+            alt="Ký túc xá Đại học Phenikaa"
+            className="hidden h-full max-h-[calc(100svh-6rem)] w-full rounded-2xl object-cover lg:block"
+          />
+          <div className="mx-auto flex w-full max-w-md flex-col justify-center py-8">
+            <div className="text-center">
+              <h1 className="text-3xl font-semibold">Xác minh tài khoản</h1>
+              <p className="text-muted-foreground mt-3 text-sm font-bold uppercase">
+                Dành cho sinh viên và cán bộ quản lý
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                để sử dụng hệ thống ký túc xá Phe
+              </p>
+            </div>
+            <form
+              onSubmit={form.handleSubmit((v) => login.mutate(v))}
+              className="mt-6 space-y-3 rounded-2xl border p-6"
+              noValidate
+            >
+              <div>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="sv001@ktx.edu.vn"
-                  {...form.register('email')}
+                  aria-label="Email"
+                  placeholder="Email"
+                  aria-invalid={!!err.email}
+                  className="bg-card dark:bg-card h-12 px-4"
+                  {...form.register("email")}
                 />
-              </FormField>
-
-              <FormField label="Mật khẩu" htmlFor="password" error={err.password?.message}>
+                {err.email && (
+                  <p className="text-destructive mt-1 text-xs">
+                    {err.email.message}
+                  </p>
+                )}
+              </div>
+              <div>
                 <Input
                   id="password"
                   type="password"
                   autoComplete="current-password"
-                  {...form.register('password')}
+                  aria-label="Mật khẩu"
+                  placeholder="Mật khẩu"
+                  aria-invalid={!!err.password}
+                  className="bg-card dark:bg-card h-12 px-4"
+                  {...form.register("password")}
                 />
-              </FormField>
-
+                {err.password && (
+                  <p className="text-destructive mt-1 text-xs">
+                    {err.password.message}
+                  </p>
+                )}
+              </div>
               {login.isError && (
                 <p className="bg-destructive/10 text-destructive rounded-md p-2 text-sm">
-                  {getErrorMessage(login.error, 'Email hoặc mật khẩu không đúng')}
+                  {getErrorMessage(
+                    login.error,
+                    "Email hoặc mật khẩu không đúng",
+                  )}
                 </p>
               )}
-
-              <Button type="submit" className="w-full" disabled={login.isPending}>
-                {login.isPending ? 'Đang đăng nhập…' : 'Đăng nhập'}
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-2 h-11 w-full text-base"
+                disabled={login.isPending}
+              >
+                {login.isPending ? "Đang đăng nhập…" : "Đăng nhập"}
               </Button>
             </form>
-
-            <p className="text-muted-foreground mt-4 text-center text-sm">
-              Chưa có tài khoản? Liên hệ ban quản lý ký túc xá để được cấp.
-            </p>
-          </CardContent>
-        </Card>
+            <div className="mt-4 flex items-center justify-between">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/">
+                  <ArrowLeft />
+                  Quay lại
+                </Link>
+              </Button>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+                onClick={() =>
+                  toast.info(
+                    "Liên hệ ban quản lý ký túc xá để được cấp lại mật khẩu.",
+                  )
+                }
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
-  )
+  );
 }

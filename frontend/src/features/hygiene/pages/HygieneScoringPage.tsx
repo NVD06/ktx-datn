@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/api/client'
 import { BackLink } from '@/components/shared/BackLink'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { SearchInput } from '@/components/shared/SearchInput'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ export function HygieneScoringPage() {
   const [buildingId, setBuildingId] = useState('')
   const [today] = useState(() => toDateInput(new Date().toISOString()))
   const [checkDate, setCheckDate] = useState(today)
+  const [search, setSearch] = useState('')
   // Chưa chọn thì lấy tòa đầu tiên — Manager chỉ có đúng một tòa.
   const selectedId = buildingId || buildings.data?.data[0]?.id || null
   const sheet = useHygieneSheet(selectedId, checkDate)
@@ -61,12 +63,15 @@ export function HygieneScoringPage() {
           className="bg-card w-44"
           aria-label="Ngày kiểm tra"
         />
+        <SearchInput value={search} onChange={setSearch} placeholder="Tìm mã phòng" />
       </div>
 
       {sheet.isError && <ErrorState error={sheet.error} />}
       {selectedId && sheet.isPending && <LoadingState />}
       {/* key: đổi tòa/ngày thì bỏ hết điểm đang nhập dở. */}
-      {sheet.data && <ScoreTable key={`${selectedId}:${checkDate}`} sheet={sheet.data} checkDate={checkDate} />}
+      {sheet.data && (
+        <ScoreTable key={`${selectedId}:${checkDate}`} sheet={sheet.data} checkDate={checkDate} search={search} />
+      )}
     </>
   )
 }
@@ -85,7 +90,15 @@ function scoreError(baseText: string, baseScore: number, deductionText: string, 
   return deduction > baseScore ? 'Điểm trừ lớn hơn điểm vệ sinh' : null
 }
 
-function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneSheet; checkDate: string }) {
+function ScoreTable({
+  sheet: { building, rooms },
+  checkDate,
+  search,
+}: {
+  sheet: HygieneSheet
+  checkDate: string
+  search: string
+}) {
   const save = useSaveHygiene()
   // Chỉ giữ ô đã sửa; ô chưa sửa lấy điểm đã lưu (nếu có).
   const [edits, setEdits] = useState<Record<string, Partial<Record<Field, string>>>>({})
@@ -106,6 +119,7 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
     })
   const ready = rows.filter((r) => r.record)
   const emptyRooms = rooms.length - rows.length
+  const shown = rows.filter((r) => r.room.code.toLowerCase().includes(search.toLowerCase()))
 
   function submit() {
     save.mutate(
@@ -150,7 +164,14 @@ function ScoreTable({ sheet: { building, rooms }, checkDate }: { sheet: HygieneS
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map(({ room, value, error, final }) => (
+              {shown.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-muted-foreground py-6 text-center">
+                    Không có phòng nào khớp "{search}".
+                  </TableCell>
+                </TableRow>
+              )}
+              {shown.map(({ room, value, error, final }) => (
                 <TableRow key={room.id}>
                   <TableCell className="font-medium">
                     {room.code} <span className="text-muted-foreground text-xs">· tầng {room.floor}</span>

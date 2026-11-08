@@ -131,6 +131,34 @@ contractRoutes.post(
 );
 
 contractRoutes.post(
+  '/:id/extension-request',
+  {
+    summary: 'Xin gia hạn hợp đồng đang ở (STUDENT)',
+    description:
+      'Hợp đồng ACTIVE của chính mình. `endDate` kiểm tra như /extend. Gửi lại thì ghi đè yêu cầu cũ. Manager duyệt ' +
+      'bằng /extend (xóa yêu cầu) hoặc từ chối bằng /extension-request/reject.',
+    body: extendContractSchema,
+    data: contractSchema,
+    errors: [400, 401, 403, 404, 409],
+  },
+  student,
+  ctrl.requestExtension,
+);
+
+contractRoutes.post(
+  '/:id/extension-request/reject',
+  {
+    summary: 'Từ chối yêu cầu gia hạn (ADMIN, MANAGER)',
+    description: 'Xóa yêu cầu đang chờ, lưu lý do để SV xem. Không có yêu cầu -> 409 `NO_EXTENSION_REQUEST`.',
+    body: contractReasonSchema,
+    data: contractSchema,
+    errors: [400, 401, 403, 404, 409],
+  },
+  staff,
+  ctrl.rejectExtension,
+);
+
+contractRoutes.post(
   '/:id/terminate',
   {
     summary: 'Chấm dứt hợp đồng đang ở / trả phòng (ADMIN, MANAGER)',

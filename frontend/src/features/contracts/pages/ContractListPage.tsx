@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Ban, CalendarPlus, Eye, LogOut } from 'lucide-react'
+import { Ban, CalendarCheck, CalendarPlus, CalendarX, Eye, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/shared/DataTable'
@@ -13,7 +13,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
-import { bedPlace, formatDateRange, formatMoney } from '@/lib/format'
+import { bedPlace, formatDate, formatDateRange, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, toOptions } from '@/lib/labels'
 import type { Contract } from '@/types/contract'
 import { ContractDetailSheet } from '../components/ContractDetailSheet'
@@ -22,6 +22,7 @@ import { canCancel, isRunning } from '../contract-actions'
 import { useContracts, useEndContract } from '../hooks/useContracts'
 
 const STATUS_OPTIONS = toOptions(CONTRACT_STATUS)
+const EXTENSION_OPTIONS = [{ value: 'PENDING', label: 'Chờ duyệt gia hạn' }]
 
 /** Còn hóa đơn chưa thanh toán thì cảnh báo — vẫn cho chấm dứt, hóa đơn giữ lại để thu sau. */
 function unpaidNote(contract: Contract) {
@@ -40,7 +41,7 @@ export function ContractListPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
 
-  const list = useListParams(['status', 'periodId'] as const)
+  const list = useListParams(['status', 'periodId', 'extension'] as const)
   const query = useContracts(list.params)
   const periodOptions = usePeriodOptions()
   const cancel = useEndContract('cancel')
@@ -50,6 +51,8 @@ export function ContractListPage() {
   const [cancelling, setCancelling] = useState<Contract | null>(null)
   const [extending, setExtending] = useState<Contract | null>(null)
   const [terminating, setTerminating] = useState<Contract | null>(null)
+  const [rejecting, setRejecting] = useState<Contract | null>(null)
+  const rejectExtension = useEndContract('extension-request/reject')
 
   /** Thao tác theo trạng thái — dùng chung cho menu "…" của dòng và chân drawer chi tiết. */
   function actionsFor(contract: Contract): RowAction[] {
@@ -60,6 +63,13 @@ export function ContractListPage() {
     }
     if (canCancel(contract)) {
       return [{ label: 'Hủy hợp đồng chờ ký', icon: Ban, destructive: true, onSelect: open(setCancelling) }]
+    }
+    if (isRunning(contract) && contract.extensionRequestedTo) {
+      return [
+        { label: 'Duyệt gia hạn', icon: CalendarCheck, onSelect: open(setExtending) },
+        { label: 'Từ chối gia hạn', icon: CalendarX, onSelect: open(setRejecting) },
+        { label: 'Chấm dứt', icon: LogOut, destructive: true, onSelect: open(setTerminating) },
+      ]
     }
     if (isRunning(contract)) {
       return [
@@ -125,7 +135,16 @@ export function ContractListPage() {
     {
       id: 'status',
       header: 'Trạng thái',
-      cell: ({ row }) => <StatusBadge {...CONTRACT_STATUS[row.original.status]} />,
+      cell: ({ row }) => (
+        <div>
+          <StatusBadge {...CONTRACT_STATUS[row.original.status]} />
+          {row.original.extensionRequestedTo && (
+            <p className="text-primary mt-1 text-xs font-medium">
+              Xin gia hạn đến {formatDate(row.original.extensionRequestedTo)}
+            </p>
+          )}
+        </div>
+      ),
     },
     {
       id: 'actions',
@@ -145,7 +164,7 @@ export function ContractListPage() {
     },
   ]
 
-  const filtered = !!(list.search || list.filters.status || list.filters.periodId)
+  const filtered = !!(list.search || list.filters.status || list.filters.periodId || list.filters.extension)
 
   return (
     <>
@@ -182,6 +201,12 @@ export function ContractListPage() {
               onChange={(v) => list.setFilter('periodId', v)}
               options={periodOptions}
               allLabel="Mọi đợt"
+            />
+            <FilterSelect
+              value={list.filters.extension}
+              onChange={(v) => list.setFilter('extension', v)}
+              options={EXTENSION_OPTIONS}
+              allLabel="Gia hạn"
             />
           </>
         }
@@ -233,6 +258,23 @@ export function ContractListPage() {
         }
       />
       <ExtendContractDialog contract={extending} onClose={() => setExtending(null)} />
+      <ReasonDialog
+        target={rejecting}
+        onClose={() => setRejecting(null)}
+        title="Từ chối yêu cầu gia hạn?"
+        description={(c) =>
+          `${c.student.fullName} xin gia hạn hợp đồng ${c.code} đến ngày ${formatDate(c.extensionRequestedTo!)}. ` +
+          'Hợp đồng giữ nguyên ngày kết thúc, sinh viên đọc được lý do ở trang cá nhân.'
+        }
+        label="Lý do từ chối"
+        placeholder="Ví dụ: giường đã xếp cho sinh viên khác từ kỳ sau…"
+        submitLabel="Từ chối"
+        isPending={rejectExtension.isPending}
+        closeOnErrorCode="NO_EXTENSION_REQUEST"
+        onSubmit={(c, reason) =>
+          rejectExtension.mutateAsync({ id: c.id, reason }).then(() => toast.success(`Đã từ chối gia hạn ${c.code}`))
+        }
+      />
     </>
   )
 }

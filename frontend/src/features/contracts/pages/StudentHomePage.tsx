@@ -18,6 +18,8 @@ import { InvoiceDueBanner } from '@/features/invoices/components/InvoiceDueBanne
 import { bedPlace, formatDate, formatDateRange } from '@/lib/format'
 import { CONTRACT_STATUS, GENDER } from '@/lib/labels'
 import type { CurrentStay } from '@/types/contract'
+import { ExtendContractDialog } from '../components/ExtendContractDialog'
+import { isRunning } from '../contract-actions'
 import { useCurrentStay, useMyContracts } from '../hooks/useContracts'
 
 /**
@@ -74,6 +76,7 @@ function NoStay() {
 
 function StayCards({ stay: { contract: c, roommates } }: { stay: CurrentStay }) {
   const [now] = useState(Date.now)
+  const [extending, setExtending] = useState(false)
   const upcoming = Date.parse(c.startDate) > now
   const { room } = c.bed
 
@@ -100,13 +103,32 @@ function StayCards({ stay: { contract: c, roommates } }: { stay: CurrentStay }) 
           />
           {c.status === 'EXPIRED' && (
             <p className="tone-warning rounded-md border p-2 text-xs">
-              Hợp đồng đã hết hạn ngày {formatDate(c.endDate)}. Liên hệ ban quản lý để gia hạn hoặc làm thủ
-              tục trả phòng.
+              Hợp đồng đã hết hạn ngày {formatDate(c.endDate)}. Bấm "Xin gia hạn" để ở tiếp, hoặc liên hệ ban
+              quản lý làm thủ tục trả phòng.
             </p>
           )}
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/student/contracts/${c.id}`}>Xem hợp đồng {c.code}</Link>
-          </Button>
+          {c.extensionRequestedTo ? (
+            <p className="tone-info rounded-md border p-2 text-xs">
+              Bạn đã xin gia hạn đến ngày {formatDate(c.extensionRequestedTo)}, đang chờ ban quản lý duyệt.
+            </p>
+          ) : (
+            c.extensionRejectReason && (
+              <p className="tone-danger rounded-md border p-2 text-xs">
+                Yêu cầu gia hạn bị từ chối: {c.extensionRejectReason}
+              </p>
+            )
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/student/contracts/${c.id}`}>Xem hợp đồng {c.code}</Link>
+            </Button>
+            {isRunning(c) && (
+              <Button size="sm" onClick={() => setExtending(true)}>
+                {c.extensionRequestedTo ? 'Sửa yêu cầu gia hạn' : 'Xin gia hạn'}
+              </Button>
+            )}
+          </div>
+          <ExtendContractDialog contract={extending ? c : null} onClose={() => setExtending(false)} request />
         </CardContent>
       </Card>
 

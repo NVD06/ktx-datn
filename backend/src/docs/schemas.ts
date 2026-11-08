@@ -263,6 +263,9 @@ export const contractSchema = z
       .object({ id: z.uuid(), fullName: z.string(), role: roleSchema })
       .nullable()
       .openapi({ description: 'Người chấm dứt / hủy — SV tự từ chối hay Manager hủy' }),
+    extensionRequestedTo: z.iso.datetime().nullable().openapi({ description: 'Ngày SV xin ở đến, đang chờ duyệt' }),
+    extensionRequestedAt: z.iso.datetime().nullable(),
+    extensionRejectReason: z.string().nullable().openapi({ description: 'Lý do từ chối lần xin gia hạn gần nhất' }),
     period: registrationPeriodSchema.pick({ id: true, name: true, term: true, stayStartAt: true, stayEndAt: true }),
     student: z.object({
       id: z.uuid(),

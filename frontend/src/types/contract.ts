@@ -32,6 +32,9 @@ export interface Contract {
   endedById: string | null
   /** Người chấm dứt / hủy — SV tự từ chối ký hay Manager hủy. */
   endedBy: { id: string; fullName: string; role: Role } | null
+  extensionRequestedTo: string | null
+  extensionRequestedAt: string | null
+  extensionRejectReason: string | null
   /** Thời gian ở của đợt dùng để tính đơn giá ngày khi gia hạn. */
   period: Pick<RegistrationPeriod, 'id' | 'name' | 'term' | 'stayStartAt' | 'stayEndAt'>
   student: {

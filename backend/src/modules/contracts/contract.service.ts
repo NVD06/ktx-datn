@@ -179,6 +179,7 @@ export async function list(user: AuthUser, query: ContractListQuery) {
         : {},
       query.status ? statusWhere(query.status, new Date()) : {},
       query.periodId ? { registration: { periodId: query.periodId } } : {},
+      query.extension ? { status: 'ACTIVE', extensionRequestedTo: { not: null } } : {},
     ],
   };
 
@@ -332,52 +333,77 @@ export function cancel(user: AuthUser, id: string, { reason }: ContractReasonInp
  */
 export async function extend(user: AuthUser, id: string, input: ExtendContractInput) {
   const endDate = endOfDayVN(input.endDate);
-
+  await prisma.$transaction(async (tx) => {
+    const contract = await checkNewEndDate(tx, user, id, endDate, 'gia hạn');
+    // Kèm cả ngày kết thúc cũ: hai người cùng gia hạn một lúc thì người sau nhận 409
+    // thay vì ghi đè ngày kết thúc của người trước.
+    await transition(tx, { id, status: 'ACTIVE', endDate: contract.endDate }, { endDate, ...NO_EXTENSION_REQUEST }, 'gia hạn');
+  });
+  return getById(user, id);
+}
+const NO_EXTENSION_REQUEST = { extensionRequestedTo: null, extensionRequestedAt: null, extensionRejectReason: null };
+export async function requestExtension(user: AuthUser, id: string, input: ExtendContractInput) {
+  const endDate = endOfDayVN(input.endDate);
+  await prisma.$transaction(async (tx) => {
+    const contract = await checkNewEndDate(tx, user, id, endDate, 'xin gia hạn');
+    const data = { ...NO_EXTENSION_REQUEST, extensionRequestedTo: endDate, extensionRequestedAt: new Date() };
+    await transition(tx, { id, status: 'ACTIVE', endDate: contract.endDate }, data, 'xin gia hạn');
+  });
+  return getById(user, id);
+}
+export async function rejectExtension(user: AuthUser, id: string, { reason }: ContractReasonInput) {
   await prisma.$transaction(async (tx) => {
     const contract = await tx.contract.findFirst({
       where: inScope(user, id),
-      select: {
-        status: true,
-        endDate: true,
-        registration: { select: { studentId: true } },
-      },
+      select: { status: true, extensionRequestedTo: true },
     });
-    assertStatus(user, contract, 'ACTIVE', 'gia hạn');
-
-    const now = new Date();
-    if (endDate <= contract.endDate) {
-      throw ApiError.validation({
-        endDate: [`Ngày kết thúc mới phải sau ngày kết thúc hiện tại (${formatDateVN(contract.endDate)})`],
-      });
+    assertStatus(user, contract, 'ACTIVE', 'từ chối gia hạn');
+    if (!contract.extensionRequestedTo) {
+      throw ApiError.conflict('NO_EXTENSION_REQUEST', 'Hợp đồng không có yêu cầu gia hạn đang chờ duyệt.');
     }
-    if (endDate < now) throw ApiError.validation({ endDate: ['Ngày kết thúc mới không được trước hôm nay'] });
-
-    // Phần ở thêm không được đè lên hợp đồng kỳ sau của chính SV (đã duyệt hoặc đang ở).
-    const { studentId } = contract.registration;
-    const next = await tx.contract.findFirst({
-      where: {
-        id: { not: id },
-        status: { in: [...HOLDING_CONTRACT_STATUSES] },
-        registration: { studentId },
-        startDate: { lte: endDate },
-        endDate: { gt: contract.endDate },
-      },
-      select: { code: true, startDate: true },
-    });
-    if (next) {
-      throw ApiError.conflict(
-        'CONTRACT_OVERLAP',
-        `Sinh viên đã có hợp đồng ${next.code} từ ${formatDateVN(next.startDate)}, chỉ gia hạn được đến trước ngày đó.`,
-      );
-    }
-
-    // Kèm cả ngày kết thúc cũ: hai người cùng gia hạn một lúc thì người sau nhận 409
-    // thay vì ghi đè ngày kết thúc của người trước.
-    await transition(tx, { id, status: 'ACTIVE', endDate: contract.endDate }, { endDate }, 'gia hạn');
-
+    const where = { id, status: 'ACTIVE' as const, extensionRequestedTo: contract.extensionRequestedTo };
+    await transition(tx, where, { ...NO_EXTENSION_REQUEST, extensionRejectReason: reason }, 'từ chối gia hạn');
   });
-
   return getById(user, id);
+}
+async function checkNewEndDate(tx: Prisma.TransactionClient, user: AuthUser, id: string, endDate: Date, action: string) {
+  const contract = await tx.contract.findFirst({
+    where: inScope(user, id),
+    select: {
+      status: true,
+      endDate: true,
+      registration: { select: { studentId: true } },
+    },
+  });
+  assertStatus(user, contract, 'ACTIVE', action);
+
+  const now = new Date();
+  if (endDate <= contract.endDate) {
+    throw ApiError.validation({
+      endDate: [`Ngày kết thúc mới phải sau ngày kết thúc hiện tại (${formatDateVN(contract.endDate)})`],
+    });
+  }
+  if (endDate < now) throw ApiError.validation({ endDate: ['Ngày kết thúc mới không được trước hôm nay'] });
+
+  // Phần ở thêm không được đè lên hợp đồng kỳ sau của chính SV (đã duyệt hoặc đang ở).
+  const { studentId } = contract.registration;
+  const next = await tx.contract.findFirst({
+    where: {
+      id: { not: id },
+      status: { in: [...HOLDING_CONTRACT_STATUSES] },
+      registration: { studentId },
+      startDate: { lte: endDate },
+      endDate: { gt: contract.endDate },
+    },
+    select: { code: true, startDate: true },
+  });
+  if (next) {
+    throw ApiError.conflict(
+      'CONTRACT_OVERLAP',
+      `Sinh viên đã có hợp đồng ${next.code} từ ${formatDateVN(next.startDate)}, chỉ gia hạn được đến trước ngày đó.`,
+    );
+  }
+  return contract;
 }
 
 /**
@@ -393,7 +419,7 @@ export async function terminate(user: AuthUser, id: string, { reason }: Contract
     });
     assertStatus(user, contract, 'ACTIVE', 'chấm dứt');
     const ended = { terminatedAt: new Date(), terminationReason: reason, endedById: user.id };
-    await transition(tx, { id, status: 'ACTIVE' }, { status: 'TERMINATED', ...ended }, 'chấm dứt');
+    await transition(tx, { id, status: 'ACTIVE' }, { status: 'TERMINATED', ...ended, ...NO_EXTENSION_REQUEST }, 'chấm dứt');
 
     await tx.bed.update({ where: { id: contract.bedId }, data: { status: 'AVAILABLE' } });
   });

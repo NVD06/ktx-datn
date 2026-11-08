@@ -15,6 +15,10 @@ import { ApiError } from '../utils/api-error.js';
  */
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const user = await loadUser(req);
+  const expected = req.headers?.['x-user-id'];
+  if (expected && expected !== user.id) {
+    throw new ApiError(401, 'SESSION_CHANGED', 'Trình duyệt đã đăng nhập bằng tài khoản khác, vui lòng tải lại trang');
+  }
   // Mật khẩu ban đầu do Admin cấp (mã SV) ai biết mã SV cũng đoán được — chưa đổi thì
   // chưa dùng được gì. Giao diện tự chuyển sang trang đổi mật khẩu; đây là lớp chặn thật.
   if (user.mustChangePassword) {

@@ -262,6 +262,10 @@ model Contract {
   endedById         String?
   endedBy           User?     @relation("ContractEndedBy", fields: [endedById], references: [id])
 
+  extensionRequestedTo  DateTime?
+  extensionRequestedAt  DateTime?
+  extensionRejectReason String?
+
   invoices Invoice[]
 
   createdAt DateTime @default(now())

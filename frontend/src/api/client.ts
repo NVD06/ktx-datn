@@ -14,6 +14,11 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+export function setSessionUser(id: string | null) {
+  if (id) api.defaults.headers.common['X-User-Id'] = id
+  else delete api.defaults.headers.common['X-User-Id']
+}
+
 /** Phần `error` trong body lỗi `{ success: false, error }` của backend, nếu có. */
 function errorBody(error: unknown): ErrorResponse['error'] | undefined {
   if (!(error instanceof AxiosError)) return undefined

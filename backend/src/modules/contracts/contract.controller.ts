@@ -49,6 +49,13 @@ export async function extend(req: Request, res: Response) {
   res.json(ok(await contractService.extend(currentUser(req), param(req), req.body as ExtendContractInput)));
 }
 
+export async function requestExtension(req: Request, res: Response) {
+  res.json(ok(await contractService.requestExtension(currentUser(req), param(req), req.body as ExtendContractInput)));
+}
+export async function rejectExtension(req: Request, res: Response) {
+  res.json(ok(await contractService.rejectExtension(currentUser(req), param(req), req.body as ContractReasonInput)));
+}
+
 /** POST /api/v1/contracts/:id/terminate */
 export async function terminate(req: Request, res: Response) {
   res.json(ok(await contractService.terminate(currentUser(req), param(req), req.body as ContractReasonInput)));

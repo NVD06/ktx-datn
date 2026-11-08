@@ -45,7 +45,7 @@ export function BuildingDetailPage() {
 
   return (
     <>
-      <BackLink to="/admin/buildings">Danh sách tòa nhà</BackLink>
+      {isAdmin && <BackLink to="/admin/buildings">Danh sách tòa nhà</BackLink>}
       <PageHeader
         title={`Tòa ${building.name}`}
         description={orDash(building.description)}

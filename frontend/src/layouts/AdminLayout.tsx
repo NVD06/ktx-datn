@@ -2,6 +2,7 @@ import { Suspense, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import {
   Building2,
+  DoorOpen,
   CalendarRange,
   ChartColumn,
   ClipboardList,
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useBuilding } from '@/features/buildings/hooks/useBuildings'
 import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
 import { SidebarContent } from '@/layouts/SidebarContent'
 import { cn } from '@/lib/utils'
@@ -38,8 +40,8 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/admin/buildings', label: 'Tòa nhà', icon: Building2 },
-  { to: '/admin/room-types', label: 'Loại phòng', icon: Layers },
-  { to: '/admin/registration-periods', label: 'Đợt đăng ký', icon: CalendarRange },
+  { to: '/admin/room-types', label: 'Loại phòng', icon: Layers, roles: ['ADMIN'] },
+  { to: '/admin/registration-periods', label: 'Đợt đăng ký', icon: CalendarRange, roles: ['ADMIN'] },
   { to: '/admin/registrations', label: 'Đơn đăng ký', icon: ClipboardList },
   { to: '/admin/contracts', label: 'Hợp đồng', icon: FileSignature },
   { to: '/admin/invoices', label: 'Hóa đơn', icon: Receipt },
@@ -55,11 +57,23 @@ export function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, toggleCollapsed] = useSidebarCollapsed()
   const [changingPassword, setChangingPassword] = useState(false)
+  const building = useBuilding(user?.buildingId ?? '')
   const sidebar = {
     homeTo: '/admin/dashboard',
     title: 'Quản lý KTX',
-    subtitle: user?.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Quản lý tòa nhà',
-    items: NAV.filter((i) => !i.roles || (user && i.roles.includes(user.role))),
+    subtitle:
+      user?.role === 'ADMIN'
+        ? 'Quản trị hệ thống'
+        : building.data
+          ? `Quản lý tòa ${building.data.name}`
+          : user?.buildingId
+            ? 'Quản lý tòa nhà'
+            : 'Chưa được gán tòa',
+    items: NAV.filter((i) => !i.roles || (user && i.roles.includes(user.role))).map((i) =>
+      i.to === '/admin/buildings' && user?.role === 'MANAGER' && user.buildingId
+        ? { ...i, to: `/admin/buildings/${user.buildingId}`, label: 'Danh sách phòng', icon: DoorOpen }
+        : i,
+    ),
     onChangePassword: () => setChangingPassword(true),
   }
 

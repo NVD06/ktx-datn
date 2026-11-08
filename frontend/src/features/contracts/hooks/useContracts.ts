@@ -70,3 +70,10 @@ export function useExtendContract() {
     onSettled: invalidate,
   })
 }
+export function useRequestExtension() {
+  const invalidate = useInvalidate(contractKeys.all)
+  return useMutation({
+    mutationFn: ({ id, endDate }: { id: string; endDate: string }) => contractsApi.requestExtension(id, endDate),
+    onSettled: invalidate,
+  })
+}

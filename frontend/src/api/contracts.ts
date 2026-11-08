@@ -35,9 +35,12 @@ export function endContract(id: string, action: ContractEndAction, reason: strin
   return apiPost<Contract>(`/contracts/${id}/${action}`, { reason })
 }
 
-export type ContractEndAction = 'decline' | 'cancel' | 'terminate'
+export type ContractEndAction = 'decline' | 'cancel' | 'terminate' | 'extension-request/reject'
 
 /** Manager gia hạn — chỉ lùi ngày kết thúc, tháng ở thêm lập hóa đơn hằng tháng như thường. `endDate` là ISO. */
 export function extendContract(id: string, endDate: string) {
   return apiPost<Contract>(`/contracts/${id}/extend`, { endDate })
+}
+export function requestExtension(id: string, endDate: string) {
+  return apiPost<Contract>(`/contracts/${id}/extension-request`, { endDate })
 }
