@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { env } from '../src/config/env.js';
 import { prisma } from '../src/config/prisma.js';
+import type { HygieneViolation } from '../src/generated/prisma/enums.js';
 import { hashPassword } from '../src/modules/auth/auth.service.js';
 import { bedCodes } from '../src/modules/beds/bed-code.js';
 import * as contractService from '../src/modules/contracts/contract.service.js';
@@ -418,18 +419,18 @@ async function main() {
   console.log('Chấm điểm vệ sinh...');
 
   /** Mỗi tuần một đợt kiểm tra, đợt cuối là hôm nay — qua service để có người chấm như thật. */
-  async function hygiene(manager: typeof m1, building: { id: string }, room: string, weeks: [number, number, string?][]) {
+  async function hygiene(manager: typeof m1, building: { id: string }, room: string, weeks: HygieneViolation[][]) {
     const id = await roomId(building, room);
-    for (const [i, [score, deduction, note]] of weeks.entries()) {
+    for (const [i, violations] of weeks.entries()) {
       await hygieneService.save(manager, {
         buildingId: building.id,
         checkDate: new Date(Date.now() - (weeks.length - 1 - i) * 7 * 24 * 60 * 60 * 1000),
-        records: [{ roomId: id, baseScore: score + deduction, deduction, note: note ?? null }],
+        records: [{ roomId: id, violations }],
       });
     }
   }
-  await hygiene(m1, b1, '103', [[85, 0], [55, 20, 'Để rác qua đêm, giày dép ngoài hành lang'], [72, 5, 'Còn để giày dép ngoài hành lang'], [90, 0]]);
-  await hygiene(m2, b2, '103', [[88, 0], [92, 0], [86, 0], [58, 15, 'Không đổ rác, nhà vệ sinh bẩn']]); // lần gần nhất dưới 60
+  await hygiene(m1, b1, '103', [[], ['TRASH', 'CORRIDOR'], ['CORRIDOR'], []]);
+  await hygiene(m2, b2, '103', [[], ['MESSY'], ['COOKING', 'TRASH'], ['COOKING', 'DIRTY_WC', 'TRASH', 'MESSY']]);
 
   const [contractCount, roomFeeCount, utilityCount, revenue] = await Promise.all([
     prisma.contract.count(),

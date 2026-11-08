@@ -20,6 +20,17 @@ export const PAYMENT_EXPIRE_MINUTES = 15;
  */
 export const HYGIENE_WARNING_SCORE = 60;
 
+export const HYGIENE_FULL_SCORE = 100;
+
+export const HYGIENE_VIOLATIONS = {
+  TRASH: { label: 'Rác', points: 5 },
+  MESSY: { label: 'Bừa bộn', points: 3 },
+  DIRTY_WC: { label: 'WC bẩn', points: 5 },
+  CORRIDOR: { label: 'Hành lang', points: 3 },
+  COOKING: { label: 'Nấu ăn', points: 10 },
+  ABSENT: { label: 'Vắng mặt', points: 2 },
+} as const;
+
 /** Dashboard (US-06.1) đếm hợp đồng đang ở sẽ hết hạn trong từng này ngày tới. */
 export const CONTRACT_EXPIRING_DAYS = 30;
 

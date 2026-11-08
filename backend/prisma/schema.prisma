@@ -78,6 +78,15 @@ enum PaymentStatus {
   DUPLICATE
 }
 
+enum HygieneViolation {
+  TRASH
+  MESSY
+  DIRTY_WC
+  CORRIDOR
+  COOKING
+  ABSENT
+}
+
 enum RequestStatus {
   PENDING
   RECEIVED
@@ -111,6 +120,8 @@ model User {
   hygieneChecks   HygieneRecord[]
   endedContracts  Contract[]           @relation("ContractEndedBy")
   createdInvoices Invoice[]            @relation("InvoiceCreatedBy")
+  announcements   Announcement[]
+  readAnnouncements AnnouncementRead[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -138,8 +149,9 @@ model Building {
   description String?
   isActive    Boolean @default(true)
 
-  rooms   Room[]
-  manager User? // quan hệ 1–1, phía giữ khóa là User.buildingId
+  rooms         Room[]
+  manager       User? // quan hệ 1–1, phía giữ khóa là User.buildingId
+  announcements Announcement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -375,9 +387,10 @@ model HygieneRecord {
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id])
   checkDate DateTime // 00:00 giờ Việt Nam của ngày kiểm tra
-  score     Int // 0-100, điểm cuối cùng — dưới 60 là cảnh báo
-  deduction Int      @default(0) // điểm bị trừ vì vi phạm nội quy, lý do ghi ở `note`
-  note      String?
+  score      Int // 0-100, điểm còn lại sau đợt — trừ dồn trong tháng, đầu tháng về 100; dưới 60 là cảnh báo
+  deduction  Int                @default(0) // điểm bị trừ trong đợt này = tổng điểm các lỗi
+  note       String? // tên các lỗi, ghép từ `violations`
+  violations HygieneViolation[] @default([])
 
   checkedById String // người chấm (lần gần nhất, nếu chấm lại)
   checkedBy   User   @relation(fields: [checkedById], references: [id])
@@ -387,4 +400,32 @@ model HygieneRecord {
 
   // Mỗi phòng một điểm mỗi ngày — chấm lại thì ghi đè.
   @@unique([roomId, checkDate])
+}
+
+model Announcement {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  buildingId String? // null = toàn KTX
+  building   Building? @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  pinned     Boolean   @default(false)
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id])
+
+  reads AnnouncementRead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buildingId, createdAt])
+}
+
+model AnnouncementRead {
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@id([announcementId, userId])
 }

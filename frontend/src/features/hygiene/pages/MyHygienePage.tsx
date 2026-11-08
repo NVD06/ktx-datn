@@ -18,12 +18,12 @@ export function MyHygienePage() {
     <>
       <PageHeader
         title="Vệ sinh"
-        description={`Điểm vệ sinh phòng bạn qua các đợt kiểm tra. Dưới ${HYGIENE_WARNING_SCORE} điểm là cảnh báo.`}
+        description={`Điểm vệ sinh phòng bạn qua các đợt kiểm tra: đầu tháng 100 điểm, mỗi lỗi bị trừ dồn. Dưới ${HYGIENE_WARNING_SCORE} điểm là cảnh báo.`}
       />
 
       {latest && latest.score < HYGIENE_WARNING_SCORE && (
         <p className="tone-danger mb-4 rounded-md border p-3 text-sm">
-          Lần kiểm tra gần nhất ({formatDate(latest.checkDate)}) phòng {latest.room.code} chỉ đạt {latest.score} điểm,
+          Lần kiểm tra gần nhất ({formatDate(latest.checkDate)}) phòng {latest.room.code} chỉ còn {latest.score} điểm,
           dưới mức {HYGIENE_WARNING_SCORE}.{latest.note && ` Lý do: ${latest.note}.`} Hãy cùng các bạn cùng phòng dọn
           dẹp trước lần kiểm tra sau.
         </p>

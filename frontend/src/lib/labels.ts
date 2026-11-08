@@ -7,6 +7,8 @@
  * `tone` quyết định màu badge, xem components/shared/StatusBadge.tsx.
  */
 
+import type { HygieneViolation } from '@/types/hygiene'
+
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info'
 
 /**
@@ -168,6 +170,15 @@ export const REQUEST_STATUS = def({
  * Giữ khớp với HYGIENE_WARNING_SCORE ở backend/src/config/constants.ts.
  */
 export const HYGIENE_WARNING_SCORE = 60
+
+export const HYGIENE_VIOLATIONS: Record<HygieneViolation, { label: string; points: number }> = {
+  TRASH: { label: 'Rác', points: 5 },
+  MESSY: { label: 'Bừa bộn', points: 3 },
+  DIRTY_WC: { label: 'WC bẩn', points: 5 },
+  CORRIDOR: { label: 'Hành lang', points: 3 },
+  COOKING: { label: 'Nấu ăn', points: 10 },
+  ABSENT: { label: 'Vắng mặt', points: 2 },
+}
 
 /** Badge điểm vệ sinh: dưới ngưỡng là cảnh báo (đỏ), còn lại là đạt (xanh). */
 export function hygieneScore(score: number): LabelDef {

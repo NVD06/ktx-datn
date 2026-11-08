@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import '../config/openapi.js';
 import { ROOM_STATUSES } from '../modules/rooms/room-status.js';
+import { HygieneViolation } from '../generated/prisma/enums.js';
 
 /**
  * Zod schema mô tả dữ liệu TRẢ VỀ, chỉ dùng cho tài liệu API.
@@ -33,6 +34,25 @@ export const authUserSchema = z
   .openapi('AuthUser');
 
 export const deletedSchema = z.object({ id: z.uuid() }).openapi('Deleted');
+
+export const announcementSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string(),
+    content: z.string(),
+    buildingId: z.uuid().nullable().openapi({ description: 'null: toàn KTX' }),
+    building: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+    pinned: z.boolean(),
+    authorId: z.uuid(),
+    author: z.object({ id: z.uuid(), fullName: z.string() }),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('Announcement');
+
+export const myAnnouncementSchema = announcementSchema
+  .extend({ readAt: z.iso.datetime().nullable().openapi({ description: 'null: chưa đọc' }) })
+  .openapi('MyAnnouncement');
 
 export const buildingSchema = z
   .object({
@@ -443,10 +463,25 @@ export const maintenanceRequestSchema = z
   })
   .openapi('MaintenanceRequest');
 
+export const maintenanceStatsSchema = z
+  .object({
+    month: z.string().openapi({ example: '2026-11' }),
+    pending: z.int(),
+    received: z.int(),
+    done: z.int().openapi({ description: 'Đã sửa xong, chờ sinh viên xác nhận' }),
+    createdThisMonth: z.int(),
+    finishedThisMonth: z.int().openapi({ description: 'Sửa xong trong tháng này' }),
+    groupBy: z.enum(['BUILDING', 'FLOOR']),
+    groups: z.array(z.object({ label: z.string().openapi({ example: 'Tòa B1' }), count: z.int() })),
+    avgHours: z.number().nullable().openapi({ example: 43.2, description: 'Từ lúc gửi tới lúc sửa xong' }),
+  })
+  .openapi('MaintenanceStats');
+
 const hygieneScoreFields = {
-  score: z.int().openapi({ example: 85, description: 'Điểm cuối cùng 0–100, dưới 60 là cảnh báo' }),
-  deduction: z.int().openapi({ example: 5, description: 'Điểm bị trừ vì vi phạm nội quy' }),
-  note: z.string().nullable().openapi({ description: 'Lý do trừ điểm, nhận xét' }),
+  score: z.int().openapi({ example: 85, description: 'Điểm còn lại sau đợt, trừ dồn trong tháng — dưới 60 là cảnh báo' }),
+  deduction: z.int().openapi({ example: 5, description: 'Điểm bị trừ trong đợt này = tổng điểm các lỗi' }),
+  note: z.string().nullable().openapi({ description: 'Tên các lỗi' }),
+  violations: z.array(z.enum(HygieneViolation)).openapi({ example: ['TRASH'] }),
 };
 
 export const hygieneRecordSchema = z
@@ -473,6 +508,7 @@ export const hygieneSheetSchema = z
         code: z.string().openapi({ example: '101' }),
         floor: z.int(),
         residents: z.int().openapi({ description: 'Số SV đang ở ngày kiểm tra' }),
+        scoreBefore: z.int().openapi({ example: 92, description: 'Điểm còn lại của tháng trước đợt này' }),
         record: z
           .object({ id: z.uuid(), ...hygieneScoreFields })
           .nullable()
@@ -512,6 +548,48 @@ export const overviewReportSchema = z
     revenue: z
       .array(revenueMonthSchema)
       .openapi({ description: '6 tháng gần nhất, cũ trước mới sau — giao dịch VNPay thành công theo tháng thanh toán' }),
+    todo: z
+      .object({
+        registrations: z.int().openapi({ description: 'Đơn đăng ký chờ duyệt' }),
+        unsignedContracts: z.int().openapi({ description: 'Hợp đồng chờ SV ký' }),
+        extensionRequests: z.int().openapi({ description: 'Yêu cầu gia hạn chờ duyệt' }),
+        unbilledRooms: z.int().openapi({ description: 'Phòng có SV ở chưa chốt điện nước tháng này' }),
+        newRequests: z.int().openapi({ description: 'Yêu cầu sửa chữa chờ tiếp nhận' }),
+        lowHygieneRooms: z.int().openapi({ description: 'Phòng có điểm vệ sinh gần nhất trong tháng dưới 60' }),
+      })
+      .openapi({ description: 'Việc chờ xử lý trong phạm vi' }),
+    buildings: z
+      .array(
+        z.object({
+          id: z.uuid(),
+          name: z.string(),
+          gender: z.enum(['MALE', 'FEMALE']),
+          floors: z.int(),
+          isActive: z.boolean(),
+          manager: z.object({ id: z.uuid(), fullName: z.string() }).nullable(),
+          rooms: z.int().openapi({ description: 'Phòng đang hoạt động' }),
+          beds: z.object({ total: z.int(), occupied: z.int() }),
+          overdue: moneyTotal,
+          openRequests: z.int(),
+          hygieneAverage: z.int().nullable().openapi({ description: 'Trung bình điểm gần nhất trong tháng của các phòng' }),
+          lowHygieneRooms: z.int(),
+        }),
+      )
+      .openapi({ description: 'Số liệu từng tòa trong phạm vi — Manager chỉ có tòa mình' }),
+    openPeriod: z
+      .object({ id: z.uuid(), name: z.string(), pending: z.int().openapi({ description: 'Đơn chờ duyệt trong đợt' }) })
+      .nullable(),
+    recentUsers: z
+      .array(
+        z.object({
+          id: z.uuid(),
+          fullName: z.string(),
+          email: z.string(),
+          role: z.enum(['ADMIN', 'MANAGER', 'STUDENT']),
+          createdAt: z.iso.datetime(),
+        }),
+      )
+      .openapi({ description: '5 tài khoản tạo gần nhất — chỉ ADMIN, MANAGER nhận mảng rỗng' }),
   })
   .openapi('OverviewReport');
 

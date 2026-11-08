@@ -5,12 +5,15 @@
 
 import type { RoomRef } from './facility'
 
+export type HygieneViolation = 'TRASH' | 'MESSY' | 'DIRTY_WC' | 'CORRIDOR' | 'COOKING' | 'ABSENT'
+
 interface HygieneScore {
-  /** Điểm cuối cùng 0–100 — dưới HYGIENE_WARNING_SCORE là cảnh báo. */
+  /** Điểm còn lại sau đợt, trừ dồn trong tháng — dưới HYGIENE_WARNING_SCORE là cảnh báo. */
   score: number
-  /** Điểm bị trừ vì vi phạm nội quy, lý do ở `note`. */
+  /** Điểm bị trừ trong đợt này = tổng điểm các lỗi. */
   deduction: number
   note: string | null
+  violations: HygieneViolation[]
 }
 
 export interface HygieneRecord extends HygieneScore {
@@ -35,6 +38,7 @@ export interface HygieneSheet {
     floor: number
     /** Số SV ở ngày kiểm tra. */
     residents: number
+    scoreBefore: number
     /** Điểm đã chấm ngày này — null: chưa chấm. */
     record: (HygieneScore & { id: string }) | null
   }[]
@@ -44,7 +48,7 @@ export interface SaveHygieneInput {
   buildingId: string
   /** "2026-10-07" — ngày ở Việt Nam, không sau hôm nay. */
   checkDate: string
-  records: { roomId: string; baseScore: number; deduction: number; note: string | null }[]
+  records: { roomId: string; violations: HygieneViolation[] }[]
 }
 
 export interface SaveHygieneResult {

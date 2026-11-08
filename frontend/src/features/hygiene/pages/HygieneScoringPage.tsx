@@ -5,7 +5,6 @@ import { BackLink } from '@/components/shared/BackLink'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { EmptyState, ErrorState, LoadingState } from '@/components/shared/QueryState'
-import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,36 +13,47 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useBuildings } from '@/features/buildings/hooks/useBuildings'
 import { toDateInput } from '@/lib/date-input'
 import { formatDate } from '@/lib/format'
-import { HYGIENE_WARNING_SCORE, hygieneScore } from '@/lib/labels'
-import type { HygieneSheet } from '@/types/hygiene'
+import { HYGIENE_VIOLATIONS, HYGIENE_WARNING_SCORE } from '@/lib/labels'
+import { cn } from '@/lib/utils'
+import type { HygieneSheet, HygieneViolation } from '@/types/hygiene'
 import { useHygieneSheet, useSaveHygiene } from '../hooks/useHygiene'
 
 const BUILDING_PARAMS = { limit: 100, sortBy: 'name', order: 'asc' } as const
-const FIELDS = ['baseScore', 'deduction', 'note'] as const
+const VIOLATIONS = Object.entries(HYGIENE_VIOLATIONS) as [HygieneViolation, { label: string; points: number }][]
+const ALL_FLOORS = 'all'
 
-type Field = (typeof FIELDS)[number]
-type SheetRoom = HygieneSheet['rooms'][number]
+const points = (list: HygieneViolation[]) => list.reduce((sum, v) => sum + HYGIENE_VIOLATIONS[v].points, 0)
+const sameSet = (a: HygieneViolation[], b: HygieneViolation[]) => a.length === b.length && a.every((v) => b.includes(v))
+const weekday = (date: string) => new Intl.DateTimeFormat('vi-VN', { weekday: 'long' }).format(new Date(`${date}T00:00:00`))
 
-/** Chấm điểm vệ sinh theo đợt (US-05.4): chọn tòa + ngày, nhập điểm hàng loạt từng phòng. */
+/** Chấm điểm vệ sinh theo đợt (US-05.4): chọn tòa + ngày, bấm lỗi từng phòng — điểm trừ dồn trong tháng. */
 export function HygieneScoringPage() {
   const buildings = useBuildings(BUILDING_PARAMS)
   const [buildingId, setBuildingId] = useState('')
   const [today] = useState(() => toDateInput(new Date().toISOString()))
   const [checkDate, setCheckDate] = useState(today)
+  const [floor, setFloor] = useState(ALL_FLOORS)
   const [search, setSearch] = useState('')
   // Chưa chọn thì lấy tòa đầu tiên — Manager chỉ có đúng một tòa.
   const selectedId = buildingId || buildings.data?.data[0]?.id || null
   const sheet = useHygieneSheet(selectedId, checkDate)
+  const floors = [...new Set(sheet.data?.rooms.map((r) => r.floor))]
 
   return (
     <>
       <BackLink to="/admin/hygiene">Bảng điểm vệ sinh</BackLink>
       <PageHeader
         title="Chấm điểm vệ sinh"
-        description="Chọn tòa và ngày kiểm tra rồi nhập điểm từng phòng. Phòng đã chấm ngày đó thì lưu lại sẽ ghi đè."
+        description={`Đợt kiểm tra ${weekday(checkDate)} ${formatDate(checkDate)} · bấm vào lỗi để trừ điểm, bấm lại để bỏ. Điểm trừ dồn trong tháng, đầu tháng mỗi phòng 100 điểm.`}
       />
       <div className="mb-4 flex flex-wrap gap-3">
-        <Select value={selectedId ?? ''} onValueChange={setBuildingId}>
+        <Select
+          value={selectedId ?? ''}
+          onValueChange={(id) => {
+            setBuildingId(id)
+            setFloor(ALL_FLOORS)
+          }}
+        >
           <SelectTrigger className="bg-card min-w-40" aria-label="Tòa nhà">
             <SelectValue placeholder="Chọn tòa nhà" />
           </SelectTrigger>
@@ -63,6 +73,19 @@ export function HygieneScoringPage() {
           className="bg-card w-44"
           aria-label="Ngày kiểm tra"
         />
+        <Select value={floor} onValueChange={setFloor}>
+          <SelectTrigger className="bg-card min-w-32" aria-label="Tầng">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value={ALL_FLOORS}>Tất cả tầng</SelectItem>
+            {floors.map((f) => (
+              <SelectItem key={f} value={String(f)}>
+                Tầng {f}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <SearchInput value={search} onChange={setSearch} placeholder="Tìm mã phòng" />
       </div>
 
@@ -70,60 +93,58 @@ export function HygieneScoringPage() {
       {selectedId && sheet.isPending && <LoadingState />}
       {/* key: đổi tòa/ngày thì bỏ hết điểm đang nhập dở. */}
       {sheet.data && (
-        <ScoreTable key={`${selectedId}:${checkDate}`} sheet={sheet.data} checkDate={checkDate} search={search} />
+        <ScoreTable
+          key={`${selectedId}:${checkDate}`}
+          sheet={sheet.data}
+          checkDate={checkDate}
+          floor={floor}
+          search={search}
+        />
       )}
     </>
   )
 }
 
-/** Giá trị đã lưu của một ô — điền sẵn để chấm lại. */
-function saved(room: SheetRoom, field: Field): string {
-  if (!room.record) return ''
-  const value = field === 'baseScore' ? room.record.score + room.record.deduction : room.record[field]
-  return value === null ? '' : String(value)
-}
-
-const isScore = (n: number) => Number.isInteger(n) && n >= 0 && n <= 100
-function scoreError(baseText: string, baseScore: number, deductionText: string, deduction: number, note: string) {
-  if (baseText === '') return deductionText !== '' || note !== '' ? 'Chưa nhập điểm vệ sinh' : null
-  if (!isScore(baseScore) || !isScore(deduction)) return 'Điểm phải là số nguyên 0–100'
-  return deduction > baseScore ? 'Điểm trừ lớn hơn điểm vệ sinh' : null
-}
-
 function ScoreTable({
   sheet: { building, rooms },
   checkDate,
+  floor,
   search,
 }: {
   sheet: HygieneSheet
   checkDate: string
+  floor: string
   search: string
 }) {
   const save = useSaveHygiene()
-  // Chỉ giữ ô đã sửa; ô chưa sửa lấy điểm đã lưu (nếu có).
-  const [edits, setEdits] = useState<Record<string, Partial<Record<Field, string>>>>({})
+  const [edits, setEdits] = useState<Record<string, HygieneViolation[]>>({})
 
   const rows = rooms
     .filter((room) => room.residents > 0 || room.record)
     .map((room) => {
-      const value = (f: Field) => edits[room.id]?.[f] ?? saved(room, f)
-      const [baseText, deductionText, note] = [value('baseScore'), value('deduction'), value('note').trim()]
-      const baseScore = Number(baseText)
-      const deduction = deductionText === '' ? 0 : Number(deductionText)
-      const error = scoreError(baseText, baseScore, deductionText, deduction, note)
-      const final = baseText !== '' && !error ? baseScore - deduction : null
-      const record = final !== null ? { roomId: room.id, baseScore, deduction, note: note || null } : null
-      // Chỉ lưu phòng có sửa — lưu lại phòng không đổi gì sẽ ghi đè người chấm.
-      const changed = FIELDS.some((f) => value(f) !== saved(room, f))
-      return { room, value, error, final, record: changed ? record : null }
+      const saved = room.record?.violations ?? []
+      const picked = edits[room.id] ?? saved
+      const onFloor = floor === ALL_FLOORS || String(room.floor) === floor
+      const changed = !sameSet(picked, saved)
+      return {
+        room,
+        picked,
+        onFloor,
+        after: Math.max(0, room.scoreBefore - points(picked)),
+        toSave: room.record ? changed : onFloor || changed,
+      }
     })
-  const ready = rows.filter((r) => r.record)
-  const emptyRooms = rooms.length - rows.length
-  const shown = rows.filter((r) => r.room.code.toLowerCase().includes(search.toLowerCase()))
+  const ready = rows.filter((r) => r.toSave)
+  const shown = rows.filter((r) => r.onFloor && r.room.code.toLowerCase().includes(search.toLowerCase()))
+  const deducted = ready.filter((r) => r.picked.length > 0)
+
+  function toggle(roomId: string, picked: HygieneViolation[], v: HygieneViolation) {
+    setEdits((d) => ({ ...d, [roomId]: picked.includes(v) ? picked.filter((x) => x !== v) : [...picked, v] }))
+  }
 
   function submit() {
     save.mutate(
-      { buildingId: building.id, checkDate, records: ready.map((r) => r.record!) },
+      { buildingId: building.id, checkDate, records: ready.map((r) => ({ roomId: r.room.id, violations: r.picked })) },
       {
         onSuccess: ({ roomCount, warningCount }) => {
           setEdits({})
@@ -135,9 +156,6 @@ function ScoreTable({
     )
   }
 
-  const edit = (roomId: string, field: Field, value: string) =>
-    setEdits((d) => ({ ...d, [roomId]: { ...d[roomId], [field]: value } }))
-
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -148,97 +166,76 @@ function ScoreTable({
   }
 
   return (
-    <>
-      <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
+    <Card>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Phòng</TableHead>
+              <TableHead>Điểm hiện tại</TableHead>
+              <TableHead>Lỗi phát hiện trong đợt này</TableHead>
+              <TableHead className="text-right">Sau đợt</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shown.length === 0 && (
               <TableRow>
-                <TableHead>Phòng</TableHead>
-                <TableHead className="text-right">Số SV</TableHead>
-                <TableHead>Điểm vệ sinh (0–100)</TableHead>
-                <TableHead>Điểm trừ</TableHead>
-                <TableHead>Điểm cuối</TableHead>
-                <TableHead>Ghi chú vi phạm</TableHead>
-                <TableHead className="text-right">Đã lưu</TableHead>
+                <TableCell colSpan={4} className="text-muted-foreground py-6 text-center">
+                  Không có phòng nào khớp bộ lọc.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {shown.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground py-6 text-center">
-                    Không có phòng nào khớp "{search}".
-                  </TableCell>
-                </TableRow>
-              )}
-              {shown.map(({ room, value, error, final }) => (
-                <TableRow key={room.id}>
-                  <TableCell className="font-medium">
-                    {room.code} <span className="text-muted-foreground text-xs">· tầng {room.floor}</span>
-                  </TableCell>
-                  <TableCell className="text-right">{room.residents}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={value('baseScore')}
-                      onChange={(e) => edit(room.id, 'baseScore', e.target.value)}
-                      aria-label={`Điểm vệ sinh phòng ${room.code}`}
-                      aria-invalid={!!error}
-                      className="h-8 w-20"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      placeholder="0"
-                      value={value('deduction')}
-                      onChange={(e) => edit(room.id, 'deduction', e.target.value)}
-                      aria-label={`Điểm trừ phòng ${room.code}`}
-                      aria-invalid={!!error}
-                      className="h-8 w-20"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {error ? (
-                      <span className="text-destructive text-xs">{error}</span>
-                    ) : (
-                      <span className="font-medium tabular-nums">{final ?? '—'}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={value('note')}
-                      maxLength={500}
-                      placeholder="Ví dụ: để rác qua đêm"
-                      onChange={(e) => edit(room.id, 'note', e.target.value)}
-                      aria-label={`Ghi chú phòng ${room.code}`}
-                      className="h-8 min-w-56"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {room.record ? <StatusBadge {...hygieneScore(room.record.score)} /> : '—'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            )}
+            {shown.map(({ room, picked, after }) => (
+              <TableRow key={room.id}>
+                <TableCell>
+                  <p className="font-semibold">{room.code}</p>
+                  {room.record && <p className="text-muted-foreground text-xs">đã chấm</p>}
+                </TableCell>
+                <TableCell className="tabular-nums">{room.scoreBefore}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1.5">
+                    {VIOLATIONS.map(([v, { label, points }]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        aria-pressed={picked.includes(v)}
+                        onClick={() => toggle(room.id, picked, v)}
+                        className={cn(
+                          'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                          picked.includes(v) ? 'tone-danger font-medium' : 'bg-card hover:bg-muted',
+                        )}
+                      >
+                        {label} −{points}
+                      </button>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell
+                  className={cn(
+                    'text-right font-semibold tabular-nums',
+                    after < HYGIENE_WARNING_SCORE ? 'text-(--tone-danger-fg)' : 'text-(--tone-success-fg)',
+                  )}
+                >
+                  {after}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-sm">
-          Điểm cuối = điểm vệ sinh − điểm trừ, dưới {HYGIENE_WARNING_SCORE} điểm là cảnh báo. Phòng bỏ trống ô điểm
-          vệ sinh sẽ không được lưu.
-          {emptyRooms > 0 && ` ${emptyRooms} phòng không có sinh viên ở không cần chấm.`}
-        </p>
-        <Button onClick={submit} disabled={save.isPending || rows.some((r) => r.error) || ready.length === 0}>
-          {save.isPending ? 'Đang lưu…' : `Lưu điểm ${ready.length} phòng`}
-        </Button>
-      </div>
-    </>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+          <p className="text-muted-foreground text-sm">
+            Đợt này:{' '}
+            <strong className="text-foreground">
+              {deducted.length} phòng bị trừ · tổng −{deducted.reduce((sum, r) => sum + points(r.picked), 0)} điểm
+            </strong>
+            . Dưới {HYGIENE_WARNING_SCORE} điểm là cảnh báo.
+          </p>
+          <Button onClick={submit} disabled={save.isPending || ready.length === 0}>
+            {save.isPending ? 'Đang lưu…' : `Lưu đợt chấm · ${ready.length} phòng`}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
