@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { contractSchema, currentStaySchema } from '../../docs/schemas.js';
+import { contractListItemSchema, contractSchema, currentStaySchema } from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './contract.controller.js';
@@ -20,7 +20,7 @@ contractRoutes.get(
       'DRAFT/ACTIVE đã qua ngày kết thúc). `search` tìm theo mã hợp đồng, tên, email, mã SV. ' +
       'Sắp xếp: createdAt, code, endDate. Mặc định createdAt giảm dần.',
     query: contractListQuerySchema,
-    paged: contractSchema,
+    paged: contractListItemSchema,
     errors: [400, 401, 403],
   },
   staff,

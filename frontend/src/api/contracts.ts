@@ -1,10 +1,10 @@
 import { apiGet, apiPost, getPaged } from './client'
 import type { ListParams } from '@/types/api'
-import type { Contract, CurrentStay } from '@/types/contract'
+import type { Contract, ContractListItem, CurrentStay } from '@/types/contract'
 
 /** ADMIN/MANAGER — backend tự giới hạn theo tòa; `status` là trạng thái thực tế. */
 export function listContracts(params: ListParams) {
-  return getPaged<Contract>('/contracts', params)
+  return getPaged<ContractListItem>('/contracts', params)
 }
 
 /** Hợp đồng của sinh viên đang đăng nhập, mới nhất trước. */

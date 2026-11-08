@@ -26,7 +26,7 @@ const points = (list: HygieneViolation[]) => list.reduce((sum, v) => sum + HYGIE
 const sameSet = (a: HygieneViolation[], b: HygieneViolation[]) => a.length === b.length && a.every((v) => b.includes(v))
 const weekday = (date: string) => new Intl.DateTimeFormat('vi-VN', { weekday: 'long' }).format(new Date(`${date}T00:00:00`))
 
-/** Chấm điểm vệ sinh theo đợt (US-05.4): chọn tòa + ngày, bấm lỗi từng phòng — điểm trừ dồn trong tháng. */
+/** Chấm điểm vệ sinh theo đợt (US-05.4): chọn tòa + ngày, bấm lỗi từng phòng — điểm trừ dồn trong kỳ nửa tháng. */
 export function HygieneScoringPage() {
   const buildings = useBuildings(BUILDING_PARAMS)
   const [buildingId, setBuildingId] = useState('')
@@ -44,7 +44,7 @@ export function HygieneScoringPage() {
       <BackLink to="/admin/hygiene">Bảng điểm vệ sinh</BackLink>
       <PageHeader
         title="Chấm điểm vệ sinh"
-        description={`Đợt kiểm tra ${weekday(checkDate)} ${formatDate(checkDate)} · bấm vào lỗi để trừ điểm, bấm lại để bỏ. Điểm trừ dồn trong tháng, đầu tháng mỗi phòng 100 điểm.`}
+        description={`Đợt kiểm tra ${weekday(checkDate)} ${formatDate(checkDate)} · bấm vào lỗi để trừ điểm, bấm lại để bỏ. Điểm trừ dồn trong kỳ nửa tháng (1–15, 16–cuối tháng), đầu kỳ mỗi phòng 100 điểm.`}
       />
       <div className="mb-4 flex flex-wrap gap-3">
         <Select

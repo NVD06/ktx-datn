@@ -1,6 +1,6 @@
 import { api, apiGet, apiPost, getPaged } from './client'
 import type { ListParams } from '@/types/api'
-import type { HygieneRecord, HygieneSheet, SaveHygieneInput, SaveHygieneResult } from '@/types/hygiene'
+import type { HygieneMarks, HygieneRecord, HygieneSheet, SaveHygieneInput, SaveHygieneResult } from '@/types/hygiene'
 
 /** Bảng điểm — ADMIN/MANAGER, backend tự giới hạn theo tòa. `belowWarning=true` chỉ các lần chấm dưới 60 điểm. */
 export function listHygieneRecords(params: ListParams) {
@@ -10,6 +10,10 @@ export function listHygieneRecords(params: ListParams) {
 /** Điểm các phòng sinh viên đã ở, chỉ trong thời gian ở đó — mới nhất trước. */
 export function listMyHygieneRecords() {
   return apiGet<HygieneRecord[]>('/hygiene-records/me')
+}
+
+export function getMyHygieneMarks() {
+  return apiGet<HygieneMarks>('/hygiene-records/me/marks')
 }
 
 export function getHygieneSheet(buildingId: string, checkDate: string) {

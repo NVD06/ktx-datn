@@ -74,6 +74,18 @@ export function nextMonthStartVN(period: string): Date {
   return new Date(Date.UTC(year, month, 1) - VN_OFFSET_MS);
 }
 
+/** 00:00 giờ Việt Nam ngày đầu của nửa tháng chứa `date`: ngày 1 hoặc ngày 16 — kỳ điểm vệ sinh. */
+export function halfMonthStartVN(date: Date): Date {
+  const local = toVN(date);
+  const day = local.getUTCDate() < 16 ? 1 : 16;
+  return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), day) - VN_OFFSET_MS);
+}
+
+/** 00:00 giờ Việt Nam ngày đầu của nửa tháng ngay sau nửa tháng chứa `date`. */
+export function nextHalfMonthStartVN(date: Date): Date {
+  return halfMonthStartVN(new Date(halfMonthStartVN(date).getTime() + 16 * DAY_MS));
+}
+
 /** Ngày trong thông báo lỗi: "31/01/2027". */
 export function formatDateVN(date: Date): string {
   const local = toVN(date);

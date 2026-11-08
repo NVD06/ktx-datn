@@ -50,6 +50,11 @@ export interface Contract {
   updatedAt: string
 }
 
+/** Hợp đồng trong danh sách của ADMIN/MANAGER — kèm số dấu vệ sinh trong hợp đồng này. */
+export interface ContractListItem extends Contract {
+  hygieneMarks: number
+}
+
 /** Chỗ ở hiện tại của sinh viên (GET /contracts/me/current); null = chưa có chỗ ở. */
 export interface CurrentStay {
   contract: Contract

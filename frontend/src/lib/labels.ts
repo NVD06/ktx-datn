@@ -185,6 +185,22 @@ export function hygieneScore(score: number): LabelDef {
   return { label: `${score} điểm`, tone: score < HYGIENE_WARNING_SCORE ? 'danger' : 'success' }
 }
 
+/**
+ * Mỗi kỳ nửa tháng phòng dưới HYGIENE_WARNING_SCORE là một dấu; quá từng này dấu trong hợp đồng thì
+ * đơn đăng ký, yêu cầu gia hạn bị gắn nhãn không ưu tiên. Giữ khớp với backend/src/config/constants.ts.
+ */
+export const HYGIENE_MARK_LIMIT = 5
+
+export const isLowPriority = (marks: number) => marks > HYGIENE_MARK_LIMIT
+
+/** Nhãn cho BQL xét đơn đăng ký, gia hạn của SV quá HYGIENE_MARK_LIMIT dấu vệ sinh. */
+export function lowPriority(marks: number): LabelDef {
+  return { label: `Không ưu tiên · ${marks} dấu`, tone: 'danger' }
+}
+
+/** Bộ lọc `?lowPriority=true` của danh sách đơn đăng ký và hợp đồng. */
+export const LOW_PRIORITY_OPTIONS = [{ value: 'true', label: 'Không ưu tiên' }]
+
 /** Bộ lọc `?belowWarning=` của bảng điểm vệ sinh. */
 export const HYGIENE_FILTER_OPTIONS = flagOptions(
   { label: `Dưới ${HYGIENE_WARNING_SCORE} điểm`, tone: 'danger' },

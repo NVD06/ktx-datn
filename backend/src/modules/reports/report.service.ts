@@ -3,7 +3,7 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { RequestStatus, type InvoiceType } from '../../generated/prisma/enums.js';
 import type { AuthUser } from '../../types/auth-user.js';
-import { currentMonthVN, monthCount, monthStartVN, nextMonthStartVN, shiftMonth } from '../../utils/date-vn.js';
+import { currentMonthVN, halfMonthStartVN, monthCount, monthStartVN, nextMonthStartVN, shiftMonth } from '../../utils/date-vn.js';
 import { buildingScope, outOfScope, ownBuildingScope } from '../../utils/scope.js';
 import { CONTRACT_STUDENT_SELECT, contractScope } from '../contracts/contract.service.js';
 import * as invoiceService from '../invoices/invoice.service.js';
@@ -96,7 +96,7 @@ export async function overview(user: AuthUser) {
       requestsByStatus(user),
       revenueByMonth(user, shiftMonth(thisMonth, 1 - REVENUE_MONTHS), thisMonth),
       pendingWork(user, thisMonth),
-      buildingStats(user, thisMonth),
+      buildingStats(user),
       openPeriodStats(user),
       latestUsers(user),
     ]);
@@ -141,7 +141,7 @@ async function pendingWork(user: AuthUser, month: string) {
   return { registrations, unsignedContracts, extensionRequests, unbilledRooms };
 }
 
-async function buildingStats(user: AuthUser, month: string) {
+async function buildingStats(user: AuthUser) {
   const [buildings, debts, rooms, requests, hygiene] = await Promise.all([
     prisma.building.findMany({
       where: ownBuildingScope(user),
@@ -165,7 +165,7 @@ async function buildingStats(user: AuthUser, month: string) {
       select: { room: { select: { buildingId: true } } },
     }),
     prisma.hygieneRecord.findMany({
-      where: { room: buildingScope(user), checkDate: { gte: monthStartVN(month), lt: nextMonthStartVN(month) } },
+      where: { room: buildingScope(user), checkDate: { gte: halfMonthStartVN(new Date()) } },
       orderBy: { checkDate: 'desc' },
       select: { roomId: true, score: true, room: { select: { buildingId: true } } },
     }),

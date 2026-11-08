@@ -15,6 +15,11 @@ export async function listMine(req: Request, res: Response) {
   res.json(ok(await hygieneService.listMine(currentUser(req))));
 }
 
+/** GET /api/v1/hygiene-records/me/marks */
+export async function myMarks(req: Request, res: Response) {
+  res.json(ok(await hygieneService.myMarks(currentUser(req))));
+}
+
 /** GET /api/v1/hygiene-records/sheet */
 export async function sheet(req: Request, res: Response) {
   res.json(ok(await hygieneService.sheet(currentUser(req), hygieneSheetQuerySchema.parse(req.query))));

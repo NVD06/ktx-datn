@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { LowPriorityBadge } from '@/features/hygiene/components/LowPriorityBadge'
 import { formatDate, formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
 import { GENDER, REGISTRATION_STATUS } from '@/lib/labels'
 import type { RegistrationListItem } from '@/types/registration'
@@ -89,8 +90,9 @@ function Content({ registration: r }: { registration: RegistrationListItem }) {
           {profile ? `${profile.studentCode} · ` : ''}
           {student.email}
         </SheetDescription>
-        <div className="pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <StatusBadge {...REGISTRATION_STATUS[r.status]} />
+          <LowPriorityBadge marks={r.hygieneMarks} />
         </div>
       </SheetHeader>
 

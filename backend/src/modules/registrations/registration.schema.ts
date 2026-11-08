@@ -1,6 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
-import { listQuerySchema } from '../../utils/query-schema.js';
+import { booleanQuery, listQuerySchema } from '../../utils/query-schema.js';
 import { optionalText, requiredText } from '../../utils/zod-fields.js';
 
 export const createRegistrationSchema = z
@@ -22,6 +22,7 @@ export const createRegistrationSchema = z
 export const registrationListQuerySchema = listQuerySchema.extend({
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']).optional(),
   periodId: z.uuid().optional(),
+  lowPriority: booleanQuery.optional().openapi({ description: 'true: chỉ SV quá 5 dấu vệ sinh trong hợp đồng gần nhất' }),
 });
 
 export const approveRegistrationSchema = z

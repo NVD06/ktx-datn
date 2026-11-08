@@ -10,11 +10,12 @@ import { RowActions, type RowAction } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { LowPriorityBadge } from '@/features/hygiene/components/LowPriorityBadge'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { formatDateTime, orDash } from '@/lib/format'
-import { GENDER, REGISTRATION_STATUS, toOptions } from '@/lib/labels'
+import { GENDER, LOW_PRIORITY_OPTIONS, REGISTRATION_STATUS, toOptions } from '@/lib/labels'
 import type { RegistrationListItem } from '@/types/registration'
 import { ApproveRegistrationDialog } from '../components/ApproveRegistrationDialog'
 import { RegistrationDetailSheet } from '../components/RegistrationDetailSheet'
@@ -31,7 +32,7 @@ export function RegistrationListPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
 
-  const list = useListParams(['status', 'periodId'] as const)
+  const list = useListParams(['status', 'periodId', 'lowPriority'] as const)
   const query = useRegistrations(list.params)
   const periodOptions = usePeriodOptions()
   const reject = useRejectRegistration()
@@ -56,14 +57,15 @@ export function RegistrationListPage() {
       id: 'student',
       header: 'Sinh viên',
       cell: ({ row }) => {
-        const { student } = row.original
+        const { student, hygieneMarks } = row.original
         return (
-          <div>
+          <div className="space-y-1">
             <p className="font-medium">{student.fullName}</p>
             <p className="text-muted-foreground text-xs">
               {student.profile ? `${student.profile.studentCode} · ` : ''}
               {student.email}
             </p>
+            <LowPriorityBadge marks={hygieneMarks} />
           </div>
         )
       },
@@ -128,7 +130,7 @@ export function RegistrationListPage() {
     },
   ]
 
-  const filtered = !!(list.search || list.filters.status || list.filters.periodId)
+  const filtered = !!(list.search || Object.values(list.filters).some(Boolean))
 
   return (
     <>
@@ -165,6 +167,12 @@ export function RegistrationListPage() {
               onChange={(v) => list.setFilter('periodId', v)}
               options={periodOptions}
               allLabel="Mọi đợt"
+            />
+            <FilterSelect
+              value={list.filters.lowPriority}
+              onChange={(v) => list.setFilter('lowPriority', v)}
+              options={LOW_PRIORITY_OPTIONS}
+              allLabel="Vệ sinh"
             />
           </>
         }

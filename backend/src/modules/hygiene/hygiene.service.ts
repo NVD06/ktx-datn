@@ -1,9 +1,16 @@
-import { HYGIENE_FULL_SCORE, HYGIENE_VIOLATIONS, HYGIENE_WARNING_SCORE } from '../../config/constants.js';
+import { HYGIENE_FULL_SCORE, HYGIENE_MARK_LIMIT, HYGIENE_VIOLATIONS, HYGIENE_WARNING_SCORE } from '../../config/constants.js';
 import { prisma } from '../../config/prisma.js';
-import type { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
-import { endOfDayVN, monthOfVN, monthStartVN, nextMonthStartVN, startOfDayVN } from '../../utils/date-vn.js';
+import {
+  endOfDayVN,
+  halfMonthStartVN,
+  monthStartVN,
+  nextHalfMonthStartVN,
+  nextMonthStartVN,
+  startOfDayVN,
+} from '../../utils/date-vn.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { findBuildingInScope, ROOM_REF_SELECT } from '../rooms/room.service.js';
@@ -11,10 +18,10 @@ import type { HygieneListQuery, HygieneSheetQuery, SaveHygieneInput } from './hy
 
 /*
  * Chấm điểm vệ sinh (US-05.4, US-05.5), luồng ở docs/flows/maintenance-flow.md. Ban quản lý
- * chấm theo đợt: chọn tòa + ngày, đánh dấu lỗi từng phòng. Điểm trừ dồn trong tháng: đầu tháng
- * mỗi phòng 100 điểm, mỗi đợt trừ tổng điểm các lỗi. Mỗi phòng một bản ghi mỗi ngày (unique
- * roomId + checkDate) — chấm lại thì ghi đè và tính lại điểm các đợt sau trong tháng. Điểm còn
- * lại dưới HYGIENE_WARNING_SCORE là cảnh báo.
+ * chấm theo đợt: chọn tòa + ngày, đánh dấu lỗi từng phòng. Điểm trừ dồn trong kỳ nửa tháng
+ * (ngày 1–15, 16–cuối tháng): đầu kỳ mỗi phòng 100 điểm, mỗi đợt trừ tổng điểm các lỗi. Mỗi phòng
+ * một bản ghi mỗi ngày (unique roomId + checkDate) — chấm lại thì ghi đè và tính lại điểm các đợt
+ * sau trong kỳ. Điểm còn lại dưới HYGIENE_WARNING_SCORE là cảnh báo, kỳ đó SV ở phòng bị một dấu.
  *
  * Phạm vi: Manager chỉ chấm và xem phòng thuộc tòa mình (lồng scope qua room); SV xem điểm
  * các phòng mình đã ở, trong thời gian mình ở đó.
@@ -65,7 +72,7 @@ export async function sheet(user: AuthUser, { buildingId, checkDate }: HygieneSh
     }),
     prisma.hygieneRecord.groupBy({
       by: ['roomId'],
-      where: { room: { buildingId }, checkDate: { gte: monthStartVN(monthOfVN(day)), lt: day } },
+      where: { room: { buildingId }, checkDate: { gte: halfMonthStartVN(day), lt: day } },
       _sum: { deduction: true },
     }),
   ]);
@@ -123,9 +130,8 @@ export async function save(user: AuthUser, { buildingId, checkDate, records }: S
 }
 
 async function rescore(tx: Prisma.TransactionClient, roomIds: string[], day: Date) {
-  const month = monthOfVN(day);
   const records = await tx.hygieneRecord.findMany({
-    where: { roomId: { in: roomIds }, checkDate: { gte: monthStartVN(month), lt: nextMonthStartVN(month) } },
+    where: { roomId: { in: roomIds }, checkDate: { gte: halfMonthStartVN(day), lt: nextHalfMonthStartVN(day) } },
     orderBy: { checkDate: 'asc' },
     select: { id: true, roomId: true, score: true, deduction: true },
   });
@@ -188,7 +194,57 @@ export async function listMine(user: AuthUser) {
   });
 }
 
-/** Xóa điểm chấm nhầm phòng — chấm sai lỗi thì chấm lại (ghi đè), không cần xóa. Các đợt sau trong tháng được tính lại. */
+const STAY = Prisma.sql`SELECT c.id, r."studentId", c."bedId", c."startDate", c."terminatedAt"
+  FROM "Contract" c JOIN "Registration" r ON r.id = c."registrationId"
+  WHERE c.status IN ('ACTIVE', 'TERMINATED')`;
+
+/**
+ * Dấu vệ sinh của các hợp đồng trong `stays` (từng dòng như STAY): số kỳ nửa tháng (giờ VN, khớp
+ * halfMonthStartVN) phòng có lần chấm dưới HYGIENE_WARNING_SCORE, tới lúc trả phòng. Kỳ SV vào ở
+ * giữa chừng không tính — điểm phòng kỳ đó đã bị trừ từ trước khi SV đến. `overLimit`: chỉ hợp đồng
+ * quá HYGIENE_MARK_LIMIT dấu.
+ */
+function markRows(stays: Prisma.Sql, overLimit: boolean) {
+  const local = Prisma.sql`h."checkDate" + interval '7 hours'`;
+  const period = Prisma.sql`date_trunc('month', ${local}) + CASE WHEN extract(day FROM ${local}) >= 16 THEN interval '15 days' ELSE interval '0' END`;
+  const startDay = Prisma.sql`date_trunc('day', s."startDate" + interval '7 hours')`;
+  return prisma.$queryRaw<{ contractId: string; studentId: string; marks: number }[]>`
+    SELECT s.id AS "contractId", s."studentId", COUNT(DISTINCT ${period})::int AS marks
+    FROM (${stays}) s
+    JOIN "Bed" b ON b.id = s."bedId"
+    JOIN "HygieneRecord" h ON h."roomId" = b."roomId"
+      AND h.score < ${HYGIENE_WARNING_SCORE}
+      AND h."checkDate" >= ${startDay} - interval '7 hours'
+      AND ${period} >= ${startDay}
+      AND (s."terminatedAt" IS NULL OR h."checkDate" <= s."terminatedAt")
+    GROUP BY s.id, s."studentId"
+    ${overLimit ? Prisma.sql`HAVING COUNT(DISTINCT ${period}) > ${HYGIENE_MARK_LIMIT}` : Prisma.empty}`;
+}
+
+/** Số dấu theo từng hợp đồng `ids` — không truyền `ids` thì mọi hợp đồng (dùng với `overLimit`). */
+export async function marksByContract(ids?: string[], overLimit = false) {
+  if (ids?.length === 0) return new Map<string, number>();
+  const stays = ids ? Prisma.sql`${STAY} AND c.id IN (${Prisma.join(ids)})` : STAY;
+  return new Map((await markRows(stays, overLimit)).map((r) => [r.contractId, r.marks]));
+}
+
+/**
+ * Số dấu của SV trong hợp đồng gần nhất đã tới ngày vào ở (hợp đồng kỳ sau chưa vào ở không tính)
+ * — để xét đơn đăng ký. Không truyền `ids` thì mọi SV.
+ */
+export async function marksByStudent(ids?: string[], overLimit = false) {
+  if (ids?.length === 0) return new Map<string, number>();
+  const stays = Prisma.sql`SELECT DISTINCT ON (r."studentId") * FROM (${STAY}
+    AND c."startDate" <= ${new Date()} ${ids ? Prisma.sql`AND r."studentId" IN (${Prisma.join(ids)})` : Prisma.empty}) r
+    ORDER BY r."studentId", r."startDate" DESC`;
+  return new Map((await markRows(stays, overLimit)).map((r) => [r.studentId, r.marks]));
+}
+
+export async function myMarks(user: AuthUser) {
+  return { marks: (await marksByStudent([user.id])).get(user.id) ?? 0 };
+}
+
+/** Xóa điểm chấm nhầm phòng — chấm sai lỗi thì chấm lại (ghi đè), không cần xóa. Các đợt sau trong kỳ được tính lại. */
 export function remove(user: AuthUser, id: string) {
   return prisma.$transaction(async (tx) => {
     const record = await tx.hygieneRecord.findFirst({

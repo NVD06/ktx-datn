@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { deletedSchema, hygieneRecordSchema, hygieneSheetSchema, saveHygieneResultSchema } from '../../docs/schemas.js';
+import {
+  deletedSchema,
+  hygieneMarksSchema,
+  hygieneRecordSchema,
+  hygieneSheetSchema,
+  saveHygieneResultSchema,
+} from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './hygiene.controller.js';
@@ -37,6 +43,20 @@ hygieneRoutes.get(
   },
   student,
   ctrl.listMine,
+);
+
+hygieneRoutes.get(
+  '/me/marks',
+  {
+    summary: 'Số dấu vệ sinh của tôi (STUDENT)',
+    description:
+      'Mỗi kỳ nửa tháng (1–15, 16–cuối tháng) phòng có lần chấm dưới 60 điểm là một dấu, tính trong hợp đồng ' +
+      'gần nhất (kỳ vào ở giữa chừng không tính). Quá 5 dấu thì đơn đăng ký, gia hạn bị gắn nhãn không ưu tiên.',
+    data: hygieneMarksSchema,
+    errors: [401, 403],
+  },
+  student,
+  ctrl.myMarks,
 );
 
 hygieneRoutes.get(

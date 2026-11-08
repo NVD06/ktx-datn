@@ -10,12 +10,13 @@ import { RowActions, type RowAction } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { LowPriorityBadge } from '@/features/hygiene/components/LowPriorityBadge'
 import { usePeriodOptions } from '@/features/registration-periods/hooks/useRegistrationPeriods'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
 import { bedPlace, formatDate, formatDateRange, formatMoney } from '@/lib/format'
-import { CONTRACT_STATUS, toOptions } from '@/lib/labels'
-import type { Contract } from '@/types/contract'
+import { CONTRACT_STATUS, LOW_PRIORITY_OPTIONS, toOptions } from '@/lib/labels'
+import type { ContractListItem } from '@/types/contract'
 import { ContractDetailSheet } from '../components/ContractDetailSheet'
 import { ExtendContractDialog } from '../components/ExtendContractDialog'
 import { canCancel, isRunning } from '../contract-actions'
@@ -25,7 +26,7 @@ const STATUS_OPTIONS = toOptions(CONTRACT_STATUS)
 const EXTENSION_OPTIONS = [{ value: 'PENDING', label: 'Chờ duyệt gia hạn' }]
 
 /** Còn hóa đơn chưa thanh toán thì cảnh báo — vẫn cho chấm dứt, hóa đơn giữ lại để thu sau. */
-function unpaidNote(contract: Contract) {
+function unpaidNote(contract: ContractListItem) {
   const unpaid = contract.invoices.filter((i) => i.status === 'UNPAID')
   if (unpaid.length === 0) return ''
   const total = unpaid.reduce((sum, i) => sum + Number(i.amount), 0)
@@ -41,23 +42,23 @@ export function ContractListPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
 
-  const list = useListParams(['status', 'periodId', 'extension'] as const)
+  const list = useListParams(['status', 'periodId', 'extension', 'lowPriority'] as const)
   const query = useContracts(list.params)
   const periodOptions = usePeriodOptions()
   const cancel = useEndContract('cancel')
   const terminate = useEndContract('terminate')
 
-  const detail = useDialogState<Contract>()
-  const [cancelling, setCancelling] = useState<Contract | null>(null)
-  const [extending, setExtending] = useState<Contract | null>(null)
-  const [terminating, setTerminating] = useState<Contract | null>(null)
-  const [rejecting, setRejecting] = useState<Contract | null>(null)
+  const detail = useDialogState<ContractListItem>()
+  const [cancelling, setCancelling] = useState<ContractListItem | null>(null)
+  const [extending, setExtending] = useState<ContractListItem | null>(null)
+  const [terminating, setTerminating] = useState<ContractListItem | null>(null)
+  const [rejecting, setRejecting] = useState<ContractListItem | null>(null)
   const rejectExtension = useEndContract('extension-request/reject')
 
   /** Thao tác theo trạng thái — dùng chung cho menu "…" của dòng và chân drawer chi tiết. */
-  function actionsFor(contract: Contract): RowAction[] {
+  function actionsFor(contract: ContractListItem): RowAction[] {
     // Mở dialog từ drawer thì đóng drawer, để dialog không chồng lên nó.
-    const open = (set: (c: Contract) => void) => () => {
+    const open = (set: (c: ContractListItem) => void) => () => {
       detail.setOpen(false)
       set(contract)
     }
@@ -80,7 +81,7 @@ export function ContractListPage() {
     return []
   }
 
-  const columns: ColumnDef<Contract>[] = [
+  const columns: ColumnDef<ContractListItem>[] = [
     {
       id: 'code',
       header: 'Hợp đồng',
@@ -96,11 +97,12 @@ export function ContractListPage() {
       id: 'student',
       header: 'Sinh viên',
       cell: ({ row }) => {
-        const { student } = row.original
+        const { student, hygieneMarks } = row.original
         return (
-          <div>
+          <div className="space-y-1">
             <p className="font-medium">{student.fullName}</p>
             <p className="text-muted-foreground text-xs">{student.profile?.studentCode ?? student.email}</p>
+            <LowPriorityBadge marks={hygieneMarks} />
           </div>
         )
       },
@@ -164,7 +166,7 @@ export function ContractListPage() {
     },
   ]
 
-  const filtered = !!(list.search || list.filters.status || list.filters.periodId || list.filters.extension)
+  const filtered = !!(list.search || Object.values(list.filters).some(Boolean))
 
   return (
     <>
@@ -207,6 +209,12 @@ export function ContractListPage() {
               onChange={(v) => list.setFilter('extension', v)}
               options={EXTENSION_OPTIONS}
               allLabel="Gia hạn"
+            />
+            <FilterSelect
+              value={list.filters.lowPriority}
+              onChange={(v) => list.setFilter('lowPriority', v)}
+              options={LOW_PRIORITY_OPTIONS}
+              allLabel="Vệ sinh"
             />
           </>
         }

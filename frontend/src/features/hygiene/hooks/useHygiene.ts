@@ -7,6 +7,7 @@ export const hygieneKeys = {
   all: ['hygiene'] as const,
   list: (params: ListParams) => ['hygiene', 'list', params] as const,
   mine: ['hygiene', 'mine'] as const,
+  marks: ['hygiene', 'marks'] as const,
   sheet: (buildingId: string, checkDate: string) => ['hygiene', 'sheet', buildingId, checkDate] as const,
 }
 
@@ -20,6 +21,10 @@ export function useHygieneRecords(params: ListParams) {
 
 export function useMyHygieneRecords() {
   return useQuery({ queryKey: hygieneKeys.mine, queryFn: hygieneApi.listMyHygieneRecords })
+}
+
+export function useMyHygieneMarks() {
+  return useQuery({ queryKey: hygieneKeys.marks, queryFn: hygieneApi.getMyHygieneMarks })
 }
 
 export function useHygieneSheet(buildingId: string | null, checkDate: string) {

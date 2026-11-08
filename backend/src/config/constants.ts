@@ -22,6 +22,13 @@ export const HYGIENE_WARNING_SCORE = 60;
 
 export const HYGIENE_FULL_SCORE = 100;
 
+/**
+ * Mỗi kỳ nửa tháng phòng còn dưới HYGIENE_WARNING_SCORE thì SV ở phòng bị một dấu. Quá từng này dấu
+ * trong hợp đồng thì đơn đăng ký, yêu cầu gia hạn bị gắn nhãn "không ưu tiên" để BQL xét.
+ * Giữ khớp với HYGIENE_MARK_LIMIT ở frontend/src/lib/labels.ts.
+ */
+export const HYGIENE_MARK_LIMIT = 5;
+
 export const HYGIENE_VIOLATIONS = {
   TRASH: { label: 'Rác', points: 5 },
   MESSY: { label: 'Bừa bộn', points: 3 },

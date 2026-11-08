@@ -1,6 +1,6 @@
 import '../../config/openapi.js';
 import { z } from 'zod';
-import { listQuerySchema } from '../../utils/query-schema.js';
+import { booleanQuery, listQuerySchema } from '../../utils/query-schema.js';
 import { dateField, requiredText } from '../../utils/zod-fields.js';
 
 /** Lý do bắt buộc — dùng chung cho SV từ chối ký, Manager hủy hợp đồng chờ ký, và chấm dứt hợp đồng. */
@@ -22,6 +22,7 @@ export const contractListQuerySchema = listQuerySchema.extend({
   status: z.enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED', 'CANCELLED']).optional(),
   periodId: z.uuid().optional(),
   extension: z.enum(['PENDING']).optional().openapi({ description: 'PENDING: chỉ hợp đồng có yêu cầu gia hạn chờ duyệt' }),
+  lowPriority: booleanQuery.optional().openapi({ description: 'true: chỉ hợp đồng có quá 5 dấu vệ sinh' }),
 });
 
 export type ContractReasonInput = z.infer<typeof contractReasonSchema>;

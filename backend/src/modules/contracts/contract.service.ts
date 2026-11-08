@@ -7,6 +7,7 @@ import { endOfDayVN, formatDateVN } from '../../utils/date-vn.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { compareBedCode } from '../beds/bed-code.js';
+import { marksByContract } from '../hygiene/hygiene.service.js';
 import { billFirstMonth } from '../invoices/room-fee.service.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { HOLDING_CONTRACT_STATUSES } from '../rooms/room-eligibility.js';
@@ -166,6 +167,7 @@ function statusWhere(status: ContractStatus, now: Date): Prisma.ContractWhereInp
 
 /** Bảng hợp đồng cho ADMIN/MANAGER (US-03.4) — Manager chỉ thấy hợp đồng có giường thuộc tòa mình. */
 export async function list(user: AuthUser, query: ContractListQuery) {
+  const flagged = query.lowPriority ? await marksByContract(undefined, true) : null;
   const where: Prisma.ContractWhereInput = {
     AND: [
       contractScope(user),
@@ -180,6 +182,7 @@ export async function list(user: AuthUser, query: ContractListQuery) {
       query.status ? statusWhere(query.status, new Date()) : {},
       query.periodId ? { registration: { periodId: query.periodId } } : {},
       query.extension ? { status: 'ACTIVE', extensionRequestedTo: { not: null } } : {},
+      flagged ? { id: { in: [...flagged.keys()] } } : {},
     ],
   };
 
@@ -189,7 +192,11 @@ export async function list(user: AuthUser, query: ContractListQuery) {
     (page) => prisma.contract.findMany({ where, ...page, include: INCLUDE }),
     () => prisma.contract.count({ where }),
   );
-  return { data: result.data.map(toDto), meta: result.meta };
+  const marks = flagged ?? (await marksByContract(result.data.map((c) => c.id)));
+  return {
+    data: result.data.map((c) => ({ ...toDto(c), hygieneMarks: marks.get(c.id) ?? 0 })),
+    meta: result.meta,
+  };
 }
 
 const STATUS_TEXT: Record<ContractStatus, string> = {

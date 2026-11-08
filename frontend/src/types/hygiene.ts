@@ -8,12 +8,17 @@ import type { RoomRef } from './facility'
 export type HygieneViolation = 'TRASH' | 'MESSY' | 'DIRTY_WC' | 'CORRIDOR' | 'COOKING' | 'ABSENT'
 
 interface HygieneScore {
-  /** Điểm còn lại sau đợt, trừ dồn trong tháng — dưới HYGIENE_WARNING_SCORE là cảnh báo. */
+  /** Điểm còn lại sau đợt, trừ dồn trong kỳ nửa tháng — dưới HYGIENE_WARNING_SCORE là cảnh báo. */
   score: number
   /** Điểm bị trừ trong đợt này = tổng điểm các lỗi. */
   deduction: number
   note: string | null
   violations: HygieneViolation[]
+}
+
+/** Số dấu vệ sinh của SV trong hợp đồng gần nhất (GET /hygiene-records/me/marks). */
+export interface HygieneMarks {
+  marks: number
 }
 
 export interface HygieneRecord extends HygieneScore {

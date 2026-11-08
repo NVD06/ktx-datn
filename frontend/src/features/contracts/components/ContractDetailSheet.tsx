@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/sheet'
 import { formatDateRange, formatDateTime, formatMoney } from '@/lib/format'
 import { CONTRACT_STATUS, GENDER, ROLE } from '@/lib/labels'
-import type { Contract } from '@/types/contract'
+import type { ContractListItem } from '@/types/contract'
+import { LowPriorityBadge } from '@/features/hygiene/components/LowPriorityBadge'
 import { InvoiceList } from '@/features/invoices/components/InvoiceList'
 
 /**
@@ -26,7 +27,7 @@ export function ContractDetailSheet({
   onOpenChange,
   actions,
 }: {
-  contract: Contract | null
+  contract: ContractListItem | null
   open: boolean
   onOpenChange: (open: boolean) => void
   actions: RowAction[]
@@ -55,7 +56,7 @@ export function ContractDetailSheet({
   )
 }
 
-function Content({ contract: c }: { contract: Contract }) {
+function Content({ contract: c }: { contract: ContractListItem }) {
   const profile = c.student.profile
 
   const contractRows: DetailRow[] = [
@@ -90,8 +91,9 @@ function Content({ contract: c }: { contract: Contract }) {
       <SheetHeader className="border-b pr-12">
         <SheetTitle>Hợp đồng {c.code}</SheetTitle>
         <SheetDescription>{c.student.fullName}</SheetDescription>
-        <div className="pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           <StatusBadge {...CONTRACT_STATUS[c.status]} />
+          <LowPriorityBadge marks={c.hygieneMarks} />
         </div>
       </SheetHeader>
 

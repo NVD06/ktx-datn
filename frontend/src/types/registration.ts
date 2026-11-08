@@ -68,6 +68,8 @@ export interface RegistrationListItem extends Registration {
       'studentCode' | 'gender' | 'dob' | 'className' | 'faculty' | 'hometown' | 'citizenId'
     > | null
   }
+  /** Số dấu vệ sinh trong hợp đồng gần nhất — quá HYGIENE_MARK_LIMIT là không ưu tiên. */
+  hygieneMarks: number
 }
 
 export interface RegistrationInput {

@@ -7,6 +7,7 @@ import { nextDocumentCode } from '../../utils/document-code.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import * as contractService from '../contracts/contract.service.js';
+import { marksByStudent } from '../hygiene/hygiene.service.js';
 import * as profileService from '../profile/profile.service.js';
 import {
   ASSIGNABLE_ROOM,
@@ -101,12 +102,14 @@ export async function reviewerScope(user: AuthUser): Promise<Prisma.Registration
 }
 
 export async function list(user: AuthUser, query: RegistrationListQuery) {
+  const flagged = query.lowPriority ? await marksByStudent(undefined, true) : null;
   const where: Prisma.RegistrationWhereInput = {
     AND: [
       await reviewerScope(user),
       query.search ? { student: profileService.studentSearch(query.search) } : {},
       query.status ? { status: query.status } : {},
       query.periodId ? { periodId: query.periodId } : {},
+      flagged ? { studentId: { in: [...flagged.keys()] } } : {},
     ],
   };
 
@@ -116,7 +119,11 @@ export async function list(user: AuthUser, query: RegistrationListQuery) {
     (page) => prisma.registration.findMany({ where, ...page, include: LIST_INCLUDE }),
     () => prisma.registration.count({ where }),
   );
-  return { data: await toDtos(result.data), meta: result.meta };
+  const [rows, marks] = await Promise.all([
+    toDtos(result.data),
+    flagged ?? marksByStudent(result.data.map((r) => r.studentId)),
+  ]);
+  return { data: rows.map((r) => ({ ...r, hygieneMarks: marks.get(r.studentId) ?? 0 })), meta: result.meta };
 }
 
 /** Đơn của chính sinh viên, mới nhất trước — mỗi đợt tối đa vài đơn nên không phân trang. */

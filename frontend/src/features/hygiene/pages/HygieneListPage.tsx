@@ -81,7 +81,7 @@ export function HygieneListPage() {
     <>
       <PageHeader
         title="Vệ sinh"
-        description={`Điểm vệ sinh từng phòng qua các đợt kiểm tra, trừ dồn trong tháng — dưới ${HYGIENE_WARNING_SCORE} điểm là cảnh báo.`}
+        description={`Điểm vệ sinh từng phòng qua các đợt kiểm tra, trừ dồn trong kỳ nửa tháng (1–15, 16–cuối tháng) — dưới ${HYGIENE_WARNING_SCORE} điểm là cảnh báo.`}
         actions={
           <Button asChild>
             <Link to="/admin/hygiene/score">
@@ -126,7 +126,7 @@ export function HygieneListPage() {
           <>
             Xóa điểm phòng <strong>{r.room.code}</strong> (tòa {r.room.building.name}) ngày{' '}
             <strong>{formatDate(r.checkDate)}</strong>. Chỉ dùng khi chấm nhầm phòng — sai lỗi thì chấm lại ở trang
-            Chấm điểm để ghi đè. Điểm các đợt sau trong tháng được tính lại.
+            Chấm điểm để ghi đè. Điểm các đợt sau trong kỳ được tính lại.
           </>
         )}
         confirmLabel="Xóa điểm"
