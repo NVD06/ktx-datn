@@ -17,6 +17,7 @@ const AnnouncementListPage = page(() => import('@/features/announcements/pages/A
 const MyAnnouncementsPage = page(() => import('@/features/announcements/pages/MyAnnouncementsPage'), 'MyAnnouncementsPage')
 const BuildingDetailPage = page(() => import('@/features/buildings/pages/BuildingDetailPage'), 'BuildingDetailPage')
 const BuildingListPage = page(() => import('@/features/buildings/pages/BuildingListPage'), 'BuildingListPage')
+const DormRuleListPage = page(() => import('@/features/dorm-rules/pages/DormRuleListPage'), 'DormRuleListPage')
 const ContractDetailPage = page(() => import('@/features/contracts/pages/ContractDetailPage'), 'ContractDetailPage')
 const ContractListPage = page(() => import('@/features/contracts/pages/ContractListPage'), 'ContractListPage')
 const MyContractsPage = page(() => import('@/features/contracts/pages/MyContractsPage'), 'MyContractsPage')
@@ -89,7 +90,13 @@ export const router = createBrowserRouter([
             ],
           },
           // Chỉ ADMIN — Manager gõ thẳng URL thì sang trang 403 thay vì bảng lỗi.
-          { element: <ProtectedRoute roles={['ADMIN']} />, children: [{ path: 'users', element: <UserListPage /> }] },
+          {
+            element: <ProtectedRoute roles={['ADMIN']} />,
+            children: [
+              { path: 'users', element: <UserListPage /> },
+              { path: 'rules', element: <DormRuleListPage /> },
+            ],
+          },
         ],
       },
     ],

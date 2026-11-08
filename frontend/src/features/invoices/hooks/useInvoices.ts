@@ -1,4 +1,6 @@
 import { keepPreviousData, skipToken, useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { getErrorMessage } from '@/api/client'
 import * as invoicesApi from '@/api/invoices'
 import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
@@ -54,5 +56,9 @@ export function useCancelUtility() {
 
 /** Không cần làm mới gì: thành công thì trình duyệt rời hẳn trang sang cổng VNPay. */
 export function usePayInvoice() {
-  return useMutation({ mutationFn: invoicesApi.payInvoice })
+  return useMutation({
+    mutationFn: invoicesApi.payInvoice,
+    onSuccess: ({ payUrl }) => window.location.assign(payUrl),
+    onError: (error) => toast.error(getErrorMessage(error)),
+  })
 }

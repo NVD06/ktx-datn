@@ -12,6 +12,7 @@ import {
   Megaphone,
   Menu,
   Receipt,
+  ScrollText,
   Sparkles,
   Users,
   Wrench,
@@ -50,6 +51,7 @@ const NAV: NavItem[] = [
   { to: '/admin/maintenance', label: 'Sửa chữa', icon: Wrench },
   { to: '/admin/hygiene', label: 'Vệ sinh', icon: Sparkles },
   { to: '/admin/announcements', label: 'Thông báo', icon: Megaphone },
+  { to: '/admin/rules', label: 'Nội quy', icon: ScrollText, roles: ['ADMIN'] },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartColumn },
   { to: '/admin/users', label: 'Người dùng', icon: Users, roles: ['ADMIN'] },
 ]

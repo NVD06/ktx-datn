@@ -2,22 +2,9 @@ import { DetailList, DetailSection } from '@/components/shared/DetailList'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDate, formatDateTime, formatMoney, orDash } from '@/lib/format'
-import { INVOICE_ITEM_TYPE, INVOICE_TYPE, PAYMENT_STATUS } from '@/lib/labels'
-import type { InvoiceDetail, InvoiceItem } from '@/types/invoice'
-
-const number = (value: string) => Number(value).toLocaleString('vi-VN')
-
-/**
- * Số lượng kèm đơn vị: kWh / m³ của cả phòng, hoặc số tháng tiền phòng (quy tắc nửa tháng).
- * Hóa đơn tiền phòng cũ, trước khi tính theo tháng: cả kỳ ("2026-HK1") hoặc số ngày gia hạn ("…-GH-…").
- */
-function quantityLabel(item: InvoiceItem, period: string) {
-  if (item.type === 'ELECTRIC') return `${number(item.quantity)} kWh`
-  if (item.type === 'WATER') return `${number(item.quantity)} m³`
-  if (period.includes('-GH-')) return `${number(item.quantity)} ngày`
-  if (period.includes('-HK')) return 'Cả kỳ'
-  return Number(item.quantity) === 1 ? '1 tháng' : 'Nửa tháng'
-}
+import { INVOICE_ITEM_TYPE, PAYMENT_STATUS } from '@/lib/labels'
+import type { InvoiceDetail, InvoicePayment } from '@/types/invoice'
+import { invoiceTitle, quantityLabel } from '../invoice-format'
 
 /**
  * Nội dung chi tiết hóa đơn (US-04.3): thông tin chung, các dòng (chỉ số, số lượng,
@@ -31,7 +18,7 @@ export function InvoiceDetailView({ invoice: i }: { invoice: InvoiceDetail }) {
       <DetailSection title="Thông tin">
         <DetailList
           rows={[
-            ['Loại', `${INVOICE_TYPE[i.type].label} · kỳ ${i.period}`],
+            ['Loại', invoiceTitle(i)],
             ['Hạn thanh toán', formatDate(i.dueDate)],
             ['Sinh viên', `${student.fullName}${student.profile ? ` · ${student.profile.studentCode}` : ''}`],
             ['Chỗ ở', `Giường ${bed.code} · Phòng ${bed.room.code} · Tòa ${bed.room.building.name}`],
@@ -82,24 +69,27 @@ export function InvoiceDetailView({ invoice: i }: { invoice: InvoiceDetail }) {
       </DetailSection>
 
       <DetailSection title="Lịch sử thanh toán">
-        {i.payments.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Chưa có giao dịch nào.</p>
-        ) : (
-          <ul className="divide-y text-sm">
-            {i.payments.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
-                <div>
-                  <p className="font-medium">{formatMoney(p.amount)}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatDateTime(p.paidAt ?? p.createdAt)} · Mã GD VNPay {orDash(p.vnpTransactionNo)}
-                  </p>
-                </div>
-                <StatusBadge {...PAYMENT_STATUS[p.status]} />
-              </li>
-            ))}
-          </ul>
-        )}
+        <PaymentHistory payments={i.payments} />
       </DetailSection>
     </div>
+  )
+}
+
+export function PaymentHistory({ payments }: { payments: InvoicePayment[] }) {
+  if (payments.length === 0) return <p className="text-muted-foreground text-sm">Chưa có giao dịch nào.</p>
+  return (
+    <ul className="divide-y text-sm">
+      {payments.map((p) => (
+        <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
+          <div>
+            <p className="font-medium">{formatMoney(p.amount)}</p>
+            <p className="text-muted-foreground text-xs">
+              {formatDateTime(p.paidAt ?? p.createdAt)} · Mã GD VNPay {orDash(p.vnpTransactionNo)}
+            </p>
+          </div>
+          <StatusBadge {...PAYMENT_STATUS[p.status]} />
+        </li>
+      ))}
+    </ul>
   )
 }

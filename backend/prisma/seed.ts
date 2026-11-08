@@ -40,6 +40,7 @@ type RequestStatus = 'PENDING' | (typeof REQUEST_FLOW)[number];
 
 async function clearAll() {
   // Xóa theo thứ tự ngược với phụ thuộc khóa ngoại.
+  await prisma.announcement.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();

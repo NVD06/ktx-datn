@@ -1,18 +1,13 @@
-import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
 import { ErrorState, LoadingState } from '@/components/shared/QueryState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { formatMoney } from '@/lib/format'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { invoiceStatus } from '@/lib/labels'
-import { useInvoice, usePayInvoice } from '../hooks/useInvoices'
+import { useInvoice } from '../hooks/useInvoices'
 import { InvoiceDetailView } from './InvoiceDetailView'
 
 /**
- * Chi tiết hóa đơn — trang hóa đơn của người quản lý và của sinh viên. Gọi API riêng vì dòng của bảng không có các
- * dòng hóa đơn và lịch sử thanh toán. Sinh viên thanh toán hóa đơn chưa trả ngay tại đây (US-04.4).
+ * Chi tiết hóa đơn ở trang hóa đơn của người quản lý. Gọi API riêng vì dòng của bảng không có các
+ * dòng hóa đơn và lịch sử thanh toán.
  */
 export function InvoiceDetailSheet({
   invoiceId,
@@ -24,17 +19,7 @@ export function InvoiceDetailSheet({
   onOpenChange: (open: boolean) => void
 }) {
   const query = useInvoice(invoiceId)
-  const { user } = useAuth()
-  const pay = usePayInvoice()
   const invoice = query.data
-
-  function startPayment(id: string) {
-    pay.mutate(id, {
-      // Rời hẳn trang để sang cổng VNPay — thanh toán xong VNPay đưa về trang kết quả.
-      onSuccess: ({ payUrl }) => window.location.assign(payUrl),
-      onError: (error) => toast.error(getErrorMessage(error)),
-    })
-  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -53,13 +38,6 @@ export function InvoiceDetailSheet({
             <div className="px-4 pb-6">
               <InvoiceDetailView invoice={invoice} />
             </div>
-            {user?.role === 'STUDENT' && invoice.status === 'UNPAID' && (
-              <SheetFooter className="border-t">
-                <Button disabled={pay.isPending} onClick={() => startPayment(invoice.id)}>
-                  {pay.isPending ? 'Đang chuyển sang VNPay…' : `Thanh toán ${formatMoney(invoice.amount)} qua VNPay`}
-                </Button>
-              </SheetFooter>
-            )}
           </>
         )}
       </SheetContent>

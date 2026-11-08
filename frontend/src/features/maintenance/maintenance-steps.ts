@@ -12,14 +12,27 @@ export const NEXT_STEP: Partial<Record<RequestStatus, { status: UpdateMaintenanc
   RECEIVED: { status: 'DONE', label: 'Báo đã sửa xong' },
 }
 
+const at = (value: string | null) => value && formatDateTime(value)
+
 /** Tiến độ của yêu cầu dạng các dòng DetailList — dùng kèm `hideEmpty` để ẩn bước chưa tới. */
 export function progressRows(r: MaintenanceRequest): DetailRow[] {
-  const at = (value: string | null) => value && formatDateTime(value)
   return [
     ['Gửi lúc', formatDateTime(r.createdAt)],
     ['Tiếp nhận lúc', at(r.receivedAt)],
     ['Sửa xong lúc', at(r.doneAt)],
     ['Sinh viên xác nhận lúc', at(r.confirmedAt)],
     ['Từ chối lúc', at(r.rejectedAt)],
+  ]
+}
+
+export function timeline(r: MaintenanceRequest) {
+  const by = (value: string | null) => value && `${formatDateTime(value)}${r.handledBy ? ` · ${r.handledBy.fullName}` : ''}`
+  const sent = { title: 'Đã gửi', time: at(r.createdAt), note: null }
+  if (r.status === 'REJECTED') return [sent, { title: 'Ban quản lý từ chối', time: by(r.rejectedAt), note: r.assigneeNote }]
+  return [
+    sent,
+    { title: 'Ban quản lý tiếp nhận', time: at(r.receivedAt), note: null },
+    { title: 'Đã sửa xong', time: by(r.doneAt), note: r.assigneeNote },
+    { title: 'Bạn xác nhận', time: at(r.confirmedAt), note: null },
   ]
 }

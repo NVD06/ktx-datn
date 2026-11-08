@@ -387,7 +387,7 @@ model HygieneRecord {
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id])
   checkDate DateTime // 00:00 giờ Việt Nam của ngày kiểm tra
-  score      Int // 0-100, điểm còn lại sau đợt — trừ dồn trong tháng, đầu tháng về 100; dưới 60 là cảnh báo
+  score      Int // 0-100, điểm còn lại sau đợt — trừ dồn trong kỳ nửa tháng (1–15, 16–cuối tháng), đầu kỳ về 100; dưới 60 là cảnh báo
   deduction  Int                @default(0) // điểm bị trừ trong đợt này = tổng điểm các lỗi
   note       String? // tên các lỗi, ghép từ `violations`
   violations HygieneViolation[] @default([])
@@ -428,4 +428,13 @@ model AnnouncementRead {
   readAt         DateTime     @default(now())
 
   @@id([announcementId, userId])
+}
+
+model DormRule {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

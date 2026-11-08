@@ -239,6 +239,7 @@ export const registrationListItemSchema = registrationSchema
         })
         .nullable(),
     }),
+    hygieneMarks: z.int().openapi({ description: 'Số dấu vệ sinh trong hợp đồng gần nhất — quá 5 là không ưu tiên' }),
   })
   .openapi('RegistrationListItem');
 
@@ -304,6 +305,12 @@ export const contractSchema = z
     updatedAt: z.iso.datetime(),
   })
   .openapi('Contract');
+
+export const contractListItemSchema = contractSchema
+  .extend({
+    hygieneMarks: z.int().openapi({ description: 'Số dấu vệ sinh trong hợp đồng này — quá 5 là không ưu tiên gia hạn' }),
+  })
+  .openapi('ContractListItem');
 
 export const currentStaySchema = z
   .object({
@@ -478,7 +485,7 @@ export const maintenanceStatsSchema = z
   .openapi('MaintenanceStats');
 
 const hygieneScoreFields = {
-  score: z.int().openapi({ example: 85, description: 'Điểm còn lại sau đợt, trừ dồn trong tháng — dưới 60 là cảnh báo' }),
+  score: z.int().openapi({ example: 85, description: 'Điểm còn lại sau đợt, trừ dồn trong kỳ nửa tháng — dưới 60 là cảnh báo' }),
   deduction: z.int().openapi({ example: 5, description: 'Điểm bị trừ trong đợt này = tổng điểm các lỗi' }),
   note: z.string().nullable().openapi({ description: 'Tên các lỗi' }),
   violations: z.array(z.enum(HygieneViolation)).openapi({ example: ['TRASH'] }),
@@ -508,7 +515,7 @@ export const hygieneSheetSchema = z
         code: z.string().openapi({ example: '101' }),
         floor: z.int(),
         residents: z.int().openapi({ description: 'Số SV đang ở ngày kiểm tra' }),
-        scoreBefore: z.int().openapi({ example: 92, description: 'Điểm còn lại của tháng trước đợt này' }),
+        scoreBefore: z.int().openapi({ example: 92, description: 'Điểm còn lại của kỳ nửa tháng trước đợt này' }),
         record: z
           .object({ id: z.uuid(), ...hygieneScoreFields })
           .nullable()
@@ -517,6 +524,15 @@ export const hygieneSheetSchema = z
     ),
   })
   .openapi('HygieneSheet');
+
+export const hygieneMarksSchema = z
+  .object({
+    marks: z.int().openapi({
+      example: 2,
+      description: 'Số kỳ nửa tháng phòng dưới 60 điểm trong hợp đồng gần nhất — quá 5 thì đơn đăng ký, gia hạn không ưu tiên',
+    }),
+  })
+  .openapi('HygieneMarks');
 
 export const saveHygieneResultSchema = z
   .object({
@@ -555,7 +571,7 @@ export const overviewReportSchema = z
         extensionRequests: z.int().openapi({ description: 'Yêu cầu gia hạn chờ duyệt' }),
         unbilledRooms: z.int().openapi({ description: 'Phòng có SV ở chưa chốt điện nước tháng này' }),
         newRequests: z.int().openapi({ description: 'Yêu cầu sửa chữa chờ tiếp nhận' }),
-        lowHygieneRooms: z.int().openapi({ description: 'Phòng có điểm vệ sinh gần nhất trong tháng dưới 60' }),
+        lowHygieneRooms: z.int().openapi({ description: 'Phòng có điểm vệ sinh gần nhất trong kỳ nửa tháng hiện tại dưới 60' }),
       })
       .openapi({ description: 'Việc chờ xử lý trong phạm vi' }),
     buildings: z
@@ -571,7 +587,7 @@ export const overviewReportSchema = z
           beds: z.object({ total: z.int(), occupied: z.int() }),
           overdue: moneyTotal,
           openRequests: z.int(),
-          hygieneAverage: z.int().nullable().openapi({ description: 'Trung bình điểm gần nhất trong tháng của các phòng' }),
+          hygieneAverage: z.int().nullable().openapi({ description: 'Trung bình điểm gần nhất trong kỳ nửa tháng hiện tại của các phòng' }),
           lowHygieneRooms: z.int(),
         }),
       )
@@ -650,3 +666,14 @@ export const maintenanceReportSchema = z
     ),
   })
   .openapi('MaintenanceReport');
+
+export const dormRuleSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string().openapi({ example: 'Thanh toán' }),
+    content: z.string().openapi({ description: 'Mỗi dòng là một ý' }),
+    sortOrder: z.int(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .openapi('DormRule');

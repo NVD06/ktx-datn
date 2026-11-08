@@ -5,6 +5,7 @@ import { authRoutes } from '../modules/auth/auth.routes.js';
 import { bedRoutes } from '../modules/beds/bed.routes.js';
 import { buildingRoutes } from '../modules/buildings/building.routes.js';
 import { contractRoutes } from '../modules/contracts/contract.routes.js';
+import { dormRuleRoutes } from '../modules/dorm-rules/dorm-rule.routes.js';
 import { hygieneRoutes } from '../modules/hygiene/hygiene.routes.js';
 import { invoiceRoutes } from '../modules/invoices/invoice.routes.js';
 import { maintenanceRoutes } from '../modules/maintenance/maintenance.routes.js';
@@ -54,6 +55,7 @@ for (const routes of [
   hygieneRoutes,
   reportRoutes,
   announcementRoutes,
+  dormRuleRoutes,
 ]) {
   apiRouter.use(routes.prefix, routes.router);
 }
