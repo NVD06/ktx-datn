@@ -4,12 +4,13 @@ import {
   cancelUtilityResultSchema,
   invoiceDetailSchema,
   invoiceSchema,
+  remindInvoicesResultSchema,
   utilitySheetSchema,
 } from '../../docs/schemas.js';
 import { requireAuth, requireRole } from '../../middlewares/auth.js';
 import { defineRoutes } from '../../utils/define-routes.js';
 import * as ctrl from './invoice.controller.js';
-import { invoiceListQuerySchema } from './invoice.schema.js';
+import { invoiceListQuerySchema, remindInvoicesSchema } from './invoice.schema.js';
 import { billUtilitiesSchema, cancelUtilitySchema, utilitySheetQuerySchema } from './utility.schema.js';
 
 // Không chặn vai trò chung: sinh viên xem hóa đơn của mình, ADMIN/MANAGER xem theo phạm vi tòa.
@@ -77,6 +78,24 @@ invoiceRoutes.post(
   },
   staff,
   ctrl.cancelUtility,
+);
+
+invoiceRoutes.post(
+  '/reminders',
+  {
+    summary: 'Nhắc nộp tiền (ADMIN, MANAGER)',
+    description:
+      'Gửi thông báo riêng cho SV của các hóa đơn chưa thanh toán — một SV nhiều hóa đơn nhận một thông báo gộp. ' +
+      '`invoiceIds` bỏ trống: mọi hóa đơn chưa thanh toán trong phạm vi (MANAGER: tòa mình). Hóa đơn đã nhắc ' +
+      'trong hôm nay thì bỏ qua, đặt lại `remindedAt` cho hóa đơn được nhắc. Hóa đơn đã thanh toán trong ' +
+      '`invoiceIds` không được nhắc; id không tồn tại hoặc ngoài phạm vi: 404 (MANAGER: 403).',
+    body: remindInvoicesSchema,
+    data: remindInvoicesResultSchema,
+    status: 201,
+    errors: [400, 401, 403, 404],
+  },
+  staff,
+  ctrl.remind,
 );
 
 invoiceRoutes.get(

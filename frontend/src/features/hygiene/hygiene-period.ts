@@ -1,13 +1,12 @@
 import { shiftMonthInput } from '@/lib/date-input'
-
-const VN_OFFSET_MS = 7 * 60 * 60 * 1000
+import { dayVN } from '@/lib/format'
 
 /**
  * Kỳ điểm vệ sinh nửa tháng (1–15, 16–cuối tháng) theo giờ Việt Nam như backend, không theo giờ máy.
  * Khóa là ngày đầu kỳ: "2026-11-01", "2026-11-16".
  */
 export function periodOf(iso: string) {
-  const day = new Date(Date.parse(iso) + VN_OFFSET_MS).toISOString().slice(0, 10)
+  const day = dayVN(iso)
   return `${day.slice(0, 8)}${Number(day.slice(8)) < 16 ? '01' : '16'}`
 }
 

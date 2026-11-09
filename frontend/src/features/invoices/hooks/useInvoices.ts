@@ -4,6 +4,7 @@ import { getErrorMessage } from '@/api/client'
 import * as invoicesApi from '@/api/invoices'
 import { useInvalidate } from '@/hooks/useInvalidate'
 import type { ListParams } from '@/types/api'
+import type { RemindInvoicesResult } from '@/types/invoice'
 
 export const invoiceKeys = {
   all: ['invoices'] as const,
@@ -52,6 +53,24 @@ export function useBillUtilities() {
 export function useCancelUtility() {
   const invalidate = useInvalidate(invoiceKeys.all)
   return useMutation({ mutationFn: invoicesApi.cancelUtility, onSettled: invalidate })
+}
+
+function reminderMessage({ students, invoices, skipped }: RemindInvoicesResult) {
+  return (
+    [invoices && `Đã nhắc ${students} sinh viên về ${invoices} hóa đơn`, skipped && `Bỏ qua ${skipped} hóa đơn đã nhắc hôm nay`]
+      .filter(Boolean)
+      .join('. ') || 'Không còn hóa đơn nào chưa thanh toán'
+  )
+}
+
+/** Báo kết quả ở đây; lỗi do nơi gọi báo (ConfirmDialog tự báo). Làm mới bảng và chi tiết để hiện ngày nhắc. */
+export function useRemindInvoices() {
+  const invalidate = useInvalidate(invoiceKeys.all)
+  return useMutation({
+    mutationFn: invoicesApi.remindInvoices,
+    onSuccess: (result) => toast.success(reminderMessage(result)),
+    onSettled: invalidate,
+  })
 }
 
 /** Không cần làm mới gì: thành công thì trình duyệt rời hẳn trang sang cổng VNPay. */

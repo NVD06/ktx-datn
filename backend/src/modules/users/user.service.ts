@@ -266,7 +266,15 @@ export async function remove(actor: AuthUser, id: string) {
     select: {
       role: true,
       fullName: true,
-      _count: { select: { registrations: true, requests: true, endedContracts: true, createdInvoices: true, announcements: true } },
+      _count: {
+        select: {
+          registrations: true,
+          requests: true,
+          endedContracts: true,
+          createdInvoices: true,
+          announcements: { where: { recipientId: null } },
+        },
+      },
     },
   });
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng');
@@ -276,10 +284,11 @@ export async function remove(actor: AuthUser, id: string) {
   }
 
   // Các cột chỉ lưu id người làm (không có khóa ngoại) — đếm tay.
-  const [reviewed, handled, checked] = await Promise.all([
+  const [reviewed, handled, checked, reminded] = await Promise.all([
     prisma.registration.count({ where: { reviewedById: id } }),
     prisma.maintenanceRequest.count({ where: { handledById: id } }),
     prisma.hygieneRecord.count({ where: { checkedById: id } }),
+    prisma.announcement.count({ where: { authorId: id, recipientId: { not: null } } }),
   ]);
   const history = [
     user._count.registrations > 0 && 'đơn đăng ký ở',
@@ -290,6 +299,7 @@ export async function remove(actor: AuthUser, id: string) {
     checked > 0 && 'lượt chấm vệ sinh',
     user._count.createdInvoices > 0 && 'hóa đơn đã lập',
     user._count.announcements > 0 && 'thông báo đã đăng',
+    reminded > 0 && 'tin nhắc nộp tiền đã gửi',
   ].filter(Boolean);
   if (history.length > 0) {
     const message =

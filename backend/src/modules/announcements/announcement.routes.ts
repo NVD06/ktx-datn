@@ -26,7 +26,7 @@ announcementRoutes.get(
   '/me',
   {
     summary: 'Thông báo của tôi (STUDENT)',
-    description: 'Tin toàn KTX và tin của tòa đang ở, tin ghim trước rồi mới nhất trước, tối đa 100 tin. `readAt` null là chưa đọc.',
+    description: 'Tin toàn KTX, tin của tòa đang ở và tin nhắc nộp tiền gửi riêng, tin ghim trước rồi mới nhất trước, tối đa 100 tin. `readAt` null là chưa đọc.',
     data: z.array(myAnnouncementSchema),
     errors: [401, 403],
   },

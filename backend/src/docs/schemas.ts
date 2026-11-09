@@ -45,6 +45,7 @@ export const announcementSchema = z
     pinned: z.boolean(),
     authorId: z.uuid(),
     author: z.object({ id: z.uuid(), fullName: z.string() }),
+    recipientId: z.uuid().nullable().openapi({ description: 'Có giá trị: tin nhắc nộp tiền gửi riêng SV này' }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -350,11 +351,20 @@ export const invoiceSchema = invoiceRefSchema
   .extend({
     contractId: z.uuid(),
     splitCount: z.int().nullable().openapi({ description: 'Số SV chia hóa đơn điện nước lúc chốt' }),
+    remindedAt: z.iso.datetime().nullable().openapi({ description: 'Lần gần nhất gửi thông báo nhắc nộp tiền' }),
     contract: contractSchema.pick({ id: true, code: true, bed: true, student: true }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
   .openapi('Invoice');
+
+export const remindInvoicesResultSchema = z
+  .object({
+    students: z.int().openapi({ description: 'Số SV nhận thông báo nhắc' }),
+    invoices: z.int().openapi({ description: 'Số hóa đơn được nhắc' }),
+    skipped: z.int().openapi({ description: 'Số hóa đơn bỏ qua vì đã nhắc trong hôm nay' }),
+  })
+  .openapi('RemindInvoicesResult');
 
 export const invoiceDetailSchema = invoiceSchema
   .extend({

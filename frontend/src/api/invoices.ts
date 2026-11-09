@@ -7,6 +7,7 @@ import type {
   CancelUtilityResult,
   Invoice,
   InvoiceDetail,
+  RemindInvoicesResult,
   UtilitySheet,
 } from '@/types/invoice'
 
@@ -32,6 +33,11 @@ export function billUtilities(input: BillUtilitiesInput) {
 /** Hủy lần chốt của một phòng khi nhập sai — backend chặn nếu đã có SV thanh toán. */
 export function cancelUtility(input: CancelUtilityInput) {
   return apiPost<CancelUtilityResult>('/invoices/utility/cancel', input)
+}
+
+/** Không truyền `invoiceIds` thì nhắc mọi hóa đơn chưa thanh toán trong phạm vi. */
+export function remindInvoices(invoiceIds?: string[]) {
+  return apiPost<RemindInvoicesResult>('/invoices/reminders', { invoiceIds })
 }
 
 /** SV tạo giao dịch VNPay — trả URL cổng thanh toán để chuyển trình duyệt sang. */

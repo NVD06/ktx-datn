@@ -7,6 +7,7 @@
  * `tone` quyết định màu badge, xem components/shared/StatusBadge.tsx.
  */
 
+import { dayVN } from '@/lib/format'
 import type { HygieneViolation } from '@/types/hygiene'
 
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info'
@@ -216,6 +217,12 @@ export const OVERDUE: LabelDef = { label: 'Quá hạn', tone: 'danger' }
 /** Hóa đơn chưa thanh toán mà đã qua hạn là "Quá hạn" — tính khi đọc, không lưu DB (us-04.md, US-04.3). */
 export function isOverdue(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }) {
   return invoice.status === 'UNPAID' && new Date(invoice.dueDate) < new Date()
+}
+
+/** Nút nhắc nộp tiền: khóa khi đang gửi hoặc hóa đơn đã nhắc trong hôm nay (giờ VN) — bấm lại backend cũng bỏ qua. */
+export function remindAction(invoice: { remindedAt: string | null }, pending: boolean) {
+  const done = !!invoice.remindedAt && dayVN(invoice.remindedAt) === dayVN()
+  return { label: done ? 'Đã nhắc hôm nay' : 'Nhắc nộp tiền', disabled: done || pending }
 }
 
 /** Nhắc hạn (US-04.6): còn chưa tới hạn nhưng hạn nằm trong số ngày này. */

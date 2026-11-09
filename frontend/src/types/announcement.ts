@@ -13,6 +13,8 @@ export interface Announcement {
   pinned: boolean
   authorId: string
   author: { id: string; fullName: string }
+  /** Có giá trị: tin nhắc nộp tiền gửi riêng SV này. */
+  recipientId: string | null
   createdAt: string
   updatedAt: string
 }

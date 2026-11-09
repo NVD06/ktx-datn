@@ -11,6 +11,17 @@ export function formatMoney(value: number | string): string {
   return `${n.toLocaleString('vi-VN')} đ`
 }
 
+/** Ngày theo giờ Việt Nam như backend, không theo giờ máy: "2026-11-09". */
+export function dayVN(value: string | number = Date.now()): string {
+  return new Date(new Date(value).getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+/** Ngày/tháng theo giờ Việt Nam: "09/11". */
+export function formatDayMonthVN(value: string): string {
+  const day = dayVN(value)
+  return `${day.slice(8)}/${day.slice(5, 7)}`
+}
+
 /** Date -> "07/09/2026" */
 export function formatDate(value: Date | string | null | undefined): string {
   if (!value) return '—'

@@ -1,18 +1,23 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { Eye } from 'lucide-react'
+import { BellRing, Eye } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { getErrorMessage } from '@/api/client'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { DataTable } from '@/components/shared/DataTable'
 import { FilterSelect } from '@/components/shared/FilterSelect'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { RowActions } from '@/components/shared/RowActions'
 import { SearchInput } from '@/components/shared/SearchInput'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { Button } from '@/components/ui/button'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useListParams } from '@/hooks/useListParams'
-import { formatDate, formatMoney } from '@/lib/format'
-import { INVOICE_FILTER_OPTIONS, INVOICE_TYPE, invoiceStatus, toOptions } from '@/lib/labels'
+import { formatDate, formatDayMonthVN, formatMoney } from '@/lib/format'
+import { INVOICE_FILTER_OPTIONS, INVOICE_TYPE, invoiceStatus, remindAction, toOptions } from '@/lib/labels'
 import type { Invoice } from '@/types/invoice'
 import { InvoiceDetailSheet } from '../components/InvoiceDetailSheet'
-import { useInvoices } from '../hooks/useInvoices'
+import { useInvoices, useRemindInvoices } from '../hooks/useInvoices'
 
 const TYPE_OPTIONS = toOptions(INVOICE_TYPE)
 
@@ -25,6 +30,8 @@ export function InvoiceListPage() {
   const query = useInvoices(list.params)
 
   const detail = useDialogState<string>()
+  const remind = useRemindInvoices()
+  const [remindingAll, setRemindingAll] = useState(false)
 
   const columns: ColumnDef<Invoice>[] = [
     {
@@ -77,14 +84,34 @@ export function InvoiceListPage() {
     {
       id: 'status',
       header: 'Trạng thái',
-      cell: ({ row }) => <StatusBadge {...invoiceStatus(row.original)} />,
+      cell: ({ row }) => (
+        <div>
+          <StatusBadge {...invoiceStatus(row.original)} />
+          {row.original.status === 'UNPAID' && row.original.remindedAt && (
+            <p className="text-muted-foreground mt-1 text-xs">Đã nhắc {formatDayMonthVN(row.original.remindedAt)}</p>
+          )}
+        </div>
+      ),
     },
     {
       id: 'actions',
       header: '',
       meta: { className: 'w-12 text-right' },
       cell: ({ row }) => (
-        <RowActions actions={[{ label: 'Xem chi tiết', icon: Eye, onSelect: () => detail.show(row.original.id) }]} />
+        <RowActions
+          actions={[
+            { label: 'Xem chi tiết', icon: Eye, onSelect: () => detail.show(row.original.id) },
+            ...(row.original.status === 'UNPAID'
+              ? [
+                  {
+                    ...remindAction(row.original, remind.isPending),
+                    icon: BellRing,
+                    onSelect: () => remind.mutate([row.original.id], { onError: (error) => toast.error(getErrorMessage(error)) }),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ),
     },
   ]
@@ -93,7 +120,16 @@ export function InvoiceListPage() {
 
   return (
     <>
-      <PageHeader title="Hóa đơn" description="Tiền phòng và tiền điện nước của sinh viên." />
+      <PageHeader
+        title="Hóa đơn"
+        description="Tiền phòng và tiền điện nước của sinh viên. Nhắc nộp tiền gửi thông báo riêng cho sinh viên."
+        actions={
+          <Button variant="outline" onClick={() => setRemindingAll(true)}>
+            <BellRing />
+            Nhắc nộp tiền
+          </Button>
+        }
+      />
 
       <DataTable
         columns={columns}
@@ -125,6 +161,19 @@ export function InvoiceListPage() {
       />
 
       <InvoiceDetailSheet invoiceId={detail.item} open={detail.open} onOpenChange={detail.setOpen} />
+      <ConfirmDialog
+        target={remindingAll ? 'all' : null}
+        onClose={() => setRemindingAll(false)}
+        title="Nhắc nộp tiền mọi hóa đơn chưa thanh toán?"
+        description={() =>
+          'Mỗi sinh viên còn hóa đơn chưa thanh toán nhận một thông báo riêng liệt kê các hóa đơn và hạn nộp. ' +
+          'Hóa đơn đã nhắc trong hôm nay thì bỏ qua.'
+        }
+        confirmLabel="Gửi nhắc"
+        destructive={false}
+        isPending={remind.isPending}
+        onConfirm={() => remind.mutateAsync(undefined)}
+      />
     </>
   )
 }

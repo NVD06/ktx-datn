@@ -1,16 +1,18 @@
 import { prisma } from '../../config/prisma.js';
-import type { Prisma } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
+import { formatDateVN, startOfDayVN } from '../../utils/date-vn.js';
 import { paginate } from '../../utils/paginate.js';
 import { outOfScope, ownBuildingScope } from '../../utils/scope.js';
+import { sendPersonal } from '../announcements/announcement.service.js';
 import { CONTRACT_BED_SELECT, CONTRACT_STUDENT_SELECT, contractScope } from '../contracts/contract.service.js';
 import { studentSearch } from '../profile/profile.service.js';
 import { BUILDING_REF_SELECT } from '../rooms/room.service.js';
 import { overdueWhere } from './invoice-rules.js';
-import type { InvoiceListQuery } from './invoice.schema.js';
+import type { InvoiceListQuery, RemindInvoicesInput } from './invoice.schema.js';
 
 /*
- * Hóa đơn (US-04.3) — chỉ đọc. Hóa đơn được lập ở nơi khác: tiền phòng khi ký /
+ * Hóa đơn (US-04.3) — chỉ đọc, và nhắc nộp tiền. Hóa đơn được lập ở nơi khác: tiền phòng khi ký /
  * gia hạn hợp đồng (contract.service.ts), điện nước khi chốt chỉ số (US-04.2).
  * Phạm vi đi theo hợp đồng: SV thấy hóa đơn của mình, Manager thấy tòa mình.
  */
@@ -138,4 +140,51 @@ export async function getById(user: AuthUser, id: string) {
   });
   if (!row) throw outOfScope(user, 'Không tìm thấy hóa đơn');
   return toDto(row);
+}
+
+const money = (amount: unknown) => `${Number(amount).toLocaleString('vi-VN')} đ`;
+
+/**
+ * Nhắc nộp tiền: gửi thông báo riêng cho SV của các hóa đơn chưa thanh toán trong phạm vi — một SV
+ * nhiều hóa đơn nhận một thông báo gộp. `invoiceIds` bỏ trống thì nhắc mọi hóa đơn chưa thanh toán.
+ * Hóa đơn đã nhắc trong hôm nay thì bỏ qua: UPDATE có điều kiện ... RETURNING giành quyền nhắc từng
+ * hóa đơn rồi chỉ gửi cho hóa đơn giành được, nên hai lần bấm cùng lúc cũng không gửi trùng. `invoiceIds` ngoài phạm vi thì báo lỗi.
+ */
+export async function remind(user: AuthUser, { invoiceIds }: RemindInvoicesInput) {
+  const now = new Date();
+  const today = startOfDayVN(now);
+  const found = await prisma.invoice.findMany({
+    where: { AND: [invoiceScope(user), invoiceIds ? { id: { in: invoiceIds } } : { status: 'UNPAID' }] },
+    orderBy: { dueDate: 'asc' },
+    select: { id: true, code: true, amount: true, dueDate: true, status: true, contract: { select: { registration: { select: { studentId: true } } } } },
+  });
+  if (invoiceIds && found.length < new Set(invoiceIds).size) throw outOfScope(user, 'Không tìm thấy hóa đơn');
+  const unpaid = found.filter((i) => i.status === 'UNPAID');
+  if (unpaid.length === 0) return { students: 0, invoices: 0, skipped: 0 };
+  const ids = unpaid.map((i) => i.id);
+  return prisma.$transaction(async (tx) => {
+    const claimed = await tx.$queryRaw<{ id: string }[]>`
+      UPDATE "Invoice" SET "remindedAt" = ${now}, "updatedAt" = ${now}
+      WHERE id IN (${Prisma.join(ids)}) AND ("remindedAt" IS NULL OR "remindedAt" < ${today})
+      RETURNING id`;
+    const claimedIds = new Set(claimed.map((i) => i.id));
+    const invoices = unpaid.filter((i) => claimedIds.has(i.id)).map((i) => ({ ...i, overdue: i.dueDate < now }));
+    const messages = [...Map.groupBy(invoices, (i) => i.contract.registration.studentId)].map(([recipientId, list]) => {
+      const overdue = list.filter((i) => i.overdue).length;
+      const total = list.reduce((sum, i) => sum + Number(i.amount), 0);
+      return {
+        recipientId,
+        title:
+          list.length === 1
+            ? `Nhắc nộp tiền hóa đơn ${list[0]!.code}${overdue ? ' (đã quá hạn)' : ''}`
+            : `Nhắc nộp tiền: ${list.length} hóa đơn chưa thanh toán${overdue ? `, ${overdue} đã quá hạn` : ''}`,
+        content: [
+          ...list.map((i) => `${i.code}: ${money(i.amount)}, hạn ${formatDateVN(i.dueDate)}${i.overdue ? ' (đã quá hạn)' : ''}`),
+          `Tổng cần thanh toán ${money(total)}. Thanh toán trực tuyến ở trang Hóa đơn.`,
+        ].join('\n'),
+      };
+    });
+    await sendPersonal(user.id, messages, tx);
+    return { students: messages.length, invoices: invoices.length, skipped: ids.length - invoices.length };
+  });
 }

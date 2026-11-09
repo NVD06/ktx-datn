@@ -29,6 +29,8 @@ export interface Invoice extends InvoiceRef {
   contractId: string
   /** Số SV chia hóa đơn điện nước lúc chốt. */
   splitCount: number | null
+  /** Lần gần nhất ban quản lý gửi thông báo nhắc nộp tiền. */
+  remindedAt: string | null
   contract: Pick<Contract, 'id' | 'code' | 'bed' | 'student'>
   createdAt: string
   updatedAt: string
@@ -110,6 +112,13 @@ export interface BillUtilitiesResult {
   invoiceCount: number
   roomCount: number
   skipped: { code: string; reason: 'BILLED' | 'EMPTY' | 'NO_USAGE' }[]
+}
+
+export interface RemindInvoicesResult {
+  students: number
+  invoices: number
+  /** Hóa đơn đã nhắc trong hôm nay nên bỏ qua. */
+  skipped: number
 }
 
 export interface CancelUtilityInput {

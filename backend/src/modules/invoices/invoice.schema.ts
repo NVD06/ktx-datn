@@ -9,4 +9,16 @@ export const invoiceListQuerySchema = listQuerySchema.extend({
   type: z.enum(['ROOM_FEE', 'UTILITY']).optional(),
 });
 
+export const remindInvoicesSchema = z
+  .object({
+    invoiceIds: z
+      .array(z.uuid('Hóa đơn không hợp lệ'))
+      .min(1)
+      .max(500)
+      .optional()
+      .openapi({ description: 'Bỏ trống: nhắc mọi hóa đơn chưa thanh toán trong phạm vi' }),
+  })
+  .openapi('RemindInvoicesInput');
+
 export type InvoiceListQuery = z.infer<typeof invoiceListQuerySchema>;
+export type RemindInvoicesInput = z.infer<typeof remindInvoicesSchema>;

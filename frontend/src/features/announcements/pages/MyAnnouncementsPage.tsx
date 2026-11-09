@@ -89,7 +89,7 @@ function AnnouncementCard({ announcement: a }: { announcement: MyAnnouncement })
                 {a.title}
               </p>
               <p className="text-muted-foreground text-xs">
-                {a.building ? `Tòa ${a.building.name}` : 'Toàn KTX'} · {a.author.fullName} · {formatDateTime(a.createdAt)}
+                {a.recipientId ? 'Gửi riêng bạn' : a.building ? `Tòa ${a.building.name}` : 'Toàn KTX'} · {a.author.fullName} · {formatDateTime(a.createdAt)}
               </p>
               <p className={cn('mt-2 text-sm whitespace-pre-line', !open && 'line-clamp-2')}>{a.content}</p>
             </div>

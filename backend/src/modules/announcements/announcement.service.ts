@@ -9,6 +9,7 @@ import type { AnnouncementInput, AnnouncementListQuery } from './announcement.sc
 /*
  * Bảng tin của ban quản lý: Admin đăng cho toàn KTX hoặc một tòa, Manager đăng cho tòa mình và
  * chỉ sửa / xóa tin của tòa mình. SV đọc tin toàn KTX và tin của tòa đang ở, đánh dấu đã đọc.
+ * Tin gửi riêng từng SV (recipientId, ví dụ nhắc nộp tiền) đi qua sendPersonal, không hiện trong bảng tin chung.
  */
 
 const INCLUDE = {
@@ -29,7 +30,11 @@ async function targetBuilding(user: AuthUser, buildingId: string | null) {
 
 export function list(user: AuthUser, query: AnnouncementListQuery) {
   const where: Prisma.AnnouncementWhereInput = {
-    AND: [visibleTo(user), query.search ? { title: { contains: query.search, mode: 'insensitive' } } : {}],
+    AND: [
+      visibleTo(user),
+      { recipientId: null },
+      query.search ? { title: { contains: query.search, mode: 'insensitive' } } : {},
+    ],
   };
   return paginate(
     query,
@@ -47,7 +52,7 @@ export async function create(user: AuthUser, input: AnnouncementInput) {
 export async function update(user: AuthUser, id: string, input: AnnouncementInput) {
   const buildingId = await targetBuilding(user, input.buildingId);
   const { count } = await prisma.announcement.updateMany({
-    where: { id, ...buildingScope(user) },
+    where: { id, recipientId: null, ...buildingScope(user) },
     data: { ...input, buildingId },
   });
   if (count === 0) throw outOfScope(user, 'Không tìm thấy thông báo');
@@ -55,7 +60,7 @@ export async function update(user: AuthUser, id: string, input: AnnouncementInpu
 }
 
 export async function remove(user: AuthUser, id: string) {
-  const { count } = await prisma.announcement.deleteMany({ where: { id, ...buildingScope(user) } });
+  const { count } = await prisma.announcement.deleteMany({ where: { id, recipientId: null, ...buildingScope(user) } });
   if (count === 0) throw outOfScope(user, 'Không tìm thấy thông báo');
   return { id };
 }
@@ -66,7 +71,17 @@ async function studentScope(user: AuthUser): Promise<Prisma.AnnouncementWhereInp
     orderBy: { startDate: 'desc' },
     select: { bed: { select: { room: { select: { buildingId: true } } } } },
   });
-  return contract ? { OR: [{ buildingId: null }, { buildingId: contract.bed.room.buildingId }] } : { buildingId: null };
+  const shared = contract ? { OR: [{ buildingId: null }, { buildingId: contract.bed.room.buildingId }] } : { buildingId: null };
+  return { OR: [{ recipientId: null, ...shared }, { recipientId: user.id }] };
+}
+
+/** Tin gửi riêng từng SV, không thuộc tòa nào; `db` là transaction của người gọi. */
+export function sendPersonal(
+  authorId: string,
+  messages: { recipientId: string; title: string; content: string }[],
+  db: Prisma.TransactionClient = prisma,
+) {
+  return db.announcement.createMany({ data: messages.map((m) => ({ ...m, authorId })) });
 }
 
 export async function listMine(user: AuthUser) {

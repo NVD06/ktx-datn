@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { ok } from '../../types/response.js';
 import { currentUser, param } from '../../utils/request.js';
-import { invoiceListQuerySchema } from './invoice.schema.js';
+import { invoiceListQuerySchema, type RemindInvoicesInput } from './invoice.schema.js';
 import * as paymentService from '../payments/payment.service.js';
 import * as invoiceService from './invoice.service.js';
 import { utilitySheetQuerySchema, type BillUtilitiesInput, type CancelUtilityInput } from './utility.schema.js';
@@ -11,6 +11,11 @@ import * as utilityService from './utility.service.js';
 export async function list(req: Request, res: Response) {
   const { data, meta } = await invoiceService.list(currentUser(req), invoiceListQuerySchema.parse(req.query));
   res.json(ok(data, meta));
+}
+
+/** POST /api/v1/invoices/reminders */
+export async function remind(req: Request, res: Response) {
+  res.status(201).json(ok(await invoiceService.remind(currentUser(req), req.body as RemindInvoicesInput)));
 }
 
 /** GET /api/v1/invoices/utility-sheet */
