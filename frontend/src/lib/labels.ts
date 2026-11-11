@@ -226,7 +226,7 @@ export function remindAction(invoice: { remindedAt: string | null }, pending: bo
 }
 
 /** Nhắc hạn (US-04.6): còn chưa tới hạn nhưng hạn nằm trong số ngày này. */
-export const DUE_SOON_DAYS = 3
+export const DUE_SOON_DAYS = 1
 
 /** Chưa thanh toán, chưa quá hạn và hạn còn ≤ DUE_SOON_DAYS ngày. */
 export function isDueSoon(invoice: { status: keyof typeof INVOICE_STATUS; dueDate: string }) {

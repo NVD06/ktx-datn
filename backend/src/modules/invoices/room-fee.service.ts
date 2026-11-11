@@ -1,4 +1,4 @@
-import { HALF_MONTH_DAYS } from '../../config/constants.js';
+import { HALF_MONTH_DAYS, ROOM_FEE_DUE_DAYS } from '../../config/constants.js';
 import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import {
@@ -118,7 +118,7 @@ async function createRoomFees(tx: Prisma.TransactionClient, contracts: BillableC
   if (rows.length === 0) return 0;
 
   const codes = await nextDocumentCodes(tx, 'INV', rows.length);
-  const dueDate = invoiceDueDate(new Date());
+  const dueDate = invoiceDueDate(new Date(), ROOM_FEE_DUE_DAYS);
   const created = await tx.invoice.createManyAndReturn({
     data: rows.map(({ contractId, period: invoicePeriod, amount }, i) => ({
       code: codes[i]!,

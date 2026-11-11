@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
+import { ROOM_FEE_DUE_DAYS } from '../src/config/constants.js';
 import { env } from '../src/config/env.js';
 import { prisma } from '../src/config/prisma.js';
 import type { HygieneViolation } from '../src/generated/prisma/enums.js';
@@ -341,7 +342,7 @@ async function main() {
   });
   for (const { id, period: month, contract } of roomFees) {
     const billedAt = new Date(Math.max(monthStartVN(month).getTime(), contract.signedAt!.getTime()));
-    await prisma.invoice.update({ where: { id }, data: { createdAt: billedAt, dueDate: invoiceDueDate(billedAt) } });
+    await prisma.invoice.update({ where: { id }, data: { createdAt: billedAt, dueDate: invoiceDueDate(billedAt, ROOM_FEE_DUE_DAYS) } });
   }
 
   // Đã trả: tiền phòng các tháng trước của mọi SV; tháng này sv001 chưa trả (còn nợ cùng hóa đơn

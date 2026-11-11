@@ -8,8 +8,12 @@ export const WATER_PRICE = 15_000; // đ/m³
  */
 export const HALF_MONTH_DAYS = 15;
 
-/** Số ngày mặc định từ lúc phát hành hóa đơn tới hạn thanh toán. */
+/**
+ * Số ngày từ lúc phát hành hóa đơn tới hạn thanh toán: điện nước INVOICE_DUE_DAYS, tiền phòng ROOM_FEE_DUE_DAYS.
+ * Giữ ROOM_FEE_DUE_DAYS khớp với frontend/src/features/contracts/contract-terms.ts.
+ */
 export const INVOICE_DUE_DAYS = 14;
+export const ROOM_FEE_DUE_DAYS = 4;
 
 /** Giao dịch VNPay hết hạn sau từng này phút (vnp_ExpireDate) — quá hạn thì SV không trả tiếp được nữa. */
 export const PAYMENT_EXPIRE_MINUTES = 15;

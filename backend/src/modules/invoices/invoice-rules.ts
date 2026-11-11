@@ -5,11 +5,11 @@ import { endOfDayVN } from '../../utils/date-vn.js';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Hạn thanh toán của mọi hóa đơn (tiền phòng, gia hạn, điện nước): hết ngày thứ
- * INVOICE_DUE_DAYS giờ VN kể từ lúc lập — hạn ghi ngày nào thì hết ngày đó mới quá hạn.
+ * Hạn thanh toán hóa đơn: hết ngày thứ `days` giờ VN kể từ lúc lập (mặc định INVOICE_DUE_DAYS của
+ * điện nước, tiền phòng truyền ROOM_FEE_DUE_DAYS) — hạn ghi ngày nào thì hết ngày đó mới quá hạn.
  */
-export function invoiceDueDate(from: Date) {
-  return endOfDayVN(new Date(from.getTime() + INVOICE_DUE_DAYS * DAY_MS));
+export function invoiceDueDate(from: Date, days = INVOICE_DUE_DAYS) {
+  return endOfDayVN(new Date(from.getTime() + days * DAY_MS));
 }
 
 /**
