@@ -4,6 +4,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import {
   calendarDaysVN,
   currentMonthVN,
+  endOfDayVN,
   monthOfVN,
   monthStartVN,
   nextMonthStartVN,
@@ -21,10 +22,13 @@ import { invoiceDueDate } from './invoice-rules.js';
  */
 
 /**
- * Hợp đồng ký trước khi đổi sang tính theo tháng đã có hóa đơn cả kỳ ("2026-HK1") hoặc gia
- * hạn ("2026-HK1-GH-…") — không lập thêm hóa đơn tháng, nếu không SV bị tính tiền hai lần.
+ * Hợp đồng ký trước khi đổi sang tính theo tháng đã có hóa đơn cả kỳ ("2026-HK1", trả tới hết thời
+ * gian ở của đợt) hoặc gia hạn ("2026-HK1-GH-20270228", trả tới hết ngày đó) — tháng lập sau chỉ tính
+ * những ngày ở sau mốc đã trả, nếu không SV bị tính tiền hai lần.
  */
-const TERM_INVOICE = { type: 'ROOM_FEE', period: { contains: '-HK' } } as const satisfies Prisma.InvoiceWhereInput;
+const LEGACY_MARK = '-HK';
+const LEGACY_EXTENSION = /-GH-(\d{4})(\d{2})(\d{2})$/;
+const TOP_UP = '-BS';
 
 /** Server tắt hoặc ngủ qua đầu tháng thì lần chạy sau vẫn bù được — xét cả vài tháng trước. */
 const LOOKBACK_MONTHS = 3;
@@ -39,18 +43,44 @@ const STAY_SELECT = {
   terminatedAt: true,
 } as const satisfies Prisma.ContractSelect;
 
+function billSelect(period: string) {
+  return {
+    ...STAY_SELECT,
+    registration: { select: { period: { select: { stayEndAt: true } } } },
+    invoices: {
+      where: { type: 'ROOM_FEE', OR: [{ period: { startsWith: period } }, { period: { contains: LEGACY_MARK } }] },
+      select: { period: true, items: { select: { quantity: true } } },
+    },
+  } as const satisfies Prisma.ContractSelect;
+}
 type StayDates = { startDate: Date; endDate: Date; signedAt: Date | null; terminatedAt: Date | null };
-type BillableContract = Prisma.ContractGetPayload<{ select: typeof STAY_SELECT }>;
+type BillableContract = Prisma.ContractGetPayload<{ select: ReturnType<typeof billSelect> }>;
+function legacyPaidUntil({ invoices, registration }: BillableContract) {
+  const legacy = invoices.filter((i) => i.period.includes(LEGACY_MARK));
+  if (legacy.length === 0) return 0;
+  const extensions = legacy.flatMap(({ period }) => {
+    const [, y, m, d] = LEGACY_EXTENSION.exec(period) ?? [];
+    return y ? [endOfDayVN(new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)))).getTime()] : [];
+  });
+  return Math.max(endOfDayVN(registration.period.stayEndAt).getTime(), ...extensions);
+}
+function billedQuantity({ invoices }: BillableContract, period: string) {
+  return invoices
+    .filter((i) => i.period.startsWith(period))
+    .flatMap((i) => i.items)
+    .reduce((sum, item) => sum + Number(item.quantity), 0);
+}
 
 /**
  * Số ngày SV ở trong tháng `period`: từ ngày ký (giường có người từ lúc ký; ký trước ngày bắt đầu
  * thì tính từ ngày bắt đầu) tới ngày kết thúc hợp đồng hoặc ngày chấm dứt, tính cả hai đầu. Lập
  * trước nên với tháng đang ở hoặc sắp ở đây là số ngày dự kiến. Ở quá ngày kết thúc mà chưa gia hạn
- * thì không tính — gia hạn xong, lần chạy sau lập bù tháng đó.
+ * thì không tính — gia hạn xong, lần chạy sau lập bù tháng đó. Ngày tới `paidUntil` đã trả theo hóa
+ * đơn kiểu cũ nên không tính.
  */
-export function stayDaysInMonth({ startDate, endDate, signedAt, terminatedAt }: StayDates, period: string) {
+export function stayDaysInMonth({ startDate, endDate, signedAt, terminatedAt }: StayDates, period: string, paidUntil = 0) {
   if (!signedAt) return 0;
-  const from = Math.max(startDate.getTime(), signedAt.getTime(), monthStartVN(period).getTime());
+  const from = Math.max(startDate.getTime(), signedAt.getTime(), monthStartVN(period).getTime(), paidUntil + 1);
   const to = Math.min(endDate.getTime(), terminatedAt?.getTime() ?? Infinity, nextMonthStartVN(period).getTime() - 1);
   return to < from ? 0 : calendarDaysVN(new Date(from), new Date(to));
 }
@@ -70,25 +100,31 @@ function lockBilling(tx: Prisma.TransactionClient) {
 }
 
 /**
- * Lập hóa đơn tháng `period` cho các hợp đồng đã lọc sẵn (chưa có hóa đơn tháng đó). Mỗi hóa đơn
- * một dòng ROOM_FEE: số lượng 1 hoặc 0,5 tháng × giá tháng. Trả số hóa đơn đã lập.
+ * Lập hóa đơn tháng `period` cho các hợp đồng: số tháng phải trả (1 hoặc 0,5) trừ số tháng đã lập
+ * của tháng đó. Chưa lập gì thì hóa đơn kỳ `period`; đã lập nửa tháng mà nay phải trả cả tháng (vừa
+ * gia hạn) thì hóa đơn bổ sung kỳ `period-BS` cho nửa còn lại. Mỗi hóa đơn một dòng ROOM_FEE: số
+ * lượng × giá tháng. Trả số hóa đơn đã lập.
  */
 async function createRoomFees(tx: Prisma.TransactionClient, contracts: BillableContract[], period: string) {
   const rows = contracts.flatMap((contract) => {
-    const quantity = roomFeeQuantity(stayDaysInMonth(contract, period));
+    const billed = billedQuantity(contract, period);
+    const quantity = roomFeeQuantity(stayDaysInMonth(contract, period, legacyPaidUntil(contract))) - billed;
     const unitPrice = Number(contract.price);
-    return quantity > 0 ? [{ contractId: contract.id, quantity, unitPrice, amount: Math.round(unitPrice * quantity) }] : [];
+    const invoicePeriod = billed > 0 ? `${period}${TOP_UP}` : period;
+    return quantity > 0
+      ? [{ contractId: contract.id, period: invoicePeriod, quantity, unitPrice, amount: Math.round(unitPrice * quantity) }]
+      : [];
   });
   if (rows.length === 0) return 0;
 
   const codes = await nextDocumentCodes(tx, 'INV', rows.length);
   const dueDate = invoiceDueDate(new Date());
   const created = await tx.invoice.createManyAndReturn({
-    data: rows.map(({ contractId, amount }, i) => ({
+    data: rows.map(({ contractId, period: invoicePeriod, amount }, i) => ({
       code: codes[i]!,
       contractId,
       type: 'ROOM_FEE' as const,
-      period,
+      period: invoicePeriod,
       amount,
       dueDate,
     })),
@@ -106,8 +142,8 @@ async function createRoomFees(tx: Prisma.TransactionClient, contracts: BillableC
 }
 
 /**
- * Lập hóa đơn tiền phòng tháng `period` (đã bắt đầu) cho mọi hợp đồng có ở trong tháng mà chưa có
- * hóa đơn tháng đó. Hợp đồng vừa ký trong tháng đã có hóa đơn từ lúc ký nên không bị lập lại.
+ * Lập hóa đơn tiền phòng tháng `period` (đã bắt đầu) cho mọi hợp đồng có ở trong tháng mà chưa lập
+ * đủ tháng đó. Hợp đồng vừa ký trong tháng đã có hóa đơn từ lúc ký nên không bị lập lại.
  * Trả số hóa đơn đã lập.
  */
 export async function billMonth(period: string) {
@@ -126,9 +162,8 @@ export async function billMonth(period: string) {
         startDate: { lt: monthEnd },
         endDate: { gte: monthStart },
         OR: [{ terminatedAt: null }, { terminatedAt: { gte: monthStart } }],
-        invoices: { none: { OR: [{ type: 'ROOM_FEE', period }, TERM_INVOICE] } },
       },
-      select: STAY_SELECT,
+      select: billSelect(period),
     });
     return createRoomFees(tx, contracts, period);
   });
@@ -142,9 +177,10 @@ export async function billMonth(period: string) {
  */
 export async function billFirstMonth(tx: Prisma.TransactionClient, contractId: string) {
   await lockBilling(tx);
-  const contract = await tx.contract.findUniqueOrThrow({ where: { id: contractId }, select: STAY_SELECT });
-  const firstDay = Math.max(contract.startDate.getTime(), contract.signedAt?.getTime() ?? 0);
-  return createRoomFees(tx, [contract], monthOfVN(new Date(firstDay)));
+  const { startDate, signedAt } = await tx.contract.findUniqueOrThrow({ where: { id: contractId }, select: STAY_SELECT });
+  const period = monthOfVN(new Date(Math.max(startDate.getTime(), signedAt?.getTime() ?? 0)));
+  const contract = await tx.contract.findUniqueOrThrow({ where: { id: contractId }, select: billSelect(period) });
+  return createRoomFees(tx, [contract], period);
 }
 
 /** Lập hóa đơn cho các tháng đã bắt đầu còn thiếu — tháng này và vài tháng trước, cũ trước mới sau. */

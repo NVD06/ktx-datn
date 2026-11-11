@@ -107,25 +107,27 @@ export async function save(user: AuthUser, { buildingId, checkDate, records }: S
     const unknown = records.findIndex((r) => !known.has(r.roomId));
     if (unknown >= 0) throw ApiError.validation({ [`records.${unknown}.roomId`]: ['Phòng không thuộc tòa này'] });
 
-    for (const { roomId, violations } of records) {
+    const roomIds = records.map((r) => r.roomId);
+    const before = await tx.hygieneRecord.groupBy({
+      by: ['roomId'],
+      where: { roomId: { in: roomIds }, checkDate: { gte: halfMonthStartVN(day), lt: day } },
+      _sum: { deduction: true },
+    });
+    const spent = new Map(before.map((r) => [r.roomId, r._sum.deduction ?? 0]));
+    const existing = await tx.hygieneRecord.findMany({ where: { roomId: { in: roomIds }, checkDate: day }, select: { roomId: true } });
+    const rescored = new Set(existing.map((r) => r.roomId));
+    const rows = records.map(({ roomId, violations }) => {
       const deduction = violations.reduce((sum, v) => sum + HYGIENE_VIOLATIONS[v].points, 0);
       const note = violations.map((v) => HYGIENE_VIOLATIONS[v].label).join(', ') || null;
-      const data = { violations, deduction, note, score: 0, checkedById: user.id };
-      await tx.hygieneRecord.upsert({
-        where: { roomId_checkDate: { roomId, checkDate: day } },
-        create: { roomId, checkDate: day, ...data },
-        update: data,
-      });
+      const score = Math.max(0, HYGIENE_FULL_SCORE - (spent.get(roomId) ?? 0) - deduction);
+      return { roomId, checkDate: day, violations, deduction, note, score, checkedById: user.id };
+    });
+    await tx.hygieneRecord.createMany({ data: rows.filter((r) => !rescored.has(r.roomId)) });
+    for (const { roomId, checkDate, ...data } of rows.filter((r) => rescored.has(r.roomId))) {
+      await tx.hygieneRecord.update({ where: { roomId_checkDate: { roomId, checkDate } }, data });
     }
-    const roomIds = records.map((r) => r.roomId);
     await rescore(tx, roomIds, day);
-
-    return {
-      roomCount: records.length,
-      warningCount: await tx.hygieneRecord.count({
-        where: { roomId: { in: roomIds }, checkDate: day, score: { lt: HYGIENE_WARNING_SCORE } },
-      }),
-    };
+    return { roomCount: records.length, warningCount: rows.filter((r) => r.score < HYGIENE_WARNING_SCORE).length };
   });
 }
 

@@ -50,21 +50,23 @@ export async function sheet(user: AuthUser, { buildingId, period }: UtilitySheet
   const { name } = await findBuildingInScope(user, buildingId);
   const [rooms, history, current] = await Promise.all([
     prisma.room.findMany({ where: { buildingId }, orderBy: [{ floor: 'asc' }, { code: 'asc' }], select: roomSelect(period) }),
-    prisma.invoice.findMany({
-      where: { type: 'UTILITY', period: { lt: period }, contract: { bed: { room: { buildingId } } } },
-      orderBy: { period: 'desc' },
-      select: { contract: { select: { bed: { select: { roomId: true } } } }, items: { select: { type: true, newIndex: true } } },
-    }),
+    prisma.$queryRaw<{ roomId: string; electricOld: number; waterOld: number }[]>`
+      SELECT DISTINCT ON (b."roomId") b."roomId",
+        (SELECT "newIndex" FROM "InvoiceItem" WHERE "invoiceId" = i.id AND type = 'ELECTRIC') AS "electricOld",
+        (SELECT "newIndex" FROM "InvoiceItem" WHERE "invoiceId" = i.id AND type = 'WATER') AS "waterOld"
+      FROM "Invoice" i
+      JOIN "Contract" c ON c.id = i."contractId"
+      JOIN "Bed" b ON b.id = c."bedId"
+      JOIN "Room" r ON r.id = b."roomId"
+      WHERE i.type = 'UTILITY' AND i.period < ${period} AND r."buildingId" = ${buildingId}
+      ORDER BY b."roomId", i.period DESC`,
     prisma.invoice.findMany({
       where: { type: 'UTILITY', period: { gte: period }, contract: { bed: { room: { buildingId } } } },
       select: { period: true, status: true, contract: { select: { bed: { select: { roomId: true } } } } },
     }),
   ]);
 
-  // Mới nhất trước nên hóa đơn gặp đầu tiên của mỗi phòng là lần chốt gần nhất.
-  const last = new Map<string, (typeof history)[number]['items']>();
-  for (const { contract, items } of history) if (!last.has(contract.bed.roomId)) last.set(contract.bed.roomId, items);
-  const newIndex = (roomId: string, type: 'ELECTRIC' | 'WATER') => last.get(roomId)?.find((i) => i.type === type)?.newIndex;
+  const last = new Map(history.map(({ roomId, ...prefill }) => [roomId, prefill]));
 
   // Lần chốt kỳ này có hủy được không — chỉ để giao diện ẩn nút Hủy, `cancel` vẫn tự kiểm tra lại.
   const roomsOf = (rows: typeof current) => new Set(rows.map((i) => i.contract.bed.roomId));
@@ -81,7 +83,7 @@ export async function sheet(user: AuthUser, { buildingId, period }: UtilitySheet
         ...room,
         residents: contracts.length,
         billed: contracts.some((c) => c._count.invoices > 0),
-        prefill: last.has(room.id) ? { electricOld: newIndex(room.id, 'ELECTRIC'), waterOld: newIndex(room.id, 'WATER') } : null,
+        prefill: last.get(room.id) ?? null,
         cancelBlock: paid.has(room.id) ? ('PAID' as const) : later.has(room.id) ? ('LATER_BILLED' as const) : null,
       };
     }),

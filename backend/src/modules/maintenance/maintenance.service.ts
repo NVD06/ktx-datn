@@ -6,7 +6,7 @@ import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
 import { studentSearch } from '../profile/profile.service.js';
-import { ROOM_REF_SELECT } from '../rooms/room.service.js';
+import { findBuildingInScope, ROOM_REF_SELECT } from '../rooms/room.service.js';
 import { currentMonthVN, monthStartVN, nextMonthStartVN } from '../../utils/date-vn.js';
 import type {
   CreateMaintenanceInput,
@@ -123,6 +123,7 @@ export function list(user: AuthUser, query: MaintenanceListQuery) {
 
 /** Số liệu đầu trang Sửa chữa: đếm theo trạng thái, yêu cầu tháng này theo tòa (hoặc theo tầng khi đã chọn một tòa), thời gian từ lúc gửi tới lúc sửa xong. */
 export async function stats(user: AuthUser, { buildingId }: MaintenanceStatsQuery) {
+  if (buildingId) await findBuildingInScope(user, buildingId);
   const month = currentMonthVN();
   const range = { gte: monthStartVN(month), lt: nextMonthStartVN(month) };
   const scope: Prisma.MaintenanceRequestWhereInput = { AND: [requestScope(user), buildingId ? { room: { buildingId } } : {}] };

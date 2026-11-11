@@ -6,7 +6,7 @@ import { ApiError } from '../utils/api-error.js';
 const ipKey = (req: Request) => ipKeyGenerator(req.ip ?? '');
 const loginKey = (req: Request) => {
   const email = (req.body as { email?: unknown } | undefined)?.email;
-  return typeof email === 'string' ? email.toLowerCase().trim() : ipKey(req);
+  return typeof email === 'string' ? `${email.toLowerCase().trim()}|${ipKey(req)}` : ipKey(req);
 };
 const loginLimit = (limit: number, keyGenerator: (req: Request) => string, message: string) =>
   rateLimit({

@@ -258,7 +258,7 @@ const invoiceRefSchema = z.object({
   type: invoiceTypeSchema,
   period: z.string().openapi({
     example: '2026-09',
-    description: 'Tháng "2026-09" (tiền phòng, điện nước). Hóa đơn tiền phòng cũ theo kỳ: "2026-HK1", gia hạn "2026-HK1-GH-20270228"',
+    description: 'Tháng "2026-09" (tiền phòng, điện nước), tiền phòng bổ sung sau gia hạn "2026-09-BS". Hóa đơn tiền phòng cũ theo kỳ: "2026-HK1", gia hạn "2026-HK1-GH-20270228"',
   }),
   amount: moneySchema,
   dueDate: z.iso.datetime(),

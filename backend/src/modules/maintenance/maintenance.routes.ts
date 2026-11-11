@@ -40,7 +40,7 @@ maintenanceRoutes.get(
       'thời gian trung bình từ lúc gửi tới lúc sửa xong của các yêu cầu xong trong tháng.',
     query: maintenanceStatsQuerySchema,
     data: maintenanceStatsSchema,
-    errors: [400, 401, 403],
+    errors: [400, 401, 403, 404],
   },
   staff,
   ctrl.stats,

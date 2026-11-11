@@ -335,8 +335,8 @@ export function cancel(user: AuthUser, id: string, { reason }: ContractReasonInp
 /**
  * Gia hạn hợp đồng đang ở (US-03.4): giữ nguyên giường, lùi ngày kết thúc. Không lập
  * hóa đơn riêng — những tháng ở thêm được lập hằng tháng như mọi tháng khác. Gia hạn
- * được cả hợp đồng đã quá ngày kết thúc mà SV vẫn ở: tháng ở quá hạn chưa tính tiền
- * sẽ được lập bù ở lần chạy sau (room-fee.service.ts).
+ * được cả hợp đồng đã quá ngày kết thúc mà SV vẫn ở: tháng ở quá hạn chưa tính tiền, và nửa
+ * tháng còn thiếu của tháng kết thúc cũ, sẽ được lập bù ở lần chạy sau (room-fee.service.ts).
  */
 export async function extend(user: AuthUser, id: string, input: ExtendContractInput) {
   const endDate = endOfDayVN(input.endDate);

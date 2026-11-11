@@ -17,5 +17,6 @@ export function quantityLabel(item: InvoiceItem, period: string) {
 }
 
 export function invoiceTitle({ type, period }: Pick<InvoiceRef, 'type' | 'period'>) {
-  return `${INVOICE_TYPE[type].label} ${/^\d{4}-\d{2}$/.test(period) ? `tháng ${formatMonth(period)}` : `kỳ ${period}`}`
+  const [, month, topUp] = /^(\d{4}-\d{2})(-BS)?$/.exec(period) ?? []
+  return `${INVOICE_TYPE[type].label} ${month ? `${topUp ? 'bổ sung ' : ''}tháng ${formatMonth(month)}` : `kỳ ${period}`}`
 }

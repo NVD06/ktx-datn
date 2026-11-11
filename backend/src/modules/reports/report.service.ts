@@ -181,7 +181,7 @@ async function buildingStats(user: AuthUser) {
       ...building,
       rooms: own.length,
       beds: { total: beds.length, occupied: beds.filter((b) => b.status === 'OCCUPIED').length },
-      overdue: debts.find((d) => d.building.id === building.id)!.overdue,
+      overdue: debts.find((d) => d.building.id === building.id)?.overdue ?? { count: 0, amount: '0' },
       openRequests: requests.filter((r) => r.room.buildingId === building.id).length,
       hygieneAverage: scores.length ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null,
       lowHygieneRooms: scores.filter((s) => s < HYGIENE_WARNING_SCORE).length,
@@ -255,20 +255,14 @@ export async function revenue(user: AuthUser, { from, to }: MonthRangeQuery) {
 export function debt(user: AuthUser) {
   return invoiceService.debtByBuilding(user);
 }
-const DEBTOR_INVOICE_SELECT = {
-  amount: true,
-  dueDate: true,
-  contract: {
-    select: {
-      bed: { select: { room: { select: ROOM_REF_SELECT } } },
-      registration: { select: { student: { select: CONTRACT_STUDENT_SELECT } } },
-    },
-  },
-} as const satisfies Prisma.InvoiceSelect;
-type DebtorContract = Prisma.InvoiceGetPayload<{ select: typeof DEBTOR_INVOICE_SELECT }>['contract'];
+const DEBTOR_CONTRACT_SELECT = {
+  id: true,
+  bed: { select: { room: { select: ROOM_REF_SELECT } } },
+  registration: { select: { student: { select: CONTRACT_STUDENT_SELECT } } },
+} as const satisfies Prisma.ContractSelect;
 interface Debtor {
-  student: DebtorContract['registration']['student'];
-  room: DebtorContract['bed']['room'];
+  student: { id: string; fullName: string };
+  contractId: string;
   unpaid: { count: number; amount: number };
   overdue: { count: number; amount: number };
 }
@@ -282,19 +276,24 @@ export async function debtors(user: AuthUser, { search, page = 1, limit = 20 }: 
         search ? { contract: { registration: { student: studentSearch(search) } } } : {},
       ],
     },
-    select: DEBTOR_INVOICE_SELECT,
+    select: {
+      amount: true,
+      dueDate: true,
+      contractId: true,
+      contract: { select: { registration: { select: { student: { select: { id: true, fullName: true } } } } } },
+    },
     orderBy: { dueDate: 'asc' },
   });
   const byStudent = new Map<string, Debtor>();
-  for (const { amount, dueDate, contract } of invoices) {
+  for (const { amount, dueDate, contractId, contract } of invoices) {
     const { student } = contract.registration;
     const row = byStudent.get(student.id) ?? {
       student,
-      room: contract.bed.room,
+      contractId,
       unpaid: { count: 0, amount: 0 },
       overdue: { count: 0, amount: 0 },
     };
-    row.room = contract.bed.room;
+    row.contractId = contractId;
     row.unpaid.count++;
     row.unpaid.amount += Number(amount);
     if (dueDate < now) {
@@ -309,11 +308,20 @@ export async function debtors(user: AuthUser, { search, page = 1, limit = 20 }: 
       b.unpaid.amount - a.unpaid.amount ||
       a.student.fullName.localeCompare(b.student.fullName, 'vi'),
   );
+  const pageRows = rows.slice((page - 1) * limit, page * limit);
+  const contracts = await prisma.contract.findMany({
+    where: { id: { in: pageRows.map((r) => r.contractId) } },
+    select: DEBTOR_CONTRACT_SELECT,
+  });
+  const detail = new Map(contracts.map((c) => [c.id, c]));
   const money = ({ count, amount }: Debtor['unpaid']) => ({ count, amount: String(amount) });
   return {
-    data: rows
-      .slice((page - 1) * limit, page * limit)
-      .map(({ student, room, unpaid, overdue }) => ({ ...student, room, unpaid: money(unpaid), overdue: money(overdue) })),
+    data: pageRows.flatMap(({ contractId, unpaid, overdue }) => {
+      const contract = detail.get(contractId);
+      return contract
+        ? [{ ...contract.registration.student, room: contract.bed.room, unpaid: money(unpaid), overdue: money(overdue) }]
+        : [];
+    }),
     meta: { page, limit, total: rows.length },
   };
 }
