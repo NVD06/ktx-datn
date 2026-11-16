@@ -12,8 +12,8 @@ import { overdueWhere } from './invoice-rules.js';
 import type { InvoiceListQuery, RemindInvoicesInput } from './invoice.schema.js';
 
 /*
- * Hóa đơn (US-04.3) — chỉ đọc, và nhắc nộp tiền. Hóa đơn được lập ở nơi khác: tiền phòng khi ký /
- * gia hạn hợp đồng (contract.service.ts), điện nước khi chốt chỉ số (US-04.2).
+ * Hóa đơn (US-04.3) — chỉ đọc, và nhắc nộp tiền. Hóa đơn được lập ở nơi khác: tiền phòng khi ký hợp
+ * đồng và vào đầu mỗi tháng (room-fee.service.ts), điện nước khi chốt chỉ số (US-04.2).
  * Phạm vi đi theo hợp đồng: SV thấy hóa đơn của mình, Manager thấy tòa mình.
  */
 

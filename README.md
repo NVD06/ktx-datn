@@ -5,9 +5,7 @@
 <p align="center">
   <a href="#tính-năng">Tính năng</a> •
   <a href="#cài-đặt">Cài đặt</a> •
-  <a href="#tài-khoản-mẫu">Tài khoản mẫu</a> •
-  <a href="#kiểm-thử">Kiểm thử</a> •
-  <a href="#thông-tin">Thông tin</a>
+  <a href="#công-nghệ">Công nghệ</a>
 </p>
 
 ## Tính năng
@@ -17,8 +15,9 @@
 - **Đăng ký ở và hợp đồng** — Sinh viên nộp đơn, Quản lý duyệt và xếp giường, sinh viên ký hợp đồng trực tuyến.
 - **Hóa đơn** — Tự động lập hóa đơn tiền phòng hằng tháng, chốt và chia tiền điện nước theo đầu người.
 - **Thanh toán VNPay** — Thanh toán trực tuyến, xác nhận qua ReturnURL và IPN.
-- **Sửa chữa và vệ sinh** — Gửi, xử lý yêu cầu sửa chữa; chấm điểm vệ sinh theo đợt.
-- **Báo cáo** — Dashboard, báo cáo lấp đầy, doanh thu và công nợ.
+- **Sửa chữa và vệ sinh** — Gửi, xử lý yêu cầu sửa chữa; chấm điểm vệ sinh theo đợt bằng lỗi vi phạm.
+- **Thông báo và nội quy** — Bảng tin của ban quản lý cho toàn ký túc xá hoặc từng tòa; nội quy do Quản trị viên soạn.
+- **Báo cáo** — Dashboard, báo cáo lấp đầy, doanh thu và công nợ, sửa chữa và vệ sinh.
 
 ## Cài đặt
 

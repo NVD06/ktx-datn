@@ -1,0 +1,8 @@
+Môi trường chạy kiểm thử tự động (đọc ngày 16/11/2026)
+Máy: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz, RAM 15,8 GB (16 GB)
+Hệ điều hành: Microsoft Windows 11 Home Single Language
+Node.js: v24.16.0
+PostgreSQL: 17.11 (CSDL riêng ktx_test)
+Lệnh: npx vitest run --reporter=verbose --reporter=json
+Kết quả: 16/16 tệp, 92/92 ca đạt, bắt đầu 08:22:10 ngày 16/11/2026, tổng thời gian 22,36 giây
+Mã nguồn: nhánh main, commit 3c43d57 (2026-11-11 11:13:20 +0700); cây làm việc chỉ khác commit ở chú thích và câu mô tả (schema.prisma, hygiene.schema.ts, invoice.service.ts, README.md, ci.yml), không đổi hành vi

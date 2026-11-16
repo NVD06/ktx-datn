@@ -1,92 +1,129 @@
 npm notice run backend@1.0.0 npx
-npm notice run vitest run --reporter=verbose --reporter=json --outputFile.json=E:\DATN\bang-chung\vitest-ket-qua.json
+npm notice run vitest run --reporter=verbose --reporter=json --outputFile.json=E:/DATN/ktx-datn/bang-chung/1-tu-dong/vitest-ket-qua.json
 
  RUN  v5.0.2 E:/DATN/ktx-datn/backend
 
- Γ£ô tests/reports.test.ts > Dashboard (US-06.1) > Manager chß╗ë thß║Ñy t├▓a m├¼nh, Admin thß║Ñy cß║ú hß╗ç thß╗æng 374ms
- Γ£ô tests/reports.test.ts > Dashboard (US-06.1) > SV ─æ├ú k├╜ cho kß╗│ sau m├á ch╞░a tß╗¢i ng├áy v├áo ß╗ƒ kh├┤ng t├¡nh l├á ─æang ß╗ƒ 91ms
- Γ£ô tests/reports.test.ts > Dashboard (US-06.1) > doanh thu 6 th├íng: chß╗ë giao dß╗ïch th├ánh c├┤ng, chia th├íng theo giß╗¥ VN, t├ích tiß╗ün ph├▓ng / ─æiß╗çn n╞░ß╗¢c 111ms
- Γ£ô tests/reports.test.ts > B├ío c├ío lß║Ñp ─æß║ºy (US-06.2) > t├▓a ΓåÆ tß║ºng ΓåÆ ph├▓ng, ─æß║┐m tß╗½ng trß║íng th├íi gi╞░ß╗¥ng, bß╗Å ph├▓ng ngß╗½ng hoß║ít ─æß╗Öng 109ms
- Γ£ô tests/reports.test.ts > B├ío c├ío lß║Ñp ─æß║ºy (US-06.2) > tß╗òng c├íc t├▓a khß╗¢p ├┤ tß╗╖ lß╗ç lß║Ñp ─æß║ºy cß╗ºa dashboard 108ms
- Γ£ô tests/reports.test.ts > B├ío c├ío lß║Ñp ─æß║ºy (US-06.2) > lß╗ìc theo t├▓a: Admin xem ─æ╞░ß╗úc t├▓a bß║Ñt kß╗│, Manager hß╗Åi t├▓a kh├íc bß╗ï 403, t├▓a kh├┤ng tß╗ôn tß║íi 404 92ms
- Γ£ô tests/reports.test.ts > B├ío c├ío doanh thu (US-06.3) > ─æß╗º mß╗ìi th├íng trong khoß║úng, khß╗¢p biß╗âu ─æß╗ô dashboard, tß╗òng chß╗ë t├¡nh trong khoß║úng 129ms
- Γ£ô tests/reports.test.ts > B├ío c├ío doanh thu (US-06.3) > Admin thß║Ñy doanh thu mß╗ìi t├▓a 107ms
- Γ£ô tests/reports.test.ts > B├ío c├ío doanh thu (US-06.3) > khoß║úng th├íng sai ─æß╗ïnh dß║íng, ng╞░ß╗úc chiß╗üu hoß║╖c qu├í 24 th├íng kh├┤ng hß╗úp lß╗ç 101ms
- Γ£ô tests/reports.test.ts > B├ío c├ío c├┤ng nß╗ú (US-06.3) > mß╗ùi SV mß╗Öt d├▓ng, qu├í hß║ín nhiß╗üu tiß╗ün nhß║Ñt l├¬n ─æß║ºu, ph├▓ng cß╗ºa hß╗úp ─æß╗ông gß║ºn nhß║Ñt 110ms
- Γ£ô tests/reports.test.ts > B├ío c├ío c├┤ng nß╗ú (US-06.3) > t├¼m theo t├¬n v├á ph├ón trang 105ms
- Γ£ô tests/reports.test.ts > B├ío c├ío c├┤ng nß╗ú (US-06.3) > tß╗òng nß╗ú c├íc SV = tß╗òng c├íc t├▓a = ├┤ "Ch╞░a thanh to├ín" cß╗ºa dashboard 114ms
- Γ£ô tests/reports.test.ts > B├ío c├ío sß╗¡a chß╗»a & vß╗ç sinh (US-06.4) > y├¬u cß║ºu theo trß║íng th├íi tß╗½ng th├íng gß╗¡i, chß╗ë trong khoß║úng v├á trong phß║ím vi 84ms
- Γ£ô tests/reports.test.ts > B├ío c├ío sß╗¡a chß╗»a & vß╗ç sinh (US-06.4) > c├íc lß║ºn chß║Ñm d╞░ß╗¢i 60 trong khoß║úng, mß╗¢i nhß║Ñt tr╞░ß╗¢c 75ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > mß║¡t khß║⌐u ban ─æß║ºu l├á m├ú SV; ch╞░a ─æß╗òi th├¼ chß╗ë gß╗ìi ─æ╞░ß╗úc /auth/me v├á ─æß╗òi mß║¡t khß║⌐u 441ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > ─æß╗òi mß║¡t khß║⌐u: sai mß║¡t khß║⌐u hiß╗çn tß║íi, tr├╣ng mß║¡t khß║⌐u c┼⌐, hoß║╖c d├╣ng m├ú SV ─æß╗üu bß╗ï tß╗½ chß╗æi 368ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > ─æß╗òi hoß║╖c ─æß║╖t lß║íi mß║¡t khß║⌐u: phi├¬n ─æ─âng nhß║¡p tr╞░ß╗¢c ─æ├│ bß╗ï 401, ─æ─âng nhß║¡p lß║íi th├¼ d├╣ng ─æ╞░ß╗úc 268ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > tß║ío lß║╗: email hoß║╖c m├ú SV ─æ├ú c├│ t├ái khoß║ún -> 409, lß╗ùi gß║»n ─æ├║ng tr╞░ß╗¥ng 103ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > nhß║¡p Excel: dryRun kh├┤ng ghi g├¼; nhß║¡p thß║¡t tß║ío ─æß╗º t├ái khoß║ún k├¿m hß╗ô s╞í, bß║»t ─æß╗òi mß║¡t khß║⌐u 169ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > nhß║¡p Excel: c├▓n d├▓ng lß╗ùi th├¼ kh├┤ng tß║ío ai; d├▓ng ─æ├ú c├│ ─æ├║ng t├ái khoß║ún ─æ├│ th├¼ bß╗Å qua 222ms
- Γ£ô tests/student-account.test.ts > T├ái khoß║ún sinh vi├¬n do Admin cß║Ñp > ─æß║╖t lß║íi mß║¡t khß║⌐u: vß╗ü m├ú SV v├á bß║»t ─æß╗òi lß║íi; t├ái khoß║ún quß║ún l├╜ th├¼ kh├┤ng ─æß║╖t lß║íi ─æ╞░ß╗úc 334ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > d╞░ß╗¢i 15 ng├áy nß╗¡a th├íng, tß╗½ 15 ng├áy cß║ú th├íng 231ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > ß╗ƒ trß╗ìn th├íng ΓåÆ mß╗Öt h├│a ─æ╞ín cß║ú th├íng theo gi├í hß╗úp ─æß╗ông; chß║íy lß║íi kh├┤ng lß║¡p tr├╣ng 100ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > k├╜ giß╗»a th├íng: t├¡nh tß╗½ ng├áy k├╜ ΓÇö c├▓n d╞░ß╗¢i 15 ng├áy th├¼ nß╗¡a th├íng 84ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > chß║Ñm dß╗⌐t giß╗»a th├íng: t├¡nh tß╗¢i ng├áy chß║Ñm dß╗⌐t; chß║Ñm dß╗⌐t tr╞░ß╗¢c th├íng th├¼ kh├┤ng lß║¡p 79ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > kh├┤ng lß║¡p cho hß╗úp ─æß╗ông ch╞░a k├╜, v├á hß╗úp ─æß╗ông kiß╗âu c┼⌐ ─æ├ú c├│ h├│a ─æ╞ín cß║ú kß╗│ 72ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > ß╗ƒ qu├í ng├áy kß║┐t th├║c ch╞░a gia hß║ín th├¼ ch╞░a t├¡nh; gia hß║ín xong lß║ºn chß║íy sau lß║¡p b├╣ 86ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng hß║▒ng th├íng ΓÇö quy tß║»c nß╗¡a th├íng > trß║ú tr╞░ß╗¢c: th├íng n├áy lß║¡p lu├┤n, cß║ú th├íng; th├íng ch╞░a bß║»t ─æß║ºu th├¼ ch╞░a lß║¡p 84ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng th├íng ─æß║ºu ΓÇö lß║¡p ngay l├║c k├╜ > kß╗│ ß╗ƒ ─æ├ú bß║»t ─æß║ºu: h├│a ─æ╞ín th├íng n├áy t├¡nh tß╗½ ng├áy k├╜; bß╗Ö hß║╣n giß╗¥ kh├┤ng lß║¡p lß║íi th├íng ─æ├│ 130ms
- Γ£ô tests/room-fee.test.ts > Tiß╗ün ph├▓ng th├íng ─æß║ºu ΓÇö lß║¡p ngay l├║c k├╜ > k├╜ tr╞░ß╗¢c kß╗│ ß╗ƒ: h├│a ─æ╞ín th├íng ─æß║ºu l├á th├íng bß║»t ─æß║ºu ß╗ƒ, lß║¡p ngay l├║c k├╜ 107ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > h├│a ─æ╞ín ─æiß╗çn n╞░ß╗¢c l╞░u ng╞░ß╗¥i chß╗æt; quß║ún l├╜ ─æ├ú chß╗æt th├¼ kh├┤ng x├│a ─æ╞░ß╗úc t├ái khoß║ún 294ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > x├│a h├│a ─æ╞ín cß╗ºa cß║ú ph├▓ng, trß║ú lß║íi chß╗ë sß╗æ ─æ├ú nhß║¡p, rß╗ôi chß╗æt lß║íi ─æ╞░ß╗úc 111ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > ─æ├ú c├│ SV trß║ú tiß╗ün th├¼ kh├┤ng hß╗ºy ─æ╞░ß╗úc, kh├┤ng x├│a g├¼ 96ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > SV ─æang ß╗ƒ cß╗òng VNPay th├¼ chß║╖n; giao dß╗ïch ─æ├ú hß║┐t hß║ín hoß║╖c thß║Ñt bß║íi th├¼ x├│a c├╣ng h├│a ─æ╞ín 89ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > ─æ├ú chß╗æt th├íng sau th├¼ phß║úi hß╗ºy th├íng sau tr╞░ß╗¢c 123ms
- Γ£ô tests/utility-cancel.test.ts > Hß╗ºy lß║ºn chß╗æt ─æiß╗çn n╞░ß╗¢c cß╗ºa mß╗Öt ph├▓ng > Manager t├▓a kh├íc nhß║¡n 403; ph├▓ng ch╞░a chß╗æt th├íng ─æ├│ th├¼ 404 90ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > ph├▓ng lß║Ñy tß╗½ hß╗úp ─æß╗ông ─æang ß╗ƒ, ─æi ─æß╗º chuß╗ùi tß╗¢i CONFIRMED k├¿m mß╗æc thß╗¥i gian 415ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > chß║╖n nhß║úy c├│c PENDING ΓåÆ DONE v├á b╞░ß╗¢c l├╣i, trß║íng th├íi giß╗» nguy├¬n 84ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > tß╗½ chß╗æi khi c├▓n PENDING; SV kh├┤ng x├íc nhß║¡n ─æ╞░ß╗úc y├¬u cß║ºu ch╞░a sß╗¡a xong 71ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > Manager t├▓a kh├íc kh├┤ng thß║Ñy, kh├┤ng xß╗¡ l├╜ ─æ╞░ß╗úc (403); SV kh├íc kh├┤ng x├íc nhß║¡n ─æ╞░ß╗úc (404) 95ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > SV ch╞░a ß╗ƒ ph├▓ng n├áo (chß╗ë c├│ hß╗úp ─æß╗ông kß╗│ sau) th├¼ kh├┤ng gß╗¡i ─æ╞░ß╗úc 67ms
- Γ£ô tests/maintenance.test.ts > Y├¬u cß║ºu sß╗¡a chß╗»a (US-05.1 ΓåÆ US-05.3) > hai Manager c├╣ng bß║Ñm tiß║┐p nhß║¡n: ─æ├║ng mß╗Öt ng╞░ß╗¥i th├ánh c├┤ng 70ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > sß╗æ tiß╗ün gß╗¡i VNPay lß║Ñy tß╗½ h├│a ─æ╞ín trong DB, nh├ón 100 328ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > SV kh├┤ng trß║ú ─æ╞░ß╗úc h├│a ─æ╞ín cß╗ºa ng╞░ß╗¥i kh├íc 69ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > ReturnURL, IPN rß╗ôi SV F5 ΓÇö c├╣ng mß╗Öt giao dß╗ïch gß╗ìi 3 lß║ºn ΓåÆ PAID ─æ├║ng mß╗Öt lß║ºn 72ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > ReturnURL v├á IPN tß╗¢i c├╣ng l├║c ΓåÆ ─æ├║ng mß╗Öt lß╗¥i gß╗ìi ghi, c├íc lß╗¥i gß╗ìi c├▓n lß║íi vß║½n b├ío ─æ├ú trß║ú 119ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > sai chß╗» k├╜ (97) hoß║╖c chß╗» k├╜ ─æ├║ng nh╞░ng lß╗çch sß╗æ tiß╗ün (04) ΓåÆ kh├┤ng ghi g├¼ 67ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > SV hß╗ºy ß╗ƒ cß╗òng VNPay ΓåÆ giao dß╗ïch FAILED, lß║ºn thß╗¡ sau vß║½n trß║ú ─æ╞░ß╗úc 69ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > SV mß╗ƒ hai tab v├á trß║ú cß║ú hai ΓåÆ h├│a ─æ╞ín PAID mß╗Öt lß║ºn, giao dß╗ïch sau DUPLICATE, doanh thu chß╗ë t├¡nh mß╗Öt lß║ºn 109ms
- Γ£ô tests/payment.test.ts > Thanh to├ín VNPay ΓÇö pay() v├á confirm() (US-04.4, US-04.5) > hai giao dß╗ïch cß╗ºa c├╣ng h├│a ─æ╞ín b├ío vß╗ü c├╣ng l├║c ΓåÆ ─æ├║ng mß╗Öt SUCCESS, mß╗Öt DUPLICATE 70ms
- Γ£ô tests/approve.test.ts > Duyß╗çt ─æ╞ín v├á xß║┐p gi╞░ß╗¥ng (US-03.1, US-03.2) > 2 lß╗çnh duyß╗çt song song v├áo c├╣ng mß╗Öt gi╞░ß╗¥ng ΓåÆ ─æ├║ng mß╗Öt lß╗çnh th├ánh c├┤ng, lß╗çnh kia 409 906ms
- Γ£ô tests/approve.test.ts > Duyß╗çt ─æ╞ín v├á xß║┐p gi╞░ß╗¥ng (US-03.1, US-03.2) > t├▓a nam kh├┤ng xß║┐p ─æ╞░ß╗úc sinh vi├¬n nß╗», kß╗â cß║ú khi ─æ╞ín ─æ├ú ghi ─æ├¡ch danh t├▓a ─æ├│ 70ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > l╞░u cß║ú ─æß╗út, chß║Ñm lß║íi c├╣ng ng├áy th├¼ ghi ─æ├¿, ─æß║┐m ph├▓ng d╞░ß╗¢i 60 286ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > ─æiß╗âm l╞░u = ─æiß╗âm vß╗ç sinh ΓêÆ ─æiß╗âm trß╗½; ─æiß╗âm trß╗½ lß╗¢n h╞ín ─æiß╗âm vß╗ç sinh kh├┤ng hß╗úp lß╗ç 65ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > ph├▓ng ngo├ái t├▓a (400), t├▓a kh├íc (403), ng├áy sau h├┤m nay (400) ─æß╗üu kh├┤ng l╞░u g├¼ 68ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > bß║úng ─æiß╗âm lß╗ìc d╞░ß╗¢i ng╞░ß╗íng v├á theo th├íng; Manager t├▓a kh├íc kh├┤ng thß║Ñy, kh├┤ng x├│a ─æ╞░ß╗úc 119ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > bß║úng chß║Ñm ─æß║┐m SV ß╗ƒ ─æ├║ng ng├áy kiß╗âm tra: SV ─æ├ú trß║ú ph├▓ng tr╞░ß╗¢c ng├áy ─æ├│ kh├┤ng t├¡nh 79ms
- Γ£ô tests/hygiene.test.ts > Chß║Ñm ─æiß╗âm vß╗ç sinh (US-05.4, US-05.5) > SV chß╗ë thß║Ñy ─æiß╗âm ph├▓ng m├¼nh trong thß╗¥i gian m├¼nh ß╗ƒ 74ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > t├▓a nam: ─æ╞ín chß╗ìn t├▓a m├¼nh + ─æ╞ín "t├▓a n├áo c┼⌐ng ─æ╞░ß╗úc" cß╗ºa SV nam 277ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > t├▓a nß╗»: chß╗ë ─æ╞ín "t├▓a n├áo c┼⌐ng ─æ╞░ß╗úc" cß╗ºa SV nß╗» 69ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > t├▓a nam thß╗⌐ hai: ─æ╞ín chß╗ìn t├▓a m├¼nh + ─æ╞ín "t├▓a n├áo c┼⌐ng ─æ╞░ß╗úc" cß╗ºa SV nam 66ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > Admin thß║Ñy tß║Ñt cß║ú 71ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > t├¼m ─æ├║ng t├¬n SV ─æ├ú chß╗ìn t├▓a kh├íc vß║½n kh├┤ng ra 91ms
- Γ£ô tests/registration-scope.test.ts > Phß║ím vi ─æ╞ín ─æ─âng k├╜ cß╗ºa Manager (US-02.4) > kh├┤ng tß╗½ chß╗æi ─æ╞░ß╗úc ─æ╞ín ngo├ái phß║ím vi (403) 71ms
- Γ£ô tests/invoice-debt.test.ts > C├┤ng nß╗ú theo t├▓a (US-04.6) > Admin thß║Ñy mß╗ìi t├▓a theo t├¬n, t├▓a kh├┤ng nß╗ú vß║½n c├│ mß║╖t vß╗¢i sß╗æ 0 522ms
- Γ£ô tests/invoice-debt.test.ts > C├┤ng nß╗ú theo t├▓a (US-04.6) > Manager chß╗ë thß║Ñy t├▓a m├¼nh 101ms
- Γ£ô tests/user-delete.test.ts > X├│a t├ái khoß║ún > sinh vi├¬n ch╞░a c├│ lß╗ïch sß╗¡ (cß║Ñp nhß║ºm) th├¼ x├│a hß║│n, hß╗ô s╞í x├│a theo 311ms
- Γ£ô tests/user-delete.test.ts > X├│a t├ái khoß║ún > sinh vi├¬n ─æ├ú c├│ ─æ╞ín ─æ─âng k├╜ th├¼ kh├┤ng x├│a ΓÇö giß╗» lß╗ïch sß╗¡, gß╗úi ├╜ kh├│a 59ms
- Γ£ô tests/user-delete.test.ts > X├│a t├ái khoß║ún > quß║ún l├╜ tß╗½ng duyß╗çt ─æ╞ín th├¼ kh├┤ng x├│a; quß║ún l├╜ ch╞░a l├ám g├¼ th├¼ x├│a ─æ╞░ß╗úc, t├▓a trß╗æng quß║ún l├╜ 71ms
- Γ£ô tests/user-delete.test.ts > X├│a t├ái khoß║ún > kh├┤ng tß╗▒ x├│a m├¼nh, kh├┤ng x├│a t├ái khoß║ún quß║ún trß╗ï vi├¬n 49ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > k├╜ rß╗ôi verify lß║íi th├¼ ─æ├║ng, kß╗â cß║ú m├┤ tß║ú c├│ dß║Ñu c├ích 239ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > sß╗¡a bß║Ñt kß╗│ tham sß╗æ n├áo sau khi k├╜ ΓåÆ sai chß╗» k├╜ 41ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > th├¬m tham sß╗æ vnp_ kh├┤ng c├│ l├║c k├╜ ΓåÆ sai chß╗» k├╜ 44ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > k├╜ bß║▒ng kh├│a kh├íc hoß║╖c thiß║┐u vnp_SecureHash ΓåÆ sai chß╗» k├╜ 50ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > bß╗Å qua vnp_SecureHashType, tham sß╗æ kh├┤ng phß║úi vnp_ v├á chß╗» hoa/th╞░ß╗¥ng cß╗ºa chß╗» k├╜ 50ms
- Γ£ô tests/vnpay.test.ts > Chß╗» k├╜ VNPay (utils/vnpay.ts) > vnpDate theo giß╗¥ Viß╗çt Nam ΓÇö 17:30 UTC ng├áy 30/09 l├á 00:30 ng├áy 01/10 45ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > Manager chỉ thấy tòa mình, Admin thấy cả hệ thống 602ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > việc chờ xử lý và số liệu từng tòa theo phạm vi 143ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > SV đã ký cho kỳ sau mà chưa tới ngày vào ở không tính là đang ở 104ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > doanh thu 6 tháng: chỉ giao dịch thành công, chia tháng theo giờ VN, tách tiền phòng / điện nước 116ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tòa → tầng → phòng, đếm từng trạng thái giường, bỏ phòng ngừng hoạt động 106ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tổng các tòa khớp ô tỷ lệ lấp đầy của dashboard 111ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > lọc theo tòa: Admin xem được tòa bất kỳ, Manager hỏi tòa khác bị 403, tòa không tồn tại 404 99ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > đủ mọi tháng trong khoảng, khớp biểu đồ dashboard, tổng chỉ tính trong khoảng 149ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > Admin thấy doanh thu mọi tòa 113ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > khoảng tháng sai định dạng, ngược chiều hoặc quá 24 tháng không hợp lệ 108ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > mỗi SV một dòng, quá hạn nhiều tiền nhất lên đầu, phòng của hợp đồng gần nhất 116ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tìm theo tên và phân trang 131ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tổng nợ các SV = tổng các tòa = ô "Chưa thanh toán" của dashboard 145ms
+ ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > yêu cầu theo trạng thái từng tháng gửi, chỉ trong khoảng và trong phạm vi 91ms
+ ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > các lần chấm dưới 60 trong khoảng, mới nhất trước 88ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > mật khẩu ban đầu là mã SV; chưa đổi thì chỉ gọi được /auth/me và đổi mật khẩu 477ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi mật khẩu: sai mật khẩu hiện tại, trùng mật khẩu cũ, hoặc dùng mã SV đều bị từ chối 388ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi hoặc đặt lại mật khẩu: phiên đăng nhập trước đó bị 401, đăng nhập lại thì dùng được 275ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > tạo lẻ: email hoặc mã SV đã có tài khoản -> 409, lỗi gắn đúng trường 144ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: dryRun không ghi gì; nhập thật tạo đủ tài khoản kèm hồ sơ, bắt đổi mật khẩu 197ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: còn dòng lỗi thì không tạo ai; dòng đã có đúng tài khoản đó thì bỏ qua 233ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đặt lại mật khẩu: về mã SV và bắt đổi lại; tài khoản quản lý thì không đặt lại được 330ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > dưới 15 ngày nửa tháng, từ 15 ngày cả tháng 234ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở trọn tháng → một hóa đơn cả tháng theo giá hợp đồng; chạy lại không lập trùng 106ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ký giữa tháng: tính từ ngày ký — còn dưới 15 ngày thì nửa tháng 98ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > chấm dứt giữa tháng: tính tới ngày chấm dứt; chấm dứt trước tháng thì không lập 92ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > không lập cho hợp đồng chưa ký, và hợp đồng kiểu cũ đã có hóa đơn cả kỳ 82ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > hợp đồng kiểu cũ: chỉ tính những ngày ở sau mốc đã trả theo hóa đơn cả kỳ / gia hạn 88ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > tháng kết thúc đã lập nửa tháng, gia hạn xong lần chạy sau lập bổ sung nửa còn lại 89ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở quá ngày kết thúc chưa gia hạn thì chưa tính; gia hạn xong lần chạy sau lập bù 96ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > trả trước: tháng này lập luôn, cả tháng; tháng chưa bắt đầu thì chưa lập 92ms
+ ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > kỳ ở đã bắt đầu: hóa đơn tháng này tính từ ngày ký; bộ hẹn giờ không lập lại tháng đó 235ms
+ ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > ký trước kỳ ở: hóa đơn tháng đầu là tháng bắt đầu ở, lập ngay lúc ký 127ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lưu cả đợt: điểm trừ là tổng các lỗi, chấm lại cùng ngày thì ghi đè 423ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > trừ dồn trong kỳ nửa tháng, sửa hoặc xóa đợt trước thì tính lại đợt sau, sang kỳ mới về 100 113ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lỗi lạ hoặc trùng lỗi không hợp lệ; phòng ngoài tòa (400), tòa khác (403), ngày sau hôm nay (400) không lưu gì 76ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng điểm lọc dưới ngưỡng và theo tháng; Manager tòa khác không thấy, không xóa được 126ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng chấm đếm SV ở đúng ngày kiểm tra: SV đã trả phòng trước ngày đó không tính 89ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > SV chỉ thấy điểm phòng mình trong thời gian mình ở 85ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > mỗi kỳ nửa tháng dưới 60 điểm là một dấu trong hợp đồng, kỳ vào ở giữa chừng không tính; quá 5 dấu thì không ưu tiên 176ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > số tiền gửi VNPay lấy từ hóa đơn trong DB, nhân 100 355ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV không trả được hóa đơn của người khác 75ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL, IPN rồi SV F5 — cùng một giao dịch gọi 3 lần → PAID đúng một lần 81ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL và IPN tới cùng lúc → đúng một lời gọi ghi, các lời gọi còn lại vẫn báo đã trả 233ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > sai chữ ký (97) hoặc chữ ký đúng nhưng lệch số tiền (04) → không ghi gì 95ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV hủy ở cổng VNPay → giao dịch FAILED, lần thử sau vẫn trả được 137ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV mở hai tab và trả cả hai → hóa đơn PAID một lần, giao dịch sau DUPLICATE, doanh thu chỉ tính một lần 230ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > hai giao dịch của cùng hóa đơn báo về cùng lúc → đúng một SUCCESS, một DUPLICATE 84ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > phòng lấy từ hợp đồng đang ở, đi đủ chuỗi tới CONFIRMED kèm mốc thời gian 417ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > chặn nhảy cóc PENDING → DONE và bước lùi, trạng thái giữ nguyên 94ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > từ chối khi còn PENDING; SV không xác nhận được yêu cầu chưa sửa xong 81ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > Manager tòa khác không thấy, không xử lý được (403); SV khác không xác nhận được (404) 142ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > SV chưa ở phòng nào (chỉ có hợp đồng kỳ sau) thì không gửi được 80ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > hai Manager cùng bấm tiếp nhận: đúng một người thành công 78ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > lọc chưa xong / theo tòa và số liệu đầu trang theo phạm vi 108ms
+ ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > 2 lệnh duyệt song song vào cùng một giường → đúng một lệnh thành công, lệnh kia 409 830ms
+ ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > tòa nam không xếp được sinh viên nữ, kể cả khi đơn đã ghi đích danh tòa đó 83ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 299ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nữ: chỉ đơn "tòa nào cũng được" của SV nữ 108ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam thứ hai: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 116ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > Admin thấy tất cả 83ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tìm đúng tên SV đã chọn tòa khác vẫn không ra 98ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > không từ chối được đơn ngoài phạm vi (403) 86ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > hóa đơn điện nước lưu người chốt; quản lý đã chốt thì không xóa được tài khoản 358ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > xóa hóa đơn của cả phòng, trả lại chỉ số đã nhập, rồi chốt lại được 130ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã có SV trả tiền thì không hủy được, không xóa gì 102ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > SV đang ở cổng VNPay thì chặn; giao dịch đã hết hạn hoặc thất bại thì xóa cùng hóa đơn 98ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã chốt tháng sau thì phải hủy tháng sau trước 105ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > Manager tòa khác nhận 403; phòng chưa chốt tháng đó thì 404 87ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > gửi yêu cầu không đổi ngày kết thúc, quản lý duyệt bằng gia hạn thì yêu cầu được xóa 339ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > từ chối lưu lý do; gửi lại thì xóa lý do cũ 241ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > kiểm tra ngày như gia hạn và chặn ngoài phạm vi 84ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > chấm dứt hợp đồng thì xóa yêu cầu, không xin gia hạn được nữa 97ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > mỗi SV một tin riêng gộp các hóa đơn, Manager chỉ nhắc tòa mình, hóa đơn đã nhắc hôm nay không gửi trùng 480ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hai lần bấm cùng lúc chỉ gửi một tin 84ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hóa đơn ngoài phạm vi hoặc không tồn tại thì báo lỗi, không gửi gì 75ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > tin riêng không sửa / xóa được qua bảng tin; người đã gửi nhắc không xóa được tài khoản 124ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên chưa có lịch sử (cấp nhầm) thì xóa hẳn, hồ sơ xóa theo 353ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên đã có đơn đăng ký thì không xóa — giữ lịch sử, gợi ý khóa 77ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > quản lý từng duyệt đơn thì không xóa; quản lý chưa làm gì thì xóa được, tòa trống quản lý 98ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > không tự xóa mình, không xóa tài khoản quản trị viên 61ms
+ ✓ tests/announcement.test.ts > Thông báo > Manager luôn đăng cho tòa mình, chỉ sửa / xóa tin của tòa mình 307ms
+ ✓ tests/announcement.test.ts > Thông báo > SV thấy tin toàn KTX và tòa đang ở, tin ghim trước, đánh dấu đã đọc 142ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký rồi verify lại thì đúng, kể cả mô tả có dấu cách 157ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > sửa bất kỳ tham số nào sau khi ký → sai chữ ký 55ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > thêm tham số vnp_ không có lúc ký → sai chữ ký 54ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký bằng khóa khác hoặc thiếu vnp_SecureHash → sai chữ ký 54ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > bỏ qua vnp_SecureHashType, tham số không phải vnp_ và chữ hoa/thường của chữ ký 52ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > vnpDate theo giờ Việt Nam — 17:30 UTC ngày 30/09 là 00:30 ngày 01/10 56ms
+ ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Admin thấy mọi tòa theo tên, tòa không nợ vẫn có mặt với số 0 353ms
+ ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Manager chỉ thấy tòa mình 112ms
+stdout | tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)
+prisma:error 
+Invalid `prisma.dormRule.delete()` invocation in
+E:/DATN/ktx-datn/backend/src/modules/dorm-rules/dorm-rule.service.ts:17:26
 
- Test Files  12 passed (12)
-      Tests  76 passed (76)
-   Start at  14:27:35
-   Duration  16.03s (tests 84%, setup 11%, transform 3%, import 2%)
+  14 }
+  15 
+  16 export function remove(id: string) {
+→ 17   return prisma.dormRule.delete(
+An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.
 
-    Isolate  12 workers spawned ┬╖ ~104ms startup each (spawn + environment, per file)
-             at least ~1.15s faster with isolate: false ΓÇö reuses workers across files instead of one per file
+stdout | tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)
+prisma:error 
+Invalid `prisma.dormRule.update()` invocation in
+E:/DATN/ktx-datn/backend/src/modules/dorm-rules/dorm-rule.service.ts:13:26
 
-JSON report written to E:/DATN/bang-chung/vitest-ket-qua.json
+  10 }
+  11 
+  12 export function update(id: string, input: DormRuleInput) {
+→ 13   return prisma.dormRule.update(
+An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
 
+ ✓ tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404) 224ms
+
+ Test Files  16 passed (16)
+      Tests  92 passed (92)
+   Start at  08:22:10
+   Duration  22.36s (tests 84%, setup 11%, transform 3%, import 2%)
+
+    Isolate  16 workers spawned · ~110ms startup each (spawn + environment, per file)
+             at least ~1.65s faster with isolate: false — reuses workers across files instead of one per file
+
+JSON report written to E:/DATN/ktx-datn/bang-chung/1-tu-dong/vitest-ket-qua.json

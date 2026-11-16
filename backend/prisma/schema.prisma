@@ -221,7 +221,8 @@ model RegistrationPeriod {
   stayStartAt DateTime
   stayEndAt   DateTime
   // Mã học kỳ "2026-HK1" | "2026-HK2" | "2026-HE" (năm = năm bắt đầu năm học).
-  // Thành Invoice.period của hóa đơn tiền phòng khi sinh viên ký hợp đồng.
+  // Chỉ để hiển thị trên đợt và hợp đồng. Hóa đơn tiền phòng lập theo tháng nên không còn lấy mã
+  // này làm Invoice.period — chỉ hóa đơn kiểu cũ (cả kỳ) mới mang mã dạng này.
   // Không unique: một học kỳ có thể có nhiều đợt (đợt chính + đợt bổ sung).
   term        String
 
@@ -299,7 +300,8 @@ model Invoice {
   contract   Contract    @relation(fields: [contractId], references: [id])
   type       InvoiceType
 
-  // Bắt buộc, kể cả ROOM_FEE — "2026-09" (điện nước) | "2026-HK1" (tiền phòng).
+  // Bắt buộc — tháng "2026-09" cho cả tiền phòng lẫn điện nước; "2026-09-BS" là tiền phòng bổ sung
+  // nửa tháng còn thiếu sau khi gia hạn. Mã học kỳ "2026-HK1" chỉ còn ở hóa đơn tiền phòng kiểu cũ.
   // Để nullable thì @@unique bên dưới vô hiệu, vì Postgres coi mọi NULL là khác nhau.
   period String
 
@@ -337,7 +339,7 @@ model InvoiceItem {
 
   oldIndex  Int? // chỉ số cũ — chỉ ELECTRIC/WATER
   newIndex  Int? // chỉ số mới — chỉ ELECTRIC/WATER
-  quantity  Decimal @db.Decimal(12, 2) // kWh / m³ của CẢ PHÒNG (ROOM_FEE = 1)
+  quantity  Decimal @db.Decimal(12, 2) // kWh / m³ của CẢ PHÒNG (ROOM_FEE = 1 hoặc 0,5 tháng)
   unitPrice Decimal @db.Decimal(12, 0) // snapshot đơn giá lúc chốt
   amount    Decimal @db.Decimal(12, 0) // phần của SV này = quantity * unitPrice / splitCount
 

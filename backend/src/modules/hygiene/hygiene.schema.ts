@@ -28,7 +28,7 @@ export const saveHygieneSchema = z
             .refine((v) => new Set(v).size === v.length, 'Mỗi lỗi chỉ tính một lần')
             .openapi({
               example: ['TRASH', 'CORRIDOR'],
-              description: 'Lỗi phát hiện trong đợt — điểm trừ là tổng điểm các lỗi, trừ dồn vào điểm của tháng',
+              description: 'Lỗi phát hiện trong đợt — điểm trừ là tổng điểm các lỗi, trừ dồn trong kỳ nửa tháng',
             }),
         }),
       )

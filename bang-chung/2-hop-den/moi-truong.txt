@@ -1,0 +1,6 @@
+Kiểm thử hộp đen — nguồn gốc 38 kết quả (ghi ngày 16/11/2026)
+33 ca chạy ngày 30/10/2026 ở commit 4caf28b (môi trường: 4-hieu-nang/moi-truong.txt): DN-01 → DN-06, PQ-01 → PQ-10, NV-01 → NV-13, NV-17 → NV-19, NV-21.
+5 ca chạy lại ngày 16/11/2026 ở commit 3c43d57 vì mã nguồn đã đổi: NV-14, NV-15, NV-16 (chấm vệ sinh theo lỗi vi phạm từ 08/11), NV-20 (hạn tiền phòng 4 ngày từ 11/11), NV-22 (ký hợp đồng, đi cùng NV-20).
+Cách chạy 5 ca này: gọi API thật qua HTTP tại http://localhost:3100 trên một CSDL mới nạp dữ liệu mẫu (prisma db seed); Node.js v24.16.0, PostgreSQL 17.11; ảnh là thẻ yêu cầu / phản hồi chụp bằng Chrome 1366 × 800.
+NV-14 và NV-15 đổi nội dung so với bản 30/10: bản cũ nhập điểm vệ sinh và điểm trừ, cách nhập này không còn trong hệ thống.
+TT-07 (thư mục 3-vnpay) dùng hóa đơn INV-2026-0010 của lần chạy 30/10, không chạy lại.

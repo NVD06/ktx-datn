@@ -1,6 +1,6 @@
 # Kiểm tra tự động mỗi lần đẩy code lên GitHub.
-# Chưa có test tự động — CI hiện kiểm tra: schema Prisma hợp lệ, TypeScript
-# không lỗi, lint sạch, và cả hai bên build được.
+# Test tự động chỉ chạy ở máy (backend/tests nằm trong .gitignore) — CI kiểm tra:
+# schema Prisma hợp lệ, TypeScript không lỗi, lint sạch, và cả hai bên build được.
 
 name: CI
 

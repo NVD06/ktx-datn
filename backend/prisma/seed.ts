@@ -25,7 +25,7 @@ import { dbTarget, isLocalDatabase } from './db-target.js';
  *   - Phòng + giường cho cả 2 tòa; B1 có > 20 phòng để test phân trang
  *   - Đơn, hợp đồng, hóa đơn tiền phòng + điện nước đủ các trạng thái để demo
  *   - Giao dịch VNPay thành công / thất bại — doanh thu trên dashboard có số kể cả khi sandbox lỗi
- *   - Yêu cầu sửa chữa đủ các trạng thái, điểm vệ sinh hằng tuần có lần dưới 60 điểm
+ *   - Yêu cầu sửa chữa đủ các trạng thái, điểm vệ sinh chấm hằng tuần theo lỗi vi phạm
  *
  * Thống kê (US-06) dùng lại dữ liệu trên, bổ sung vào file này nếu cần.
  *
@@ -453,7 +453,7 @@ Seed xong (phạm vi US-00 → US-06):
   Thanh toán : ${paidInvoices.length} giao dịch thành công, tổng ${Number(revenue._sum.amount ?? 0).toLocaleString('vi-VN')} đ + 1 thất bại (sv001 hủy)
   Đơn        : 2 chờ duyệt (sv006, sv007), 1 bị từ chối (sv008)
   Sửa chữa   : 6 yêu cầu đủ trạng thái (sv001, sv002 tòa ${b1.name}; sv003 tòa ${b2.name})
-  Vệ sinh    : 4 đợt hằng tuần phòng 103 mỗi tòa, 2 lần dưới 60 điểm (${b2.name}-103 ngay đợt hôm nay)
+  Vệ sinh    : 4 đợt hằng tuần phòng 103 mỗi tòa, chấm theo lỗi vi phạm (${b2.name}-103 bị trừ nhiều nhất)
 
 Đăng nhập bằng mật khẩu "${PASSWORD}":
   ${admin.email}       → ADMIN
