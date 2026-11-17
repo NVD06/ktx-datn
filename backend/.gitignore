@@ -31,6 +31,3 @@ Thumbs.db
 # Prisma Client sinh tu dong (chay "npx prisma generate")
 src/generated
 
-# Test tự động — chỉ giữ ở máy local, chạy bằng "npm test"
-tests/
-vitest.config.ts

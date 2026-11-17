@@ -3,97 +3,101 @@ npm notice run vitest run --reporter=verbose --reporter=json --outputFile.json=E
 
  RUN  v5.0.2 E:/DATN/ktx-datn/backend
 
- ✓ tests/reports.test.ts > Dashboard (US-06.1) > Manager chỉ thấy tòa mình, Admin thấy cả hệ thống 602ms
- ✓ tests/reports.test.ts > Dashboard (US-06.1) > việc chờ xử lý và số liệu từng tòa theo phạm vi 143ms
- ✓ tests/reports.test.ts > Dashboard (US-06.1) > SV đã ký cho kỳ sau mà chưa tới ngày vào ở không tính là đang ở 104ms
- ✓ tests/reports.test.ts > Dashboard (US-06.1) > doanh thu 6 tháng: chỉ giao dịch thành công, chia tháng theo giờ VN, tách tiền phòng / điện nước 116ms
- ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tòa → tầng → phòng, đếm từng trạng thái giường, bỏ phòng ngừng hoạt động 106ms
- ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tổng các tòa khớp ô tỷ lệ lấp đầy của dashboard 111ms
- ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > lọc theo tòa: Admin xem được tòa bất kỳ, Manager hỏi tòa khác bị 403, tòa không tồn tại 404 99ms
- ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > đủ mọi tháng trong khoảng, khớp biểu đồ dashboard, tổng chỉ tính trong khoảng 149ms
- ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > Admin thấy doanh thu mọi tòa 113ms
- ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > khoảng tháng sai định dạng, ngược chiều hoặc quá 24 tháng không hợp lệ 108ms
- ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > mỗi SV một dòng, quá hạn nhiều tiền nhất lên đầu, phòng của hợp đồng gần nhất 116ms
- ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tìm theo tên và phân trang 131ms
- ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tổng nợ các SV = tổng các tòa = ô "Chưa thanh toán" của dashboard 145ms
- ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > yêu cầu theo trạng thái từng tháng gửi, chỉ trong khoảng và trong phạm vi 91ms
- ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > các lần chấm dưới 60 trong khoảng, mới nhất trước 88ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > mật khẩu ban đầu là mã SV; chưa đổi thì chỉ gọi được /auth/me và đổi mật khẩu 477ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi mật khẩu: sai mật khẩu hiện tại, trùng mật khẩu cũ, hoặc dùng mã SV đều bị từ chối 388ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi hoặc đặt lại mật khẩu: phiên đăng nhập trước đó bị 401, đăng nhập lại thì dùng được 275ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > tạo lẻ: email hoặc mã SV đã có tài khoản -> 409, lỗi gắn đúng trường 144ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: dryRun không ghi gì; nhập thật tạo đủ tài khoản kèm hồ sơ, bắt đổi mật khẩu 197ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: còn dòng lỗi thì không tạo ai; dòng đã có đúng tài khoản đó thì bỏ qua 233ms
- ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đặt lại mật khẩu: về mã SV và bắt đổi lại; tài khoản quản lý thì không đặt lại được 330ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > dưới 15 ngày nửa tháng, từ 15 ngày cả tháng 234ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở trọn tháng → một hóa đơn cả tháng theo giá hợp đồng; chạy lại không lập trùng 106ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ký giữa tháng: tính từ ngày ký — còn dưới 15 ngày thì nửa tháng 98ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > chấm dứt giữa tháng: tính tới ngày chấm dứt; chấm dứt trước tháng thì không lập 92ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > không lập cho hợp đồng chưa ký, và hợp đồng kiểu cũ đã có hóa đơn cả kỳ 82ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > hợp đồng kiểu cũ: chỉ tính những ngày ở sau mốc đã trả theo hóa đơn cả kỳ / gia hạn 88ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > tháng kết thúc đã lập nửa tháng, gia hạn xong lần chạy sau lập bổ sung nửa còn lại 89ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở quá ngày kết thúc chưa gia hạn thì chưa tính; gia hạn xong lần chạy sau lập bù 96ms
- ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > trả trước: tháng này lập luôn, cả tháng; tháng chưa bắt đầu thì chưa lập 92ms
- ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > kỳ ở đã bắt đầu: hóa đơn tháng này tính từ ngày ký; bộ hẹn giờ không lập lại tháng đó 235ms
- ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > ký trước kỳ ở: hóa đơn tháng đầu là tháng bắt đầu ở, lập ngay lúc ký 127ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lưu cả đợt: điểm trừ là tổng các lỗi, chấm lại cùng ngày thì ghi đè 423ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > trừ dồn trong kỳ nửa tháng, sửa hoặc xóa đợt trước thì tính lại đợt sau, sang kỳ mới về 100 113ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lỗi lạ hoặc trùng lỗi không hợp lệ; phòng ngoài tòa (400), tòa khác (403), ngày sau hôm nay (400) không lưu gì 76ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng điểm lọc dưới ngưỡng và theo tháng; Manager tòa khác không thấy, không xóa được 126ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng chấm đếm SV ở đúng ngày kiểm tra: SV đã trả phòng trước ngày đó không tính 89ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > Manager chỉ thấy tòa mình, Admin thấy cả hệ thống 420ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > việc chờ xử lý và số liệu từng tòa theo phạm vi 134ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > SV đã ký cho kỳ sau mà chưa tới ngày vào ở không tính là đang ở 114ms
+ ✓ tests/reports.test.ts > Dashboard (US-06.1) > doanh thu 6 tháng: chỉ giao dịch thành công, chia tháng theo giờ VN, tách tiền phòng / điện nước 120ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tòa → tầng → phòng, đếm từng trạng thái giường, bỏ phòng ngừng hoạt động 100ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > tổng các tòa khớp ô tỷ lệ lấp đầy của dashboard 126ms
+ ✓ tests/reports.test.ts > Báo cáo lấp đầy (US-06.2) > lọc theo tòa: Admin xem được tòa bất kỳ, Manager hỏi tòa khác bị 403, tòa không tồn tại 404 106ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > đủ mọi tháng trong khoảng, khớp biểu đồ dashboard, tổng chỉ tính trong khoảng 197ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > Admin thấy doanh thu mọi tòa 132ms
+ ✓ tests/reports.test.ts > Báo cáo doanh thu (US-06.3) > khoảng tháng sai định dạng, ngược chiều hoặc quá 24 tháng không hợp lệ 107ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > mỗi SV một dòng, quá hạn nhiều tiền nhất lên đầu, phòng của hợp đồng gần nhất 122ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tìm theo tên và phân trang 105ms
+ ✓ tests/reports.test.ts > Báo cáo công nợ (US-06.3) > tổng nợ các SV = tổng các tòa = ô "Chưa thanh toán" của dashboard 128ms
+ ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > yêu cầu theo trạng thái từng tháng gửi, chỉ trong khoảng và trong phạm vi 118ms
+ ✓ tests/reports.test.ts > Báo cáo sửa chữa & vệ sinh (US-06.4) > các lần chấm dưới 60 trong khoảng, mới nhất trước 84ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > mật khẩu ban đầu là mã SV; chưa đổi thì chỉ gọi được /auth/me và đổi mật khẩu 480ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi mật khẩu: sai mật khẩu hiện tại, trùng mật khẩu cũ, hoặc dùng mã SV đều bị từ chối 404ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đổi hoặc đặt lại mật khẩu: phiên đăng nhập trước đó bị 401, đăng nhập lại thì dùng được 289ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > tạo lẻ: email hoặc mã SV đã có tài khoản -> 409, lỗi gắn đúng trường 121ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: dryRun không ghi gì; nhập thật tạo đủ tài khoản kèm hồ sơ, bắt đổi mật khẩu 193ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > nhập Excel: còn dòng lỗi thì không tạo ai; dòng đã có đúng tài khoản đó thì bỏ qua 241ms
+ ✓ tests/student-account.test.ts > Tài khoản sinh viên do Admin cấp > đặt lại mật khẩu: về mã SV và bắt đổi lại; tài khoản quản lý thì không đặt lại được 345ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > dưới 15 ngày nửa tháng, từ 15 ngày cả tháng 344ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở trọn tháng → một hóa đơn cả tháng theo giá hợp đồng; chạy lại không lập trùng 117ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ký giữa tháng: tính từ ngày ký — còn dưới 15 ngày thì nửa tháng 106ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > chấm dứt giữa tháng: tính tới ngày chấm dứt; chấm dứt trước tháng thì không lập 103ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > không lập cho hợp đồng chưa ký, và hợp đồng kiểu cũ đã có hóa đơn cả kỳ 84ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > hợp đồng kiểu cũ: chỉ tính những ngày ở sau mốc đã trả theo hóa đơn cả kỳ / gia hạn 86ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > tháng kết thúc đã lập nửa tháng, gia hạn xong lần chạy sau lập bổ sung nửa còn lại 100ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > ở quá ngày kết thúc chưa gia hạn thì chưa tính; gia hạn xong lần chạy sau lập bù 113ms
+ ✓ tests/room-fee.test.ts > Tiền phòng hằng tháng — quy tắc nửa tháng > trả trước: tháng này lập luôn, cả tháng; tháng chưa bắt đầu thì chưa lập 100ms
+ ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > kỳ ở đã bắt đầu: hóa đơn tháng này tính từ ngày ký; bộ hẹn giờ không lập lại tháng đó 147ms
+ ✓ tests/room-fee.test.ts > Tiền phòng tháng đầu — lập ngay lúc ký > ký trước kỳ ở: hóa đơn tháng đầu là tháng bắt đầu ở, lập ngay lúc ký 246ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lưu cả đợt: điểm trừ là tổng các lỗi, chấm lại cùng ngày thì ghi đè 314ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > trừ dồn trong kỳ nửa tháng, sửa hoặc xóa đợt trước thì tính lại đợt sau, sang kỳ mới về 100 117ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > lỗi lạ hoặc trùng lỗi không hợp lệ; phòng ngoài tòa (400), tòa khác (403), ngày sau hôm nay (400) không lưu gì 89ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng điểm lọc dưới ngưỡng và theo tháng; Manager tòa khác không thấy, không xóa được 129ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > bảng chấm đếm SV ở đúng ngày kiểm tra: SV đã trả phòng trước ngày đó không tính 92ms
  ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > SV chỉ thấy điểm phòng mình trong thời gian mình ở 85ms
- ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > mỗi kỳ nửa tháng dưới 60 điểm là một dấu trong hợp đồng, kỳ vào ở giữa chừng không tính; quá 5 dấu thì không ưu tiên 176ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > số tiền gửi VNPay lấy từ hóa đơn trong DB, nhân 100 355ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV không trả được hóa đơn của người khác 75ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL, IPN rồi SV F5 — cùng một giao dịch gọi 3 lần → PAID đúng một lần 81ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL và IPN tới cùng lúc → đúng một lời gọi ghi, các lời gọi còn lại vẫn báo đã trả 233ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > sai chữ ký (97) hoặc chữ ký đúng nhưng lệch số tiền (04) → không ghi gì 95ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV hủy ở cổng VNPay → giao dịch FAILED, lần thử sau vẫn trả được 137ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV mở hai tab và trả cả hai → hóa đơn PAID một lần, giao dịch sau DUPLICATE, doanh thu chỉ tính một lần 230ms
- ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > hai giao dịch của cùng hóa đơn báo về cùng lúc → đúng một SUCCESS, một DUPLICATE 84ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > phòng lấy từ hợp đồng đang ở, đi đủ chuỗi tới CONFIRMED kèm mốc thời gian 417ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > chặn nhảy cóc PENDING → DONE và bước lùi, trạng thái giữ nguyên 94ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > từ chối khi còn PENDING; SV không xác nhận được yêu cầu chưa sửa xong 81ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > Manager tòa khác không thấy, không xử lý được (403); SV khác không xác nhận được (404) 142ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > SV chưa ở phòng nào (chỉ có hợp đồng kỳ sau) thì không gửi được 80ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > hai Manager cùng bấm tiếp nhận: đúng một người thành công 78ms
- ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > lọc chưa xong / theo tòa và số liệu đầu trang theo phạm vi 108ms
- ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > 2 lệnh duyệt song song vào cùng một giường → đúng một lệnh thành công, lệnh kia 409 830ms
- ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > tòa nam không xếp được sinh viên nữ, kể cả khi đơn đã ghi đích danh tòa đó 83ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 299ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nữ: chỉ đơn "tòa nào cũng được" của SV nữ 108ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam thứ hai: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 116ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > Admin thấy tất cả 83ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tìm đúng tên SV đã chọn tòa khác vẫn không ra 98ms
- ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > không từ chối được đơn ngoài phạm vi (403) 86ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > hóa đơn điện nước lưu người chốt; quản lý đã chốt thì không xóa được tài khoản 358ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > xóa hóa đơn của cả phòng, trả lại chỉ số đã nhập, rồi chốt lại được 130ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã có SV trả tiền thì không hủy được, không xóa gì 102ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > SV đang ở cổng VNPay thì chặn; giao dịch đã hết hạn hoặc thất bại thì xóa cùng hóa đơn 98ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã chốt tháng sau thì phải hủy tháng sau trước 105ms
- ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > Manager tòa khác nhận 403; phòng chưa chốt tháng đó thì 404 87ms
- ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > gửi yêu cầu không đổi ngày kết thúc, quản lý duyệt bằng gia hạn thì yêu cầu được xóa 339ms
- ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > từ chối lưu lý do; gửi lại thì xóa lý do cũ 241ms
- ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > kiểm tra ngày như gia hạn và chặn ngoài phạm vi 84ms
- ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > chấm dứt hợp đồng thì xóa yêu cầu, không xin gia hạn được nữa 97ms
- ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > mỗi SV một tin riêng gộp các hóa đơn, Manager chỉ nhắc tòa mình, hóa đơn đã nhắc hôm nay không gửi trùng 480ms
- ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hai lần bấm cùng lúc chỉ gửi một tin 84ms
- ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hóa đơn ngoài phạm vi hoặc không tồn tại thì báo lỗi, không gửi gì 75ms
- ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > tin riêng không sửa / xóa được qua bảng tin; người đã gửi nhắc không xóa được tài khoản 124ms
- ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên chưa có lịch sử (cấp nhầm) thì xóa hẳn, hồ sơ xóa theo 353ms
- ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên đã có đơn đăng ký thì không xóa — giữ lịch sử, gợi ý khóa 77ms
- ✓ tests/user-delete.test.ts > Xóa tài khoản > quản lý từng duyệt đơn thì không xóa; quản lý chưa làm gì thì xóa được, tòa trống quản lý 98ms
- ✓ tests/user-delete.test.ts > Xóa tài khoản > không tự xóa mình, không xóa tài khoản quản trị viên 61ms
- ✓ tests/announcement.test.ts > Thông báo > Manager luôn đăng cho tòa mình, chỉ sửa / xóa tin của tòa mình 307ms
- ✓ tests/announcement.test.ts > Thông báo > SV thấy tin toàn KTX và tòa đang ở, tin ghim trước, đánh dấu đã đọc 142ms
- ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký rồi verify lại thì đúng, kể cả mô tả có dấu cách 157ms
+ ✓ tests/hygiene.test.ts > Chấm điểm vệ sinh (US-05.4, US-05.5) > mỗi kỳ nửa tháng dưới 60 điểm là một dấu trong hợp đồng, kỳ vào ở giữa chừng không tính; quá 5 dấu thì không ưu tiên 327ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > phòng lấy từ hợp đồng đang ở, đi đủ chuỗi tới CONFIRMED kèm mốc thời gian 433ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > chặn nhảy cóc PENDING → DONE và bước lùi, trạng thái giữ nguyên 104ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > từ chối khi còn PENDING; SV không xác nhận được yêu cầu chưa sửa xong 87ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > Manager tòa khác không thấy, không xử lý được (403); SV khác không xác nhận được (404) 111ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > SV chưa ở phòng nào (chỉ có hợp đồng kỳ sau) thì không gửi được 93ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > hai Manager cùng bấm tiếp nhận: đúng một người thành công 98ms
+ ✓ tests/maintenance.test.ts > Yêu cầu sửa chữa (US-05.1 → US-05.3) > lọc chưa xong / theo tòa và số liệu đầu trang theo phạm vi 116ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > hóa đơn điện nước lưu người chốt; quản lý đã chốt thì không xóa được tài khoản 339ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > xóa hóa đơn của cả phòng, trả lại chỉ số đã nhập, rồi chốt lại được 131ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã có SV trả tiền thì không hủy được, không xóa gì 115ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > SV đang ở cổng VNPay thì chặn; giao dịch đã hết hạn hoặc thất bại thì xóa cùng hóa đơn 122ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > đã chốt tháng sau thì phải hủy tháng sau trước 120ms
+ ✓ tests/utility-cancel.test.ts > Hủy lần chốt điện nước của một phòng > Manager tòa khác nhận 403; phòng chưa chốt tháng đó thì 404 91ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > số tiền gửi VNPay lấy từ hóa đơn trong DB, nhân 100 409ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV không trả được hóa đơn của người khác 83ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL, IPN rồi SV F5 — cùng một giao dịch gọi 3 lần → PAID đúng một lần 91ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > ReturnURL và IPN tới cùng lúc → đúng một lời gọi ghi, các lời gọi còn lại vẫn báo đã trả 239ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > sai chữ ký (97) hoặc chữ ký đúng nhưng lệch số tiền (04) → không ghi gì 94ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV hủy ở cổng VNPay → giao dịch FAILED, lần thử sau vẫn trả được 94ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > SV mở hai tab và trả cả hai → hóa đơn PAID một lần, giao dịch sau DUPLICATE, doanh thu chỉ tính một lần 129ms
+ ✓ tests/payment.test.ts > Thanh toán VNPay — pay() và confirm() (US-04.4, US-04.5) > hai giao dịch của cùng hóa đơn báo về cùng lúc → đúng một SUCCESS, một DUPLICATE 94ms
+ ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > 2 lệnh duyệt song song vào cùng một giường → đúng một lệnh thành công, lệnh kia 409 720ms
+ ✓ tests/approve.test.ts > Duyệt đơn và xếp giường (US-03.1, US-03.2) > tòa nam không xếp được sinh viên nữ, kể cả khi đơn đã ghi đích danh tòa đó 94ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 324ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nữ: chỉ đơn "tòa nào cũng được" của SV nữ 89ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tòa nam thứ hai: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam 86ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > Admin thấy tất cả 97ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > tìm đúng tên SV đã chọn tòa khác vẫn không ra 103ms
+ ✓ tests/registration-scope.test.ts > Phạm vi đơn đăng ký của Manager (US-02.4) > không từ chối được đơn ngoài phạm vi (403) 88ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > mỗi SV một tin riêng gộp các hóa đơn, Manager chỉ nhắc tòa mình, hóa đơn đã nhắc hôm nay không gửi trùng 448ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hai lần bấm cùng lúc chỉ gửi một tin 80ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > hóa đơn ngoài phạm vi hoặc không tồn tại thì báo lỗi, không gửi gì 81ms
+ ✓ tests/invoice-remind.test.ts > Nhắc nộp tiền > tin riêng không sửa / xóa được qua bảng tin; người đã gửi nhắc không xóa được tài khoản 234ms
+ ✓ tests/contract-cancel.test.ts > Quản lý hủy hợp đồng chờ ký > hợp đồng chuyển CANCELLED, đơn ghi lý do, giường xếp được cho sinh viên khác 500ms
+ ✓ tests/contract-cancel.test.ts > Quản lý hủy hợp đồng chờ ký > không hủy được hợp đồng đã hủy, đang ở hoặc của tòa khác 152ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > gửi yêu cầu không đổi ngày kết thúc, quản lý duyệt bằng gia hạn thì yêu cầu được xóa 334ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > từ chối lưu lý do; gửi lại thì xóa lý do cũ 244ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > kiểm tra ngày như gia hạn và chặn ngoài phạm vi 93ms
+ ✓ tests/contract-extension.test.ts > Sinh viên xin gia hạn hợp đồng > chấm dứt hợp đồng thì xóa yêu cầu, không xin gia hạn được nữa 108ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên chưa có lịch sử (cấp nhầm) thì xóa hẳn, hồ sơ xóa theo 373ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > sinh viên đã có đơn đăng ký thì không xóa — giữ lịch sử, gợi ý khóa 76ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > quản lý từng duyệt đơn thì không xóa; quản lý chưa làm gì thì xóa được, tòa trống quản lý 82ms
+ ✓ tests/user-delete.test.ts > Xóa tài khoản > không tự xóa mình, không xóa tài khoản quản trị viên 56ms
+ ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Admin thấy mọi tòa theo tên, tòa không nợ vẫn có mặt với số 0 432ms
+ ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Manager chỉ thấy tòa mình 107ms
+ ✓ tests/announcement.test.ts > Thông báo > Manager luôn đăng cho tòa mình, chỉ sửa / xóa tin của tòa mình 438ms
+ ✓ tests/announcement.test.ts > Thông báo > SV thấy tin toàn KTX và tòa đang ở, tin ghim trước, đánh dấu đã đọc 144ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký rồi verify lại thì đúng, kể cả mô tả có dấu cách 156ms
  ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > sửa bất kỳ tham số nào sau khi ký → sai chữ ký 55ms
- ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > thêm tham số vnp_ không có lúc ký → sai chữ ký 54ms
- ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký bằng khóa khác hoặc thiếu vnp_SecureHash → sai chữ ký 54ms
- ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > bỏ qua vnp_SecureHashType, tham số không phải vnp_ và chữ hoa/thường của chữ ký 52ms
- ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > vnpDate theo giờ Việt Nam — 17:30 UTC ngày 30/09 là 00:30 ngày 01/10 56ms
- ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Admin thấy mọi tòa theo tên, tòa không nợ vẫn có mặt với số 0 353ms
- ✓ tests/invoice-debt.test.ts > Công nợ theo tòa (US-04.6) > Manager chỉ thấy tòa mình 112ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > thêm tham số vnp_ không có lúc ký → sai chữ ký 53ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > ký bằng khóa khác hoặc thiếu vnp_SecureHash → sai chữ ký 50ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > bỏ qua vnp_SecureHashType, tham số không phải vnp_ và chữ hoa/thường của chữ ký 50ms
+ ✓ tests/vnpay.test.ts > Chữ ký VNPay (utils/vnpay.ts) > vnpDate theo giờ Việt Nam — 17:30 UTC ngày 30/09 là 00:30 ngày 01/10 51ms
+ ✓ tests/facility-delete.test.ts > Không xóa cứng phòng, giường đã được tham chiếu (BR-04) > phòng đã có hợp đồng thì từ chối, phòng chưa dùng thì xóa cả giường 268ms
+ ✓ tests/facility-delete.test.ts > Không xóa cứng phòng, giường đã được tham chiếu (BR-04) > giường đang có người hoặc có lịch sử hợp đồng thì từ chối, giường chưa dùng thì xóa được 85ms
 stdout | tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)
 prisma:error 
 Invalid `prisma.dormRule.delete()` invocation in
@@ -116,14 +120,14 @@ E:/DATN/ktx-datn/backend/src/modules/dorm-rules/dorm-rule.service.ts:13:26
 → 13   return prisma.dormRule.update(
 An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
 
- ✓ tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404) 224ms
+ ✓ tests/dorm-rule.test.ts > Nội quy KTX > xếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404) 326ms
 
- Test Files  16 passed (16)
-      Tests  92 passed (92)
-   Start at  08:22:10
-   Duration  22.36s (tests 84%, setup 11%, transform 3%, import 2%)
+ Test Files  18 passed (18)
+      Tests  96 passed (96)
+   Start at  19:50:00
+   Duration  24.47s (tests 83%, setup 12%, transform 3%, import 2%)
 
-    Isolate  16 workers spawned · ~110ms startup each (spawn + environment, per file)
-             at least ~1.65s faster with isolate: false — reuses workers across files instead of one per file
+    Isolate  18 workers spawned · ~113ms startup each (spawn + environment, per file)
+             at least ~1.92s faster with isolate: false — reuses workers across files instead of one per file
 
 JSON report written to E:/DATN/ktx-datn/bang-chung/1-tu-dong/vitest-ket-qua.json

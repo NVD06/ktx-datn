@@ -1,0 +1,9 @@
+{
+  // Chỉ để editor và `npx tsc -p tests` kiểm tra kiểu cho test — build chính vẫn chỉ gồm src/.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": [".", "../src", "../vitest.config.ts"]
+}
