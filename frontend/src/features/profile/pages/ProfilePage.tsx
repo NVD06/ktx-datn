@@ -17,9 +17,13 @@ import { useProfile, useUpdateProfile } from '../hooks/useProfile'
 
 // Giữ khớp với backend/src/modules/profile/profile.schema.ts. Ô để trống = xóa giá trị.
 const pattern = (re: RegExp, message: string) => z.string().trim().refine((v) => !v || re.test(v), message)
+const today = () => toDateInput(new Date().toISOString())
 const schema = z.object({
   phone: pattern(/^0\d{9}$/, 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0'),
-  dob: z.string().refine((v) => !v || v <= toDateInput(new Date().toISOString()), 'Ngày sinh không được ở tương lai'),
+  dob: z
+    .string()
+    .refine((v) => !v || v <= today(), 'Ngày sinh không được ở tương lai')
+    .refine((v) => !v || `${+v.slice(0, 4) + 15}${v.slice(4)}` <= today(), 'Sinh viên phải đủ 15 tuổi'),
   className: z.string().trim().max(50, 'Lớp tối đa 50 ký tự'),
   faculty: z.string().trim().max(100, 'Khoa tối đa 100 ký tự'),
   hometown: z.string().trim().max(200, 'Quê quán tối đa 200 ký tự'),

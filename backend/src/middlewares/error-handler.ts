@@ -4,6 +4,7 @@ import { isDev } from '../config/env.js';
 import { Prisma } from '../generated/prisma/client.js';
 import type { ErrorResponse } from '../types/response.js';
 import { ApiError } from '../utils/api-error.js';
+import { isWriteConflict, writeConflict } from '../utils/serializable.js';
 
 /** Route không khớp — đặt sau tất cả route, trước errorHandler. */
 export function notFoundHandler(req: Request, res: Response<ErrorResponse>) {
@@ -25,11 +26,6 @@ const PRISMA_ERRORS: Record<string, { status: number; code: string; message: str
     message: 'Dữ liệu đang được sử dụng ở nơi khác, không thể thực hiện',
   },
   P2025: { status: 404, code: 'NOT_FOUND', message: 'Không tìm thấy dữ liệu' },
-  P2034: {
-    status: 409,
-    code: 'CONCURRENT_UPDATE',
-    message: 'Dữ liệu vừa bị thay đổi bởi thao tác khác, vui lòng thử lại',
-  },
 };
 
 /**
@@ -100,6 +96,7 @@ export function errorHandler(
     }
     err = ApiError.validation(details);
   }
+  if (isWriteConflict(err)) err = writeConflict();
 
   const bodyError = bodyParserError(err);
   if (bodyError) {

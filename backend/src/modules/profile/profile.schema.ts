@@ -13,7 +13,8 @@ export const updateProfileSchema = z
     phone: phoneSchema.nullable().exactOptional(),
     dob: dateField('Ngày sinh')
       // refine thay vì .max(new Date()): .max chốt "hôm nay" lúc server khởi động.
-      .refine((d) => d <= new Date(), 'Ngày sinh không được ở tương lai')
+      .refine((d) => d <= new Date(), { message: 'Ngày sinh không được ở tương lai', abort: true })
+      .refine((d) => new Date(d).setFullYear(d.getFullYear() + 15) <= Date.now(), 'Sinh viên phải đủ 15 tuổi')
       .nullable()
       .exactOptional()
       .openapi({ example: '2005-03-15T00:00:00.000Z' }),

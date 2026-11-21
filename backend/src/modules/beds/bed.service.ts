@@ -3,6 +3,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import type { AuthUser } from '../../types/auth-user.js';
 import { ApiError } from '../../utils/api-error.js';
 import { buildingScope, outOfScope } from '../../utils/scope.js';
+import { serializable } from '../../utils/serializable.js';
 import { ASSIGNABLE_ROOM, FREE_BED, roomForGender } from '../rooms/room-eligibility.js';
 import { ROOM_REF_SELECT } from '../rooms/room.service.js';
 import { compareBedCode, nextBedCode } from './bed-code.js';
@@ -52,44 +53,41 @@ export async function listAvailable(user: AuthUser, query: AvailableBedQuery) {
  * thể cùng đọc thấy "còn chỗ" rồi cùng ghi, làm phòng vượt sức chứa.
  */
 export async function create(user: AuthUser, roomId: string, input: CreateBedInput) {
-  return prisma.$transaction(
-    async (tx) => {
-      const room = await tx.room.findFirst({
-        where: { id: roomId, ...buildingScope(user) },
-        select: {
-          code: true,
-          building: { select: { name: true, isActive: true } },
-          roomType: { select: { name: true, capacity: true } },
-          beds: { select: { code: true } },
-        },
-      });
-      if (!room) throw outOfScope(user, 'Không tìm thấy phòng');
+  return serializable(async (tx) => {
+    const room = await tx.room.findFirst({
+      where: { id: roomId, ...buildingScope(user) },
+      select: {
+        code: true,
+        building: { select: { name: true, isActive: true } },
+        roomType: { select: { name: true, capacity: true } },
+        beds: { select: { code: true } },
+      },
+    });
+    if (!room) throw outOfScope(user, 'Không tìm thấy phòng');
 
-      // Cùng quy tắc với thêm phòng: tòa ngừng hoạt động thì không mở rộng thêm chỗ.
-      if (!room.building.isActive) {
-        throw ApiError.conflict(
-          'BUILDING_INACTIVE',
-          `Tòa nhà ${room.building.name} đang ngừng hoạt động, không thể thêm giường`,
-        );
-      }
+    // Cùng quy tắc với thêm phòng: tòa ngừng hoạt động thì không mở rộng thêm chỗ.
+    if (!room.building.isActive) {
+      throw ApiError.conflict(
+        'BUILDING_INACTIVE',
+        `Tòa nhà ${room.building.name} đang ngừng hoạt động, không thể thêm giường`,
+      );
+    }
 
-      if (room.beds.length >= room.roomType.capacity) {
-        throw ApiError.conflict(
-          'ROOM_CAPACITY_REACHED',
-          `Phòng ${room.code} đã đủ ${room.roomType.capacity} giường theo loại phòng "${room.roomType.name}"`,
-        );
-      }
+    if (room.beds.length >= room.roomType.capacity) {
+      throw ApiError.conflict(
+        'ROOM_CAPACITY_REACHED',
+        `Phòng ${room.code} đã đủ ${room.roomType.capacity} giường theo loại phòng "${room.roomType.name}"`,
+      );
+    }
 
-      const existing = room.beds.map((bed) => bed.code);
-      const code = input.code ?? nextBedCode(existing);
-      if (existing.some((c) => c.toLowerCase() === code.toLowerCase())) {
-        throw ApiError.conflict('BED_CODE_TAKEN', `Giường ${code} đã có trong phòng ${room.code}`);
-      }
+    const existing = room.beds.map((bed) => bed.code);
+    const code = input.code ?? nextBedCode(existing);
+    if (existing.some((c) => c.toLowerCase() === code.toLowerCase())) {
+      throw ApiError.conflict('BED_CODE_TAKEN', `Giường ${code} đã có trong phòng ${room.code}`);
+    }
 
-      return tx.bed.create({ data: { roomId, code }, select: SELECT });
-    },
-    { isolationLevel: 'Serializable' },
-  );
+    return tx.bed.create({ data: { roomId, code }, select: SELECT });
+  });
 }
 
 export async function update(user: AuthUser, id: string, input: UpdateBedInput) {

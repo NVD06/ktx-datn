@@ -2,6 +2,7 @@ import { prisma } from '../../config/prisma.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ApiError } from '../../utils/api-error.js';
 import { paginate } from '../../utils/paginate.js';
+import { serializable } from '../../utils/serializable.js';
 import {
   periodDateIssues,
   type CreateRegistrationPeriodInput,
@@ -88,34 +89,31 @@ export async function update(id: string, input: UpdateRegistrationPeriodInput) {
 
 export async function open(id: string) {
   // Transaction để hai Admin cùng bấm mở 2 đợt khác nhau không lọt cả hai.
-  const period = await prisma.$transaction(
-    async (tx) => {
-      const target = await tx.registrationPeriod.findUnique({ where: { id }, include: INCLUDE });
-      if (!target) throw ApiError.notFound('Không tìm thấy đợt đăng ký');
-      if (target.isOpen) return target;
+  const period = await serializable(async (tx) => {
+    const target = await tx.registrationPeriod.findUnique({ where: { id }, include: INCLUDE });
+    if (!target) throw ApiError.notFound('Không tìm thấy đợt đăng ký');
+    if (target.isOpen) return target;
 
-      if (target.endAt < new Date()) {
-        throw ApiError.conflict(
-          'PERIOD_ENDED',
-          `Đợt "${target.name}" đã hết hạn nhận đơn nên không thể mở. Hãy sửa ngày hết hạn nhận đơn trước.`,
-        );
-      }
+    if (target.endAt < new Date()) {
+      throw ApiError.conflict(
+        'PERIOD_ENDED',
+        `Đợt "${target.name}" đã hết hạn nhận đơn nên không thể mở. Hãy sửa ngày hết hạn nhận đơn trước.`,
+      );
+    }
 
-      const opened = await tx.registrationPeriod.findFirst({
-        where: { isOpen: true },
-        select: { name: true },
-      });
-      if (opened) {
-        throw ApiError.conflict(
-          'PERIOD_ALREADY_OPEN',
-          `Đợt "${opened.name}" đang mở. Hãy đóng đợt đó trước khi mở đợt mới.`,
-        );
-      }
+    const opened = await tx.registrationPeriod.findFirst({
+      where: { isOpen: true },
+      select: { name: true },
+    });
+    if (opened) {
+      throw ApiError.conflict(
+        'PERIOD_ALREADY_OPEN',
+        `Đợt "${opened.name}" đang mở. Hãy đóng đợt đó trước khi mở đợt mới.`,
+      );
+    }
 
-      return tx.registrationPeriod.update({ where: { id }, data: { isOpen: true }, include: INCLUDE });
-    },
-    { isolationLevel: 'Serializable' },
-  );
+    return tx.registrationPeriod.update({ where: { id }, data: { isOpen: true }, include: INCLUDE });
+  });
   return toDto(period);
 }
 
