@@ -1,0 +1,11 @@
+Kịch bản nguong-800 · 2026-11-21T18:36:12.424Z · http://localhost:3100
+Chạy 126 giây, tối đa 800 người dùng ảo, 45712 yêu cầu (362.7/giây), 11028 lượt
+Kiểm tra đạt 100.00%
+Thời gian tính bằng ms. Ngưỡng: P95 dưới 500 ms (trừ dang-nhap) và lỗi dưới 1%
+API              Số yêu cầu      Lỗi %         TB   Trung vị        P90        P95   Lớn nhất     Ngưỡng
+csrf                    800       0.00        7.3        7.0       11.1       13.0       55.3        đạt
+dang-nhap               800       0.00      199.5      192.2      362.2      381.7      432.6        đạt
+toi                   11028       0.00      282.8      325.0      358.5      369.9      449.3        đạt
+cho-o-hien-tai        11028       0.00     2227.9     2645.5     2752.7     2805.8     3040.5  KHÔNG ĐẠT
+hoa-don-cua-toi       11028       0.00     1499.5     1775.7     1861.6     1901.5     2124.4  KHÔNG ĐẠT
+bang-tin              11028       0.00     1491.5     1776.5     1864.4     1899.6     2134.3  KHÔNG ĐẠT

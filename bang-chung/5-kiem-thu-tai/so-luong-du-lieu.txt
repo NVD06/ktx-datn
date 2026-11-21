@@ -1,0 +1,3 @@
+Lượng dữ liệu CSDL ktx_tai lúc bắt đầu kiểm thử tải (npm run seed:tai, 22/11/2026)
+phong=200; giuong=960; tai_khoan=1605; don=800; hop_dong=800; hoa_don=5600; giao_dich=3200; sua_chua=200; thong_bao=30
+Tài khoản: 1 quản trị viên, 4 quản lý (mỗi tòa một người), 800 sinh viên đang ở (sv0001–sv0800), 800 sinh viên chưa có chỗ (sv0801–sv1600)

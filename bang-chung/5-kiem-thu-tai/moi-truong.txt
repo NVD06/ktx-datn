@@ -1,0 +1,10 @@
+Môi trường kiểm thử tải (chạy ngày 22/11/2026, 01:25–01:37 và 01:50–01:55 giờ Việt Nam)
+Máy: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz (6 nhân, 12 luồng), RAM 15,8 GB (16 GB)
+Hệ điều hành: Microsoft Windows 11 Home Single Language
+Node.js: v24.16.0 — máy chủ chạy bản build (npm run start:tai), NODE_ENV=production, cổng 3100
+PostgreSQL: 17.11 — CSDL riêng ktx_tai, dữ liệu sinh bằng npm run seed:tai (xem so-luong-du-lieu.txt)
+k6: v2.4.0 — kịch bản kiem-thu-tai/tai.js
+k6, máy chủ Node và PostgreSQL chạy trên cùng một máy, không có độ trễ mạng; k6 cũng dùng CPU của máy này.
+Mã nguồn: nhánh main, commit 1087ac1 (2026-11-17 21:45:45 +0700) cùng các thay đổi chưa commit lúc chạy: quy tắc ngày sinh đủ 15 tuổi, script sinh dữ liệu và kịch bản kiểm thử tải; riêng lượt mo-dot chạy sau khi thêm phần tự chạy lại giao dịch khi bị xung đột (nộp đơn, thêm giường, mở đợt; tối đa 5 lần)
+thuong-ngay và nguong chỉ đăng nhập và gọi API đọc, không đi qua phần tự chạy lại giao dịch
+CPU khi chạy nguong với 400 người dùng ảo (lấy mẫu 10 giây ở giữa một lượt đo thêm 40 giây): tiến trình Node 1,09 lõi, k6 0,20 lõi

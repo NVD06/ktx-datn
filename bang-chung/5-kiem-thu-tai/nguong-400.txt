@@ -1,0 +1,11 @@
+Kịch bản nguong-400 · 2026-11-21T18:34:05.868Z · http://localhost:3100
+Chạy 124 giây, tối đa 400 người dùng ảo, 43848 yêu cầu (352.9/giây), 10762 lượt
+Kiểm tra đạt 100.00%
+Thời gian tính bằng ms. Ngưỡng: P95 dưới 500 ms (trừ dang-nhap) và lỗi dưới 1%
+API              Số yêu cầu      Lỗi %         TB   Trung vị        P90        P95   Lớn nhất     Ngưỡng
+csrf                    400       0.00        6.1        5.7       10.6       14.0       55.7        đạt
+dang-nhap               400       0.00      106.1       93.2      172.0      183.5      260.5        đạt
+toi                   10762       0.00      130.6      134.1      170.8      183.5      436.8        đạt
+cho-o-hien-tai        10762       0.00      854.7      895.5     1160.9     1213.2     1437.9  KHÔNG ĐẠT
+hoa-don-cua-toi       10762       0.00      583.6      609.0      793.6      826.0      964.9  KHÔNG ĐẠT
+bang-tin              10762       0.00      573.4      598.9      782.1      816.2      962.3  KHÔNG ĐẠT

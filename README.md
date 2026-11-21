@@ -5,6 +5,7 @@
 <p align="center">
   <a href="#tính-năng">Tính năng</a> •
   <a href="#cài-đặt">Cài đặt</a> •
+  <a href="#kiểm-thử-tải">Kiểm thử tải</a> •
   <a href="#công-nghệ">Công nghệ</a>
 </p>
 
@@ -26,6 +27,18 @@
 3. Chạy máy chủ: `cd backend && npm install && npx prisma migrate dev && npx prisma db seed && npm run dev`
 4. Chạy giao diện ở terminal khác: `cd frontend && npm install && npm run dev`
 5. Mở http://localhost:5173.
+
+## Kiểm thử tải
+
+Dùng k6 trên cơ sở dữ liệu riêng `ktx_tai`, không đụng tới dữ liệu đang dùng.
+
+1. Cài k6: `winget install k6 --source winget`.
+2. Chép `backend/.env` thành `backend/.env.tai`, đổi tên cơ sở dữ liệu trong `DATABASE_URL` thành `ktx_tai`, thêm `PORT=3100` và `NODE_ENV=production`.
+3. Sinh dữ liệu (1.600 sinh viên, 800 hợp đồng, 5.600 hóa đơn; mật khẩu `123456`) rồi chạy máy chủ: `cd backend && npm run seed:tai && npm run build && npm run start:tai`
+4. Ở thư mục gốc, mở terminal khác và chạy một trong ba kịch bản. Kết quả ghi vào `bang-chung/5-kiem-thu-tai/`.
+   - Thường ngày, 100 sinh viên và 10 quản lý trong 3 phút: `k6 run kiem-thu-tai/tai.js`
+   - Mở đợt đăng ký, 749 sinh viên nộp đơn trong khoảng 40 giây: `k6 run -e KB=mo-dot kiem-thu-tai/tai.js`. Chạy lại `npm run seed:tai` trước mỗi lần.
+   - Tìm ngưỡng chịu tải: `k6 run -e KB=nguong -e VUS=400 kiem-thu-tai/tai.js`
 
 ## Công nghệ
 

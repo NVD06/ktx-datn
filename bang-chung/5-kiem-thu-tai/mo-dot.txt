@@ -1,0 +1,10 @@
+Kịch bản mo-dot · 2026-11-21T18:54:27.176Z · http://localhost:3100
+Chạy 44 giây, tối đa 100 người dùng ảo, 3745 yêu cầu (85.3/giây), 749 lượt
+Kiểm tra đạt 100.00%; nộp đơn bị báo "vui lòng thử lại": 0, bị lỗi máy chủ: 0
+Thời gian tính bằng ms. Ngưỡng: P95 dưới 500 ms (trừ dang-nhap) và lỗi dưới 1%
+API              Số yêu cầu      Lỗi %         TB   Trung vị        P90        P95   Lớn nhất     Ngưỡng
+csrf                    749       0.00        1.2        1.1        1.7        2.2       12.0        đạt
+dang-nhap               749       0.00       59.8       58.8       64.7       67.9      145.6        đạt
+dot-hien-tai            749       0.00        4.4        4.0        6.1        7.3       16.0        đạt
+nop-don                 749       0.00       11.9        9.1       20.9       28.8       70.8        đạt
+don-cua-toi             749       0.00        4.7        4.1        6.2        7.6       53.9        đạt

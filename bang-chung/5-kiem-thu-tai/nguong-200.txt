@@ -1,0 +1,11 @@
+Kịch bản nguong-200 · 2026-11-21T18:32:01.156Z · http://localhost:3100
+Chạy 123 giây, tối đa 200 người dùng ảo, 44208 yêu cầu (359.4/giây), 10952 lượt
+Kiểm tra đạt 100.00%
+Thời gian tính bằng ms. Ngưỡng: P95 dưới 500 ms (trừ dang-nhap) và lỗi dưới 1%
+API              Số yêu cầu      Lỗi %         TB   Trung vị        P90        P95   Lớn nhất     Ngưỡng
+csrf                    200       0.00        2.2        1.5        4.1        6.4       37.7        đạt
+dang-nhap               200       0.00       64.7       61.1       73.0       84.8      223.8        đạt
+toi                   10952       0.00       19.7       16.4       39.8       45.2       78.0        đạt
+cho-o-hien-tai        10952       0.00       39.3       30.7       79.0       96.7      215.6        đạt
+hoa-don-cua-toi       10952       0.00       31.8       25.5       63.5       77.7      155.3        đạt
+bang-tin              10952       0.00       31.5       25.1       63.4       77.2      155.6        đạt

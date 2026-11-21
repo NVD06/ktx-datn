@@ -1,0 +1,12 @@
+Kiểm tra CSDL ktx_tai ngay sau lượt mo-dot (22/11/2026)
+Đợt                              Số đơn   Số sinh viên   Sinh viên có hơn 1 đơn
+Đăng ký học kỳ 1 năm 2026-2027      800            800                        0
+Đăng ký học kỳ 2 năm 2026-2027      749            749                        0
+Lượt mo-dot gửi 749 đơn vào đợt học kỳ 2: cả 749 đơn được ghi, không đơn nào bị từ chối, không sinh viên nào bị ghi trùng đơn.
+Số giao dịch bị hủy trong CSDL ktx_tai: 232 ngay trước lượt chạy, 313 sau khi chạy xong và tắt máy chủ, tức 81 giao dịch bị hủy trong lượt.
+Lượt này mọi yêu cầu đều thành công và chỉ có nộp đơn mở giao dịch ghi, nên 81 lần hủy là các lần nộp đơn bị xung đột đã được máy chủ tự chạy lại.
+Truy vấn:
+SELECT p.name, count(r.*) AS don, count(DISTINCT r."studentId") AS sinh_vien,
+       (SELECT count(*) FROM (SELECT "studentId" FROM "Registration" WHERE "periodId" = p.id GROUP BY 1 HAVING count(*) > 1) x) AS sv_trung_don
+FROM "RegistrationPeriod" p LEFT JOIN "Registration" r ON r."periodId" = p.id GROUP BY p.id, p.name ORDER BY p.name;
+SELECT xact_rollback FROM pg_stat_database WHERE datname = current_database();
