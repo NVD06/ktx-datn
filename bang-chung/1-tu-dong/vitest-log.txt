@@ -3,101 +3,103 @@ npm notice run vitest run --reporter=verbose --reporter=json --outputFile.json=E
 
 [1m[30m[46m RUN [49m[39m[22m [36mv5.0.2 [39m[90mE:/DATN/ktx-datn/backend[39m
 
- [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mManager chỉ thấy tòa mình, Admin thấy cả hệ thống[33m 420[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mviệc chờ xử lý và số liệu từng tòa theo phạm vi[32m 134[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mSV đã ký cho kỳ sau mà chưa tới ngày vào ở không tính là đang ở[32m 114[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mdoanh thu 6 tháng: chỉ giao dịch thành công, chia tháng theo giờ VN, tách tiền phòng / điện nước[32m 120[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mtòa → tầng → phòng, đếm từng trạng thái giường, bỏ phòng ngừng hoạt động[32m 100[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mtổng các tòa khớp ô tỷ lệ lấp đầy của dashboard[32m 126[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mlọc theo tòa: Admin xem được tòa bất kỳ, Manager hỏi tòa khác bị 403, tòa không tồn tại 404[32m 106[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mđủ mọi tháng trong khoảng, khớp biểu đồ dashboard, tổng chỉ tính trong khoảng[32m 197[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mAdmin thấy doanh thu mọi tòa[32m 132[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mkhoảng tháng sai định dạng, ngược chiều hoặc quá 24 tháng không hợp lệ[32m 107[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mmỗi SV một dòng, quá hạn nhiều tiền nhất lên đầu, phòng của hợp đồng gần nhất[32m 122[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mtìm theo tên và phân trang[32m 105[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mtổng nợ các SV = tổng các tòa = ô "Chưa thanh toán" của dashboard[32m 128[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo sửa chữa & vệ sinh (US-06.4)[2m > [22myêu cầu theo trạng thái từng tháng gửi, chỉ trong khoảng và trong phạm vi[32m 118[2mms[22m[39m
- [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo sửa chữa & vệ sinh (US-06.4)[2m > [22mcác lần chấm dưới 60 trong khoảng, mới nhất trước[32m 84[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mmật khẩu ban đầu là mã SV; chưa đổi thì chỉ gọi được /auth/me và đổi mật khẩu[33m 480[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđổi mật khẩu: sai mật khẩu hiện tại, trùng mật khẩu cũ, hoặc dùng mã SV đều bị từ chối[33m 404[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđổi hoặc đặt lại mật khẩu: phiên đăng nhập trước đó bị 401, đăng nhập lại thì dùng được[32m 289[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mtạo lẻ: email hoặc mã SV đã có tài khoản -> 409, lỗi gắn đúng trường[32m 121[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mnhập Excel: dryRun không ghi gì; nhập thật tạo đủ tài khoản kèm hồ sơ, bắt đổi mật khẩu[32m 193[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mnhập Excel: còn dòng lỗi thì không tạo ai; dòng đã có đúng tài khoản đó thì bỏ qua[32m 241[2mms[22m[39m
- [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđặt lại mật khẩu: về mã SV và bắt đổi lại; tài khoản quản lý thì không đặt lại được[33m 345[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mdưới 15 ngày nửa tháng, từ 15 ngày cả tháng[33m 344[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mở trọn tháng → một hóa đơn cả tháng theo giá hợp đồng; chạy lại không lập trùng[32m 117[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mký giữa tháng: tính từ ngày ký — còn dưới 15 ngày thì nửa tháng[32m 106[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mchấm dứt giữa tháng: tính tới ngày chấm dứt; chấm dứt trước tháng thì không lập[32m 103[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mkhông lập cho hợp đồng chưa ký, và hợp đồng kiểu cũ đã có hóa đơn cả kỳ[32m 84[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mhợp đồng kiểu cũ: chỉ tính những ngày ở sau mốc đã trả theo hóa đơn cả kỳ / gia hạn[32m 86[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mtháng kết thúc đã lập nửa tháng, gia hạn xong lần chạy sau lập bổ sung nửa còn lại[32m 100[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mở quá ngày kết thúc chưa gia hạn thì chưa tính; gia hạn xong lần chạy sau lập bù[32m 113[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mtrả trước: tháng này lập luôn, cả tháng; tháng chưa bắt đầu thì chưa lập[32m 100[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng tháng đầu — lập ngay lúc ký[2m > [22mkỳ ở đã bắt đầu: hóa đơn tháng này tính từ ngày ký; bộ hẹn giờ không lập lại tháng đó[32m 147[2mms[22m[39m
- [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng tháng đầu — lập ngay lúc ký[2m > [22mký trước kỳ ở: hóa đơn tháng đầu là tháng bắt đầu ở, lập ngay lúc ký[32m 246[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mlưu cả đợt: điểm trừ là tổng các lỗi, chấm lại cùng ngày thì ghi đè[33m 314[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mtrừ dồn trong kỳ nửa tháng, sửa hoặc xóa đợt trước thì tính lại đợt sau, sang kỳ mới về 100[32m 117[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mlỗi lạ hoặc trùng lỗi không hợp lệ; phòng ngoài tòa (400), tòa khác (403), ngày sau hôm nay (400) không lưu gì[32m 89[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mbảng điểm lọc dưới ngưỡng và theo tháng; Manager tòa khác không thấy, không xóa được[32m 129[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mbảng chấm đếm SV ở đúng ngày kiểm tra: SV đã trả phòng trước ngày đó không tính[32m 92[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mSV chỉ thấy điểm phòng mình trong thời gian mình ở[32m 85[2mms[22m[39m
- [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mmỗi kỳ nửa tháng dưới 60 điểm là một dấu trong hợp đồng, kỳ vào ở giữa chừng không tính; quá 5 dấu thì không ưu tiên[33m 327[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mphòng lấy từ hợp đồng đang ở, đi đủ chuỗi tới CONFIRMED kèm mốc thời gian[33m 433[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mchặn nhảy cóc PENDING → DONE và bước lùi, trạng thái giữ nguyên[32m 104[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mtừ chối khi còn PENDING; SV không xác nhận được yêu cầu chưa sửa xong[32m 87[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mManager tòa khác không thấy, không xử lý được (403); SV khác không xác nhận được (404)[32m 111[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mSV chưa ở phòng nào (chỉ có hợp đồng kỳ sau) thì không gửi được[32m 93[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mhai Manager cùng bấm tiếp nhận: đúng một người thành công[32m 98[2mms[22m[39m
- [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mlọc chưa xong / theo tòa và số liệu đầu trang theo phạm vi[32m 116[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mhóa đơn điện nước lưu người chốt; quản lý đã chốt thì không xóa được tài khoản[33m 339[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mxóa hóa đơn của cả phòng, trả lại chỉ số đã nhập, rồi chốt lại được[32m 131[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mđã có SV trả tiền thì không hủy được, không xóa gì[32m 115[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mSV đang ở cổng VNPay thì chặn; giao dịch đã hết hạn hoặc thất bại thì xóa cùng hóa đơn[32m 122[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mđã chốt tháng sau thì phải hủy tháng sau trước[32m 120[2mms[22m[39m
- [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mManager tòa khác nhận 403; phòng chưa chốt tháng đó thì 404[32m 91[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22msố tiền gửi VNPay lấy từ hóa đơn trong DB, nhân 100[33m 409[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV không trả được hóa đơn của người khác[32m 83[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mReturnURL, IPN rồi SV F5 — cùng một giao dịch gọi 3 lần → PAID đúng một lần[32m 91[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mReturnURL và IPN tới cùng lúc → đúng một lời gọi ghi, các lời gọi còn lại vẫn báo đã trả[32m 239[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22msai chữ ký (97) hoặc chữ ký đúng nhưng lệch số tiền (04) → không ghi gì[32m 94[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV hủy ở cổng VNPay → giao dịch FAILED, lần thử sau vẫn trả được[32m 94[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV mở hai tab và trả cả hai → hóa đơn PAID một lần, giao dịch sau DUPLICATE, doanh thu chỉ tính một lần[32m 129[2mms[22m[39m
- [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mhai giao dịch của cùng hóa đơn báo về cùng lúc → đúng một SUCCESS, một DUPLICATE[32m 94[2mms[22m[39m
- [32m✓[39m tests/approve.test.ts[2m > [22mDuyệt đơn và xếp giường (US-03.1, US-03.2)[2m > [22m2 lệnh duyệt song song vào cùng một giường → đúng một lệnh thành công, lệnh kia 409[33m 720[2mms[22m[39m
- [32m✓[39m tests/approve.test.ts[2m > [22mDuyệt đơn và xếp giường (US-03.1, US-03.2)[2m > [22mtòa nam không xếp được sinh viên nữ, kể cả khi đơn đã ghi đích danh tòa đó[32m 94[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nam: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam[33m 324[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nữ: chỉ đơn "tòa nào cũng được" của SV nữ[32m 89[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nam thứ hai: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam[32m 86[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mAdmin thấy tất cả[32m 97[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtìm đúng tên SV đã chọn tòa khác vẫn không ra[32m 103[2mms[22m[39m
- [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mkhông từ chối được đơn ngoài phạm vi (403)[32m 88[2mms[22m[39m
- [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mmỗi SV một tin riêng gộp các hóa đơn, Manager chỉ nhắc tòa mình, hóa đơn đã nhắc hôm nay không gửi trùng[33m 448[2mms[22m[39m
- [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mhai lần bấm cùng lúc chỉ gửi một tin[32m 80[2mms[22m[39m
- [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mhóa đơn ngoài phạm vi hoặc không tồn tại thì báo lỗi, không gửi gì[32m 81[2mms[22m[39m
- [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mtin riêng không sửa / xóa được qua bảng tin; người đã gửi nhắc không xóa được tài khoản[32m 234[2mms[22m[39m
- [32m✓[39m tests/contract-cancel.test.ts[2m > [22mQuản lý hủy hợp đồng chờ ký[2m > [22mhợp đồng chuyển CANCELLED, đơn ghi lý do, giường xếp được cho sinh viên khác[33m 500[2mms[22m[39m
- [32m✓[39m tests/contract-cancel.test.ts[2m > [22mQuản lý hủy hợp đồng chờ ký[2m > [22mkhông hủy được hợp đồng đã hủy, đang ở hoặc của tòa khác[32m 152[2mms[22m[39m
- [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mgửi yêu cầu không đổi ngày kết thúc, quản lý duyệt bằng gia hạn thì yêu cầu được xóa[33m 334[2mms[22m[39m
- [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mtừ chối lưu lý do; gửi lại thì xóa lý do cũ[32m 244[2mms[22m[39m
- [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mkiểm tra ngày như gia hạn và chặn ngoài phạm vi[32m 93[2mms[22m[39m
- [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mchấm dứt hợp đồng thì xóa yêu cầu, không xin gia hạn được nữa[32m 108[2mms[22m[39m
- [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22msinh viên chưa có lịch sử (cấp nhầm) thì xóa hẳn, hồ sơ xóa theo[33m 373[2mms[22m[39m
- [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22msinh viên đã có đơn đăng ký thì không xóa — giữ lịch sử, gợi ý khóa[32m 76[2mms[22m[39m
- [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22mquản lý từng duyệt đơn thì không xóa; quản lý chưa làm gì thì xóa được, tòa trống quản lý[32m 82[2mms[22m[39m
- [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22mkhông tự xóa mình, không xóa tài khoản quản trị viên[32m 56[2mms[22m[39m
- [32m✓[39m tests/invoice-debt.test.ts[2m > [22mCông nợ theo tòa (US-04.6)[2m > [22mAdmin thấy mọi tòa theo tên, tòa không nợ vẫn có mặt với số 0[33m 432[2mms[22m[39m
- [32m✓[39m tests/invoice-debt.test.ts[2m > [22mCông nợ theo tòa (US-04.6)[2m > [22mManager chỉ thấy tòa mình[32m 107[2mms[22m[39m
- [32m✓[39m tests/announcement.test.ts[2m > [22mThông báo[2m > [22mManager luôn đăng cho tòa mình, chỉ sửa / xóa tin của tòa mình[33m 438[2mms[22m[39m
- [32m✓[39m tests/announcement.test.ts[2m > [22mThông báo[2m > [22mSV thấy tin toàn KTX và tòa đang ở, tin ghim trước, đánh dấu đã đọc[32m 144[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mký rồi verify lại thì đúng, kể cả mô tả có dấu cách[32m 156[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22msửa bất kỳ tham số nào sau khi ký → sai chữ ký[32m 55[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mthêm tham số vnp_ không có lúc ký → sai chữ ký[32m 53[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mký bằng khóa khác hoặc thiếu vnp_SecureHash → sai chữ ký[32m 50[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mbỏ qua vnp_SecureHashType, tham số không phải vnp_ và chữ hoa/thường của chữ ký[32m 50[2mms[22m[39m
- [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mvnpDate theo giờ Việt Nam — 17:30 UTC ngày 30/09 là 00:30 ngày 01/10[32m 51[2mms[22m[39m
- [32m✓[39m tests/facility-delete.test.ts[2m > [22mKhông xóa cứng phòng, giường đã được tham chiếu (BR-04)[2m > [22mphòng đã có hợp đồng thì từ chối, phòng chưa dùng thì xóa cả giường[32m 268[2mms[22m[39m
- [32m✓[39m tests/facility-delete.test.ts[2m > [22mKhông xóa cứng phòng, giường đã được tham chiếu (BR-04)[2m > [22mgiường đang có người hoặc có lịch sử hợp đồng thì từ chối, giường chưa dùng thì xóa được[32m 85[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mManager chỉ thấy tòa mình, Admin thấy cả hệ thống[33m 994[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mviệc chờ xử lý và số liệu từng tòa theo phạm vi[32m 286[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mSV đã ký cho kỳ sau mà chưa tới ngày vào ở không tính là đang ở[32m 211[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mDashboard (US-06.1)[2m > [22mdoanh thu 6 tháng: chỉ giao dịch thành công, chia tháng theo giờ VN, tách tiền phòng / điện nước[33m 431[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mtòa → tầng → phòng, đếm từng trạng thái giường, bỏ phòng ngừng hoạt động[32m 242[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mtổng các tòa khớp ô tỷ lệ lấp đầy của dashboard[32m 284[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo lấp đầy (US-06.2)[2m > [22mlọc theo tòa: Admin xem được tòa bất kỳ, Manager hỏi tòa khác bị 403, tòa không tồn tại 404[32m 217[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mđủ mọi tháng trong khoảng, khớp biểu đồ dashboard, tổng chỉ tính trong khoảng[33m 305[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mAdmin thấy doanh thu mọi tòa[32m 238[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo doanh thu (US-06.3)[2m > [22mkhoảng tháng sai định dạng, ngược chiều hoặc quá 24 tháng không hợp lệ[32m 200[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mmỗi SV một dòng, quá hạn nhiều tiền nhất lên đầu, phòng của hợp đồng gần nhất[32m 238[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mtìm theo tên và phân trang[32m 235[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo công nợ (US-06.3)[2m > [22mtổng nợ các SV = tổng các tòa = ô "Chưa thanh toán" của dashboard[32m 290[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo sửa chữa & vệ sinh (US-06.4)[2m > [22myêu cầu theo trạng thái từng tháng gửi, chỉ trong khoảng và trong phạm vi[32m 188[2mms[22m[39m
+ [32m✓[39m tests/reports.test.ts[2m > [22mBáo cáo sửa chữa & vệ sinh (US-06.4)[2m > [22mcác lần chấm dưới 60 trong khoảng, mới nhất trước[32m 168[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mmật khẩu ban đầu là mã SV; chưa đổi thì chỉ gọi được /auth/me và đổi mật khẩu[33m 651[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđổi mật khẩu: sai mật khẩu hiện tại, trùng mật khẩu cũ, hoặc dùng mã SV đều bị từ chối[33m 478[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđổi hoặc đặt lại mật khẩu: phiên đăng nhập trước đó bị 401, đăng nhập lại thì dùng được[33m 389[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mtạo lẻ: email hoặc mã SV đã có tài khoản -> 409, lỗi gắn đúng trường[32m 170[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mnhập Excel: dryRun không ghi gì; nhập thật tạo đủ tài khoản kèm hồ sơ, bắt đổi mật khẩu[32m 290[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mnhập Excel: còn dòng lỗi thì không tạo ai; dòng đã có đúng tài khoản đó thì bỏ qua[33m 323[2mms[22m[39m
+ [32m✓[39m tests/student-account.test.ts[2m > [22mTài khoản sinh viên do Admin cấp[2m > [22mđặt lại mật khẩu: về mã SV và bắt đổi lại; tài khoản quản lý thì không đặt lại được[33m 442[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mdưới 15 ngày nửa tháng, từ 15 ngày cả tháng[33m 419[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mở trọn tháng → một hóa đơn cả tháng theo giá hợp đồng; chạy lại không lập trùng[32m 203[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mký giữa tháng: tính từ ngày ký — còn dưới 15 ngày thì nửa tháng[32m 189[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mchấm dứt giữa tháng: tính tới ngày chấm dứt; chấm dứt trước tháng thì không lập[32m 197[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mkhông lập cho hợp đồng chưa ký, và hợp đồng kiểu cũ đã có hóa đơn cả kỳ[32m 192[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mhợp đồng kiểu cũ: chỉ tính những ngày ở sau mốc đã trả theo hóa đơn cả kỳ / gia hạn[32m 184[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mtháng kết thúc đã lập nửa tháng, gia hạn xong lần chạy sau lập bổ sung nửa còn lại[32m 215[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mở quá ngày kết thúc chưa gia hạn thì chưa tính; gia hạn xong lần chạy sau lập bù[32m 204[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng hằng tháng — quy tắc nửa tháng[2m > [22mtrả trước: tháng này lập luôn, cả tháng; tháng chưa bắt đầu thì chưa lập[32m 191[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng tháng đầu — lập ngay lúc ký[2m > [22mkỳ ở đã bắt đầu: hóa đơn tháng này tính từ ngày ký; bộ hẹn giờ không lập lại tháng đó[32m 249[2mms[22m[39m
+ [32m✓[39m tests/room-fee.test.ts[2m > [22mTiền phòng tháng đầu — lập ngay lúc ký[2m > [22mký trước kỳ ở: hóa đơn tháng đầu là tháng bắt đầu ở, lập ngay lúc ký[32m 167[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mlưu cả đợt: điểm trừ là tổng các lỗi, chấm lại cùng ngày thì ghi đè[33m 584[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mtrừ dồn trong kỳ nửa tháng, sửa hoặc xóa đợt trước thì tính lại đợt sau, sang kỳ mới về 100[32m 238[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mlỗi lạ hoặc trùng lỗi không hợp lệ; phòng ngoài tòa (400), tòa khác (403), ngày sau hôm nay (400) không lưu gì[32m 151[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mbảng điểm lọc dưới ngưỡng và theo tháng; Manager tòa khác không thấy, không xóa được[32m 181[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mbảng chấm đếm SV ở đúng ngày kiểm tra: SV đã trả phòng trước ngày đó không tính[32m 179[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mSV chỉ thấy điểm phòng mình trong thời gian mình ở[32m 141[2mms[22m[39m
+ [32m✓[39m tests/hygiene.test.ts[2m > [22mChấm điểm vệ sinh (US-05.4, US-05.5)[2m > [22mmỗi kỳ nửa tháng dưới 60 điểm là một dấu trong hợp đồng, kỳ vào ở giữa chừng không tính; quá 5 dấu thì không ưu tiên[33m 348[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22msố tiền gửi VNPay lấy từ hóa đơn trong DB, nhân 100[33m 512[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV không trả được hóa đơn của người khác[32m 173[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mReturnURL, IPN rồi SV F5 — cùng một giao dịch gọi 3 lần → PAID đúng một lần[32m 180[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mReturnURL và IPN tới cùng lúc → đúng một lời gọi ghi, các lời gọi còn lại vẫn báo đã trả[32m 224[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22msai chữ ký (97) hoặc chữ ký đúng nhưng lệch số tiền (04) → không ghi gì[32m 160[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV hủy ở cổng VNPay → giao dịch FAILED, lần thử sau vẫn trả được[32m 165[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mSV mở hai tab và trả cả hai → hóa đơn PAID một lần, giao dịch sau DUPLICATE, doanh thu chỉ tính một lần[32m 238[2mms[22m[39m
+ [32m✓[39m tests/payment.test.ts[2m > [22mThanh toán VNPay — pay() và confirm() (US-04.4, US-04.5)[2m > [22mhai giao dịch của cùng hóa đơn báo về cùng lúc → đúng một SUCCESS, một DUPLICATE[32m 174[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mphòng lấy từ hợp đồng đang ở, đi đủ chuỗi tới CONFIRMED kèm mốc thời gian[33m 649[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mchặn nhảy cóc PENDING → DONE và bước lùi, trạng thái giữ nguyên[32m 179[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mtừ chối khi còn PENDING; SV không xác nhận được yêu cầu chưa sửa xong[32m 152[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mManager tòa khác không thấy, không xử lý được (403); SV khác không xác nhận được (404)[32m 187[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mSV chưa ở phòng nào (chỉ có hợp đồng kỳ sau) thì không gửi được[32m 168[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mhai Manager cùng bấm tiếp nhận: đúng một người thành công[32m 168[2mms[22m[39m
+ [32m✓[39m tests/maintenance.test.ts[2m > [22mYêu cầu sửa chữa (US-05.1 → US-05.3)[2m > [22mlọc chưa xong / theo tòa và số liệu đầu trang theo phạm vi[32m 204[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mhóa đơn điện nước lưu người chốt; quản lý đã chốt thì không xóa được tài khoản[33m 552[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mxóa hóa đơn của cả phòng, trả lại chỉ số đã nhập, rồi chốt lại được[32m 237[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mđã có SV trả tiền thì không hủy được, không xóa gì[32m 192[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mSV đang ở cổng VNPay thì chặn; giao dịch đã hết hạn hoặc thất bại thì xóa cùng hóa đơn[32m 201[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mđã chốt tháng sau thì phải hủy tháng sau trước[32m 232[2mms[22m[39m
+ [32m✓[39m tests/utility-cancel.test.ts[2m > [22mHủy lần chốt điện nước của một phòng[2m > [22mManager tòa khác nhận 403; phòng chưa chốt tháng đó thì 404[32m 186[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nam: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam[33m 548[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nữ: chỉ đơn "tòa nào cũng được" của SV nữ[32m 172[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtòa nam thứ hai: đơn chọn tòa mình + đơn "tòa nào cũng được" của SV nam[32m 174[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mAdmin thấy tất cả[32m 175[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mtìm đúng tên SV đã chọn tòa khác vẫn không ra[32m 192[2mms[22m[39m
+ [32m✓[39m tests/registration-scope.test.ts[2m > [22mPhạm vi đơn đăng ký của Manager (US-02.4)[2m > [22mkhông từ chối được đơn ngoài phạm vi (403)[32m 163[2mms[22m[39m
+ [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mgửi yêu cầu không đổi ngày kết thúc, quản lý duyệt bằng gia hạn thì yêu cầu được xóa[33m 557[2mms[22m[39m
+ [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mtừ chối lưu lý do; gửi lại thì xóa lý do cũ[32m 252[2mms[22m[39m
+ [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mkiểm tra ngày như gia hạn và chặn ngoài phạm vi[32m 154[2mms[22m[39m
+ [32m✓[39m tests/contract-extension.test.ts[2m > [22mSinh viên xin gia hạn hợp đồng[2m > [22mchấm dứt hợp đồng thì xóa yêu cầu, không xin gia hạn được nữa[32m 172[2mms[22m[39m
+ [32m✓[39m tests/approve.test.ts[2m > [22mDuyệt đơn và xếp giường (US-03.1, US-03.2)[2m > [22m2 lệnh duyệt song song vào cùng một giường → đúng một lệnh thành công, lệnh kia 409[33m 1078[2mms[22m[39m
+ [32m✓[39m tests/approve.test.ts[2m > [22mDuyệt đơn và xếp giường (US-03.1, US-03.2)[2m > [22mtòa nam không xếp được sinh viên nữ, kể cả khi đơn đã ghi đích danh tòa đó[32m 158[2mms[22m[39m
+ [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mmỗi SV một tin riêng gộp các hóa đơn, Manager chỉ nhắc tòa mình, hóa đơn đã nhắc hôm nay không gửi trùng[33m 741[2mms[22m[39m
+ [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mhai lần bấm cùng lúc chỉ gửi một tin[32m 164[2mms[22m[39m
+ [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mhóa đơn ngoài phạm vi hoặc không tồn tại thì báo lỗi, không gửi gì[32m 187[2mms[22m[39m
+ [32m✓[39m tests/invoice-remind.test.ts[2m > [22mNhắc nộp tiền[2m > [22mtin riêng không sửa / xóa được qua bảng tin; người đã gửi nhắc không xóa được tài khoản[32m 209[2mms[22m[39m
+ [32m✓[39m tests/contract-sign.test.ts[2m > [22mSinh viên ký hợp đồng — nhánh không ký được[2m > [22mhợp đồng quá hạn thì báo CONTRACT_EXPIRED, không đổi gì[33m 587[2mms[22m[39m
+ [32m✓[39m tests/contract-sign.test.ts[2m > [22mSinh viên ký hợp đồng — nhánh không ký được[2m > [22mgiường đang bảo trì thì báo BED_UNAVAILABLE, hợp đồng vẫn chờ ký[32m 263[2mms[22m[39m
+ [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22msinh viên chưa có lịch sử (cấp nhầm) thì xóa hẳn, hồ sơ xóa theo[33m 682[2mms[22m[39m
+ [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22msinh viên đã có đơn đăng ký thì không xóa — giữ lịch sử, gợi ý khóa[32m 132[2mms[22m[39m
+ [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22mquản lý từng duyệt đơn thì không xóa; quản lý chưa làm gì thì xóa được, tòa trống quản lý[32m 162[2mms[22m[39m
+ [32m✓[39m tests/user-delete.test.ts[2m > [22mXóa tài khoản[2m > [22mkhông tự xóa mình, không xóa tài khoản quản trị viên[32m 107[2mms[22m[39m
+ [32m✓[39m tests/contract-cancel.test.ts[2m > [22mQuản lý hủy hợp đồng chờ ký[2m > [22mhợp đồng chuyển CANCELLED, đơn ghi lý do, giường xếp được cho sinh viên khác[33m 681[2mms[22m[39m
+ [32m✓[39m tests/contract-cancel.test.ts[2m > [22mQuản lý hủy hợp đồng chờ ký[2m > [22mkhông hủy được hợp đồng đã hủy, đang ở hoặc của tòa khác[32m 297[2mms[22m[39m
+ [32m✓[39m tests/invoice-debt.test.ts[2m > [22mCông nợ theo tòa (US-04.6)[2m > [22mAdmin thấy mọi tòa theo tên, tòa không nợ vẫn có mặt với số 0[33m 756[2mms[22m[39m
+ [32m✓[39m tests/invoice-debt.test.ts[2m > [22mCông nợ theo tòa (US-04.6)[2m > [22mManager chỉ thấy tòa mình[32m 216[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mký rồi verify lại thì đúng, kể cả mô tả có dấu cách[32m 274[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22msửa bất kỳ tham số nào sau khi ký → sai chữ ký[32m 94[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mthêm tham số vnp_ không có lúc ký → sai chữ ký[32m 102[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mký bằng khóa khác hoặc thiếu vnp_SecureHash → sai chữ ký[32m 97[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mbỏ qua vnp_SecureHashType, tham số không phải vnp_ và chữ hoa/thường của chữ ký[32m 90[2mms[22m[39m
+ [32m✓[39m tests/vnpay.test.ts[2m > [22mChữ ký VNPay (utils/vnpay.ts)[2m > [22mvnpDate theo giờ Việt Nam — 17:30 UTC ngày 30/09 là 00:30 ngày 01/10[32m 101[2mms[22m[39m
+ [32m✓[39m tests/announcement.test.ts[2m > [22mThông báo[2m > [22mManager luôn đăng cho tòa mình, chỉ sửa / xóa tin của tòa mình[33m 607[2mms[22m[39m
+ [32m✓[39m tests/announcement.test.ts[2m > [22mThông báo[2m > [22mSV thấy tin toàn KTX và tòa đang ở, tin ghim trước, đánh dấu đã đọc[32m 226[2mms[22m[39m
+ [32m✓[39m tests/facility-delete.test.ts[2m > [22mKhông xóa cứng phòng, giường đã được tham chiếu (BR-04)[2m > [22mphòng đã có hợp đồng thì từ chối, phòng chưa dùng thì xóa cả giường[33m 394[2mms[22m[39m
+ [32m✓[39m tests/facility-delete.test.ts[2m > [22mKhông xóa cứng phòng, giường đã được tham chiếu (BR-04)[2m > [22mgiường đang có người hoặc có lịch sử hợp đồng thì từ chối, giường chưa dùng thì xóa được[32m 154[2mms[22m[39m
 [90mstdout[2m | tests/dorm-rule.test.ts[2m > [22m[2mNội quy KTX[2m > [22m[2mxếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)
 [22m[39m[31mprisma:error[39m 
 Invalid `prisma.dormRule.delete()` invocation in
@@ -120,14 +122,14 @@ E:/DATN/ktx-datn/backend/src/modules/dorm-rules/dorm-rule.service.ts:13:26
 → 13   return prisma.dormRule.update(
 An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
 
- [32m✓[39m tests/dorm-rule.test.ts[2m > [22mNội quy KTX[2m > [22mxếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)[33m 326[2mms[22m[39m
+ [32m✓[39m tests/dorm-rule.test.ts[2m > [22mNội quy KTX[2m > [22mxếp theo thứ tự, sửa và xóa; mục không tồn tại thì P2025 (404)[33m 336[2mms[22m[39m
 
-[2m Test Files [22m [1m[32m18 passed[39m[22m[90m (18)[39m
-[2m      Tests [22m [1m[32m96 passed[39m[22m[90m (96)[39m
-[2m   Start at [22m 19:50:00
-[2m   Duration [22m 24.47s[2m (tests 83%, setup 12%, transform 3%, import 2%)[22m
+[2m Test Files [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m      Tests [22m [1m[32m98 passed[39m[22m[90m (98)[39m
+[2m   Start at [22m 22:44:39
+[2m   Duration [22m 42.19s[2m (tests 82%, setup 13%, transform 3%, import 2%)[22m
 
-[2m    Isolate [22m [33m18 workers spawned[39m[2m · ~113ms startup each (spawn + environment, per file)[22m
-[2m            [22m [2mat least ~1.92s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
+[2m    Isolate [22m [33m19 workers spawned[39m[2m · ~190ms startup each (spawn + environment, per file)[22m
+[2m            [22m [2mat least ~3.43s faster with [22m[33misolate: false[39m[2m — reuses workers across files instead of one per file[22m
 
 JSON report written to E:/DATN/ktx-datn/bang-chung/1-tu-dong/vitest-ket-qua.json
